@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include ceramic *.css
+recursive-include ceramic *.csv
+recursive-include ceramic *.html
+recursive-include ceramic *.ico
+recursive-include ceramic *.js
+recursive-include ceramic *.json
+recursive-include ceramic *.md
+recursive-include ceramic *.png
+recursive-include ceramic *.py
+recursive-include ceramic *.svg
+recursive-include ceramic *.txt
+recursive-exclude ceramic *.pyc
