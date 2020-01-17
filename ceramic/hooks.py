@@ -127,6 +127,10 @@ app_license = "GPL 3.0"
 # 	"Task": "ceramic.task.get_dashboard_data"
 # }
 
+doctype_js = {
+    "Delivery Note": "public/js/doctype_js/delivery_note.js",
+}
+
 doc_events = {
     'Sales Order' : {
         'on_submit': 'ceramic.doc_events.sales_order.on_submit',
