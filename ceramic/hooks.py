@@ -127,4 +127,10 @@ app_license = "GPL 3.0"
 # 	"Task": "ceramic.task.get_dashboard_data"
 # }
 
-fixtures = ["Custom Field"]	
+doc_events = {
+    'Sales Order' : {
+        'on_submit': 'ceramic.doc_events.sales_order.on_submit',
+    },
+}
+
+fixtures = ['Custom Field']	

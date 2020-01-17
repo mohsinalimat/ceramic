@@ -1,0 +1,57 @@
+{
+ "actions": [],
+ "autoname": "field:use_name",
+ "creation": "2020-01-10 11:38:20.208116",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "use_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "use_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Use Name",
+   "reqd": 1,
+   "unique": 1
+  }
+ ],
+ "links": [],
+ "modified": "2020-01-10 11:41:06.972078",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Tile Use",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Item Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
