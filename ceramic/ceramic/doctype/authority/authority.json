@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "autoname": "field:authority",
  "creation": "2020-01-11 11:40:43.890611",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -10,15 +10,14 @@
  "fields": [
   {
    "fieldname": "authority",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Authority",
-   "options": "\nAuthorized\nUnauthorized",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-11 11:42:31.690405",
+ "modified": "2020-01-18 17:37:32.046233",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Authority",

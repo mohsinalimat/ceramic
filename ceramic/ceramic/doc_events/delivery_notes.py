@@ -65,12 +65,6 @@ def create_invoice(source_name, target_doc=None):
         if target.company_address:
             target.update(get_fetch_values("Sales Invoice", 'company_address', target.company_address))
 
-    def update_item(source_doc, target_doc, source_parent):
-        target_doc.qty = to_make_invoice_qty_map[source_doc.name]
-
-        if source_doc.serial_no and source_parent.per_billed > 0:
-            target_doc.serial_no = get_delivery_note_serial_no(source_doc.item_code,
-                target_doc.qty, source_parent.name)
 
     def get_pending_qty(item_row):
         pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0)
@@ -91,6 +85,16 @@ def create_invoice(source_name, target_doc=None):
         to_make_invoice_qty_map[item_row.name] = pending_qty
 
         return pending_qty
+    
+    def update_item(source_doc, target_doc, source_parent):
+        target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+
+        doc = frappe.get_doc("Company", target_company)
+
+        target_doc.income_account = doc.default_income_account
+        target_doc.expense_account = doc.default_expense_account
+        target_doc.cost_center = doc.cost_center
+
 
     doc = get_mapped_doc("Delivery Note", source_name, {
         "Delivery Note": {
@@ -106,19 +110,21 @@ def create_invoice(source_name, target_doc=None):
             "doctype": "Sales Invoice Item",
             "field_map": {
                 "parent": "delivery_docname",
-                "so_detail": "delivery_docdetails",
-                "against_sales_order": "sales_order",
+                "name":"delivery_childname",
+                "so_detail": "so_childname" ,
+                "against_sales_order": "so_docname",
                 "serial_no": "serial_no",
-                "cost_center": "cost_center",
                 "real_qty": "qty",
                 "discounted_rate": "rate",
+                "qty": "full_qty",
+                "rate":"full_rate",
             },
             "field_no_map": [
-				"income_account",
-				"expense_account",
-				"cost_center",
-				"warehouse"
-			],
+                "income_account",
+                "expense_account",
+                "cost_center",
+                "warehouse"
+            ],
             "postprocess": update_item,
             "filter": lambda d: get_pending_qty(d) <= 0 if not doc.get("is_return") else get_pending_qty(d) > 0
         },

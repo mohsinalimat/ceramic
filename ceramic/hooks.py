@@ -129,12 +129,16 @@ app_license = "GPL 3.0"
 
 doctype_js = {
     "Delivery Note": "public/js/doctype_js/delivery_note.js",
+    "Sales Invoice": "public/js/doctype_js/sales_invoice.js",
 }
 
 doc_events = {
     'Sales Order' : {
-        'on_submit': 'ceramic.doc_events.sales_order.on_submit',
+        'on_submit': 'ceramic.ceramic.doc_events.sales_order.on_submit',
     },
+    "Sales Invoice": {
+		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
+	},
 }
 
 fixtures = ['Custom Field', 'Custom DocPerm']	
