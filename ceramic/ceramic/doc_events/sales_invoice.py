@@ -1,103 +1,124 @@
 import frappe
 from frappe import _
+from frappe.model.mapper import get_mapped_doc
 
 def on_submit(self, test):
     """On Submit Custom Function for Sales Invoice"""
     create_main_sales_invoice(self)
 
+def on_cancel(self, test):
+    """On Cancel Custom Function for Sales Invoice"""
+    cancel_main_sales_invoice(self)
+
+def on_trash(self, test):
+    delete_sales_invoice(self)
+
+# Create New Invouice on Submit
 def create_main_sales_invoice(self):
-    si = frappe.new_doc("Sales Invoice")
     
-    si.posting_date = self.posting_date
-    si.posting_time = self.posting_time
-    si.set_posting_time = self.set_posting_time
-    si.address_display = self.address_display
-    si.company = frappe.db.get_value("Company", self.company, "alternate_company") or si.company
-	si.customer = self.customer or "_Test Customer"
-	# si.debit_to = args.debit_to or "Debtors - _TC"
-	# si.update_stock = args.update_stock
-	si.is_pos = self.is_pos
-	si.is_return = self.is_return
-	si.return_against = self.return_against
-	si.currency = self.currency or "INR"
-	si.conversion_rate = self.conversion_rate or 1
+    # Getting authority of company
+    authority = frappe.db.get_value("Company", self.company, "authority")
+
+    # If company is authorized then only cancel another invoice
+    if authority == "Authorized":
+        si = get_sales_invoice_entry(self.name)
+        try:
+            si.save()
+            self.db_set('ref_invoice', si.name)
+            frappe.db.commit()
+            si.submit()
+        except Exception as e:
+            frappe.db.rollback()
+            frappe.throw(e)
     
-    dn_doc = frappe.get_doc("Delivery Note", "")
+    def get_sales_invoice_entry(source_name, target_doc=None, ignore_permissions= True):
+        def set_target_values(source, target):
+            target_company = frappe.db.get_value("Company", source.company, "alternate_company")
+            target.company = target_company
+            target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
+            source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-    for index, item in enumerate(self.items):
-        si.append('items', {
-            "item_code": item.item_code,
-            "gst_hsn_code": item.gst_hsn_code,
-            "warehouse": item.warehouse or '',
-            "qty": item.qty,
-            "rate": item.rate,
-            "income_account": item.income_account,
-            "expense_account": item.expense_account,
-            "cost_center": item.cost_center,
-            "serial_no": item.serial_no
-        })
+            target.ref_invoice = self.name
+
+            if source.debit_to:
+                target.debit_to = source.debit_to.replace(source_company_abbr, target_company_abbr)
+            if source.taxes_and_charges:
+                target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+
+                for index, i in enumerate(source.taxes):
+                    target.taxes[index].charge_type = "Actual"
+                    target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
+
+            if self.amended_from:
+                name = frappe.db.get_value("Sales Invoice", {"ref_invoice": source.amended_from}, "name")
+                target.amended_from = name
+
+            target.set_missing_values()
+
+        def account_details(source_doc, target_doc, source_parent):
+            target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+
+            doc = frappe.get_doc("Company", target_company)
+
+            target_doc.income_account = doc.default_income_account
+            target_doc.expense_account = doc.default_expense_account
+            target_doc.cost_center = doc.cost_center
+
+        fields = {
+            "Sales Invoice": {
+                "doctype": "Sales Invoice",
+                "field_map": {
+                    "ref_invoice": "name",
+                },
+            },
+            "Sales Invoice Item": {
+                "doctype": "Sales Invoice Item",
+                "field_map": {
+                    "full_rate": "rate",
+                    "full_qty": "qty",
+                    "rate": "discounted_rate",
+                    "qty": "actual_rate",
+                    "delivery_docname": "delivery_note",
+                    "delivery_childname": "dn_detail",
+                },
+                "field_no_map": {
+                    "full_rate",
+                    "full_qty",
+                    "series",
+                },
+                "postprocess": account_details,
+            }
+        }
+
+        doclist = get_mapped_doc(
+            "Sales Invoice",
+            source_name,
+            fields, target_doc,
+            set_target_values,
+            ignore_permissions=ignore_permissions
+        )
+
+        return doclist
+
+
+
+# Cancel Invoice on Cancel
+def cancel_main_sales_invoice(self):
+    si = frappe.get_doc("Sales Invoice", {'ref_invoice':self.name})
     
-    si.save()
-    
+    if si.docstatus == 1:
+        si.flags.ignore_permissions = True
+        try:
+            si.cancel()
+        except Exception as e:
+            frappe.db.rollback()
+            frappe.throw(e)
 
+def delete_sales_invoice(self):
+    ref_name = self.ref_invoice
 
-def create_purchase_invoice(self):
-    pi = frappe.new_doc("Purchase Invoice")
+    frappe.db.set_value("Sales Invoice", self.name, 'ref_invoice', '')    
+    frappe.db.set_value("Sales Invoice", ref_name, 'ref_invoice', '')    
+    frappe.db.commit()
 
-    pi.naming_series = db.get_value("Company", self.customer, 'purchase_invoice')
-    pi.company = self.customer
-    pi.supplier = self.company
-    pi.due_date = self.due_date
-    pi.bill_no = self.name
-    pi.bill_date = self.posting_date
-    pi.currency = self.currency
-    pi.update_stock = self.update_stock
-
-    for item in self.items:
-        pi.append('items', {
-            'item_code': item.item_code,
-            'item_name': item.item_name,
-            'qty': item.qty,
-            'rate': item.rate,
-            'description': item.description,
-            'uom': item.uom,
-            'price_list_rate': item.price_list_rate,
-            'rate': item.rate,
-            'original_rate': item.original_rate,
-            'discount_per': item.discount_per,
-            'purchase_order': frappe.db.get_value("Purchase Order Item", item.purchase_order_item, 'parent'),
-            'po_detail': item.purchase_order_item
-        })
-
-    pi.taxes_and_charges = self.taxes_and_charges
-    pi.shipping_rule = self.shipping_rule
-    pi.shipping_address = self.shipping_address_name
-    pi.shipping_address_display = self.shipping_address
-    pi.tc_name = 'Purchase Terms'
-
-    old_abbr = db.get_value("Company", self.company, 'abbr')
-    new_abbr = db.get_value("Company", self.customer, 'abbr')
-
-    for tax in self.taxes:
-        account_head = tax.account_head.replace(old_abbr, new_abbr)
-        if not db.exists("Account", account_head):
-            frappe.msgprint(_("The Account Head <b>{0}</b> does not exists. Please create Account Head for company <b>{1}</b> and create Purchase Invoice manually.".format(_(account_head), _(self.customer))), title="Purchase Invoice could not be created", indicator='red')
-            return
-
-        pi.append('taxes',{
-            'charge_type': tax.charge_type,
-            'row_id': tax.row_id,
-            'account_head': account_head,
-            'description': tax.description.replace(old_abbr, ''),
-            'rate': tax.rate,
-            'tax_amount': tax.tax_amount,
-            'total': tax.total
-        })
-
-    pi.save()
-    self.db_set('purchase_invoice', pi.name)
-    pi.submit()
-    db.commit()
-
-    url = get_url_to_form("Purchase Invoice", pi.name)
-    frappe.msgprint(_("Purchase Invoice <b><a href='{url}'>{name}</a></b> has been created successfully!".format(url=url, name=pi.name)), title="Purchase Invoice Created", indicator="green")
+    frappe.delete_doc("Sales Invoice", ref_name, force = 1)

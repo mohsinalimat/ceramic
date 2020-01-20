@@ -138,7 +138,12 @@ doc_events = {
     },
     "Sales Invoice": {
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
+        "on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
+        "on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
 	},
+    ("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
+		"before_naming": "ceramic.api.docs_before_naming",
+	}
 }
 
 fixtures = ['Custom Field', 'Custom DocPerm']	

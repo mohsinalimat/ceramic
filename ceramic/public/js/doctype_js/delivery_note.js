@@ -1,5 +1,5 @@
 frappe.ui.form.on('Delivery Note', {
-	refresh(frm) {
+	refresh: function(frm) {
 		// frm.trigger('si_menu_hide');
 	},
     onload_post_render: function(frm){
@@ -21,7 +21,7 @@ frappe.ui.form.on('Delivery Note', {
 
 		
 		if (!frm.doc.__is_local && frm.doc.docstatus == 1 && frm.doc.status != 'Canclled') {
-			frm.add_custom_button(__("Material Repack"), function () {
+			frm.add_custom_button(__("Sales Invoice"), function () {
 				frappe.model.open_mapped_doc({
 					method: "ceramic.ceramic.doc_events.delivery_notes.create_invoice",
                     frm: cur_frm
