@@ -7,6 +7,18 @@ def check_sub(string, sub_str):
     else: 
         return True
 
+def naming_series_name(name, company_series):
+    if check_sub(name, '.fiscal.'):
+        current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
+        fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
+        name = name.replace('.fiscal.', str(fiscal))
+
+    if company_series:
+        if check_sub(name, '.company_series.'):
+            name = name.replace('.company_series.', str(company_series))
+    
+    return name
+
 @frappe.whitelist()
 def docs_before_naming(self, method):
     from erpnext.accounts.utils import get_fiscal_year
@@ -25,16 +37,9 @@ def docs_before_naming(self, method):
 
 @frappe.whitelist()
 def check_counter_series(name = None, company_series = None):
-    if check_sub(name, '.fiscal.'):
-        current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
-        fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
-        name = name.replace('.fiscal.', str(fiscal))
+    name = naming_series_name(name, company_series)
     
-    if check_sub(name, '.company_series.'):
-        name = name.replace('.company_series.', str(company_series))
-     
     check = frappe.db.get_value('Series', name, 'current', order_by="name")
-
     if check == 0:
         return 1
     elif check == None:
@@ -42,3 +47,17 @@ def check_counter_series(name = None, company_series = None):
         return 1
     else:
         return int(frappe.db.get_value('Series', name, 'current', order_by="name")) + 1
+
+
+@frappe.whitelist()
+def before_naming(self, test):
+    if not self.amended_from:
+        if self.series_value:
+            name = naming_series_name(self.naming_series, self.company_series)
+        
+            check = frappe.db.get_value('Series', name, 'current', order_by="name")
+            if check == 0:
+                pass
+            elif not check:
+                frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
+            frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")

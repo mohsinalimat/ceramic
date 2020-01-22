@@ -137,9 +137,11 @@ doc_events = {
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
         "on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
         "on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
+        "before_naming": "ceramic.api.before_naming",
 	},
     "Delivery Note": {
-        "on_update_after_submit": "ceramic.ceramic.doc_events.delivery_note.on_update_after_submit"
+        "on_update_after_submit": "ceramic.ceramic.doc_events.delivery_note.on_update_after_submit",
+        "before_naming": "ceramic.api.before_naming",
     },
     ("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
