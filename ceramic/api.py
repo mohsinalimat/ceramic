@@ -13,6 +13,9 @@ def naming_series_name(name, company_series):
         fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
         name = name.replace('.fiscal.', str(fiscal))
 
+    if check_sub(name, '.YYYY.'):
+        name = name.replace('.2020.')
+
     if company_series:
         if check_sub(name, '.company_series.'):
             name = name.replace('.company_series.', str(company_series))
