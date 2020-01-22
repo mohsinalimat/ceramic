@@ -9,7 +9,7 @@ frappe.ui.form.on('Delivery Note', {
 		frm.trigger('si_menu_hide');
 	},
 	si_menu_hide: function(frm){
-		// hide delivery note from make button
+		
 		let $group = cur_frm.page.get_inner_group_button("Create");
 				
 		let li_length = $group.find("ul li");
@@ -18,16 +18,22 @@ frappe.ui.form.on('Delivery Note', {
 			if (li.getElementsByTagName("a")[0].innerHTML == "Sales Invoice")
 				$group.find(".dropdown-menu").children("li")[i].remove();
 		}
-
 		
-		if (!frm.doc.__is_local && frm.doc.docstatus == 1 && frm.doc.status != 'Canclled') {
+		if (!frm.doc.__islocal && frm.doc.docstatus == 1 && frm.doc.status != 'Cancelled') {
 			frm.add_custom_button(__("Sales Invoice"), function () {
 				frappe.model.open_mapped_doc({
 					method: "ceramic.ceramic.doc_events.delivery_notes.create_invoice",
                     frm: cur_frm
 				})
 			},
-			__("Create"))
+			__("Create"));
+			frm.add_custom_button(__("Sales Invoice Test"), function () {
+				frappe.model.open_mapped_doc({
+					method: "erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice",
+					frm: cur_frm
+				})
+			},
+			__("Create"));
 		}
 	}
 });

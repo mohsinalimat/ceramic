@@ -13,24 +13,21 @@ def on_cancel(self, test):
 def on_trash(self, test):
     delete_sales_invoice(self)
 
+def change_delivery_authority(name):
+    dn_status = frappe.get_value("Delivery Note", name, "status")
+    if dn_status == 'Completed':
+        frappe.db.set_value("Delivery Note",name, "authority", "Unauthorized")
+    else:
+        frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
+    
+    frappe.db.commit()
+
 # Create New Invouice on Submit
 def create_main_sales_invoice(self):
     
     # Getting authority of company
     authority = frappe.db.get_value("Company", self.company, "authority")
 
-    # If company is authorized then only cancel another invoice
-    if authority == "Authorized":
-        si = get_sales_invoice_entry(self.name)
-        try:
-            si.save()
-            self.db_set('ref_invoice', si.name)
-            frappe.db.commit()
-            si.submit()
-        except Exception as e:
-            frappe.db.rollback()
-            frappe.throw(e)
-    
     def get_sales_invoice_entry(source_name, target_doc=None, ignore_permissions= True):
         def set_target_values(source, target):
             target_company = frappe.db.get_value("Company", source.company, "alternate_company")
@@ -74,6 +71,8 @@ def create_main_sales_invoice(self):
             "Sales Invoice Item": {
                 "doctype": "Sales Invoice Item",
                 "field_map": {
+                    "item_design": "item_code",
+                    "item_code": "item_design",
                     "full_rate": "rate",
                     "full_qty": "qty",
                     "rate": "discounted_rate",
@@ -100,19 +99,40 @@ def create_main_sales_invoice(self):
 
         return doclist
 
+    # If company is authorized then only cancel another invoice
+    if authority == "Authorized":
+        si = get_sales_invoice_entry(self.name)
+        try:
+            si.save()
+            self.db_set('ref_invoice', si.name)
+            frappe.db.commit()
+            si.submit()
+            for i in self.items:
+                change_delivery_authority(i.delivery_docname)
+        except Exception as e:
+            frappe.db.rollback()
+            frappe.throw(e)
+    
+    
 
 
 # Cancel Invoice on Cancel
 def cancel_main_sales_invoice(self):
-    si = frappe.get_doc("Sales Invoice", {'ref_invoice':self.name})
+    if self.ref_invoice:
+        si = frappe.get_doc("Sales Invoice", {'ref_invoice':self.name})
+    else:
+        si = None
     
-    if si.docstatus == 1:
-        si.flags.ignore_permissions = True
-        try:
-            si.cancel()
-        except Exception as e:
-            frappe.db.rollback()
-            frappe.throw(e)
+    if si:
+        if si.docstatus == 1:
+            si.flags.ignore_permissions = True
+            try:
+                si.cancel()
+                for i in self.items:
+                    change_delivery_authority(i.delivery_docname)
+            except Exception as e:
+                frappe.db.rollback()
+                frappe.throw(e)
 
 def delete_sales_invoice(self):
     ref_name = self.ref_invoice
