@@ -32,8 +32,12 @@ def check_counter_series(name = None, company_series = None):
     
     if check_sub(name, '.company_series.'):
         name = name.replace('.company_series.', str(company_series))
+     
+    check = frappe.db.get_value('Series', name, 'current', order_by="name")
 
-    if not frappe.db.get_value('Series', name, 'current', order_by="name"):
+    if check == 0:
+        return 1
+    elif check == None:
         frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
         return 1
     else:
