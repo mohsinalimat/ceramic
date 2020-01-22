@@ -133,9 +133,6 @@ doctype_js = {
 }
 
 doc_events = {
-    'Sales Order' : {
-        'on_submit': 'ceramic.ceramic.doc_events.sales_order.on_submit',
-    },
     "Sales Invoice": {
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
         "on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
