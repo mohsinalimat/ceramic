@@ -4,6 +4,19 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 
 @frappe.whitelist()
+def on_submit(self, test):
+    change_delivery_authority(self)
+
+def change_delivery_authority(name):
+    dn_status = frappe.get_value("Delivery Note", name, "status")
+    if dn_status == 'Completed':
+        frappe.db.set_value("Delivery Note",name, "authority", "Unauthorized")
+    else:
+        frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
+    
+    frappe.db.commit()
+
+@frappe.whitelist()
 def create_invoice(source_name, target_doc=None):
     doc = frappe.get_doc('Delivery Note', source_name)
 

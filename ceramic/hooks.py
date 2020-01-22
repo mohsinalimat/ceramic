@@ -131,6 +131,7 @@ doctype_js = {
     "Delivery Note": "public/js/doctype_js/delivery_note.js",
     "Sales Invoice": "public/js/doctype_js/sales_invoice.js",
     "Sales Order": "public/js/doctype_js/sales_order.js",
+    "Payment Entry": "public/js/doctype_js/payment_entry.js",
 }
 
 doc_events = {
@@ -141,7 +142,7 @@ doc_events = {
         "before_naming": "ceramic.api.before_naming",
 	},
     "Delivery Note": {
-        "on_update_after_submit": "ceramic.ceramic.doc_events.delivery_note.on_update_after_submit",
+        "on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
         "before_naming": "ceramic.api.before_naming",
     },
     "Sales Order": {
@@ -149,6 +150,9 @@ doc_events = {
     },
     "Payment Entry": {
         "on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
+        "on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
+        "on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
+        "before_naming": "ceramic.api.before_naming",
     },
     ("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",

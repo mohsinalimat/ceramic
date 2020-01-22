@@ -36,6 +36,7 @@ def create_main_sales_invoice(self):
             source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
             target.ref_invoice = self.name
+            target.authority = "Unauthorized"
 
             if source.debit_to:
                 target.debit_to = source.debit_to.replace(source_company_abbr, target_company_abbr)
@@ -67,6 +68,9 @@ def create_main_sales_invoice(self):
                 "field_map": {
                     "ref_invoice": "name",
                 },
+                "field_no_map":{
+                    "authority",
+                }
             },
             "Sales Invoice Item": {
                 "doctype": "Sales Invoice Item",
@@ -92,7 +96,8 @@ def create_main_sales_invoice(self):
         doclist = get_mapped_doc(
             "Sales Invoice",
             source_name,
-            fields, target_doc,
+            fields,
+            target_doc,
             set_target_values,
             ignore_permissions=ignore_permissions
         )
