@@ -43,7 +43,7 @@ def check_counter_series(name = None, company_series = None):
     name = naming_series_name(name, company_series)
     
     check = frappe.db.get_value('Series', name, 'current', order_by="name")
-    if check == 0:
+    if check <= 0:
         return 1
     elif check == None:
         frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
@@ -56,11 +56,13 @@ def check_counter_series(name = None, company_series = None):
 def before_naming(self, test):
     if not self.amended_from:
         if self.series_value:
-            name = naming_series_name(self.naming_series, self.company_series)
-        
-            check = frappe.db.get_value('Series', name, 'current', order_by="name")
-            if check == 0:
-                pass
-            elif not check:
-                frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
-            frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
+            if self.series_value > 0:
+                name = naming_series_name(self.naming_series, self.company_series)
+            
+                check = frappe.db.get_value('Series', name, 'current', order_by="name")
+                if check == 0:
+                    pass
+                elif not check:
+                    frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
+                    
+                frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")

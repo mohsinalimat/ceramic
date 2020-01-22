@@ -148,4 +148,4 @@ doc_events = {
 	}
 }
 
-fixtures = ['Custom Field', 'Custom DocPerm']	
+fixtures = ['Custom Field']	
