@@ -8,16 +8,22 @@ frappe.ui.form.on('Sales Invoice', {
 		}
 	},
 	naming_series: function(frm) {
-		let naming_series = frm.doc.naming_series
-		frappe.call({
-			method: "ceramic.api.check_counter_series",
-			args: {
-				'name': frm.doc.naming_series,
-			},
-			callback: function(r) {
-				let a = r.message;
-				frm.set_value("series_value", a);
-			}
-		});
+		if (frm.doc.company){
+			let naming_series = frm.doc.naming_series
+			frappe.call({
+				method: "ceramic.api.check_counter_series",
+				args: {
+					'name': frm.doc.naming_series,
+					'company_series': frm.doc.company_series,
+				},
+				callback: function(r) {
+					let a = r.message;
+					frm.set_value("series_value", a);
+				}
+			});
+		}
 	},
+	company: function(frm){
+		frm.trigger('naming_series');
+	}
 });
