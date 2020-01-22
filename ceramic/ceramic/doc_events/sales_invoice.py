@@ -133,6 +133,9 @@ def cancel_main_sales_invoice(self):
             except Exception as e:
                 frappe.db.rollback()
                 frappe.throw(e)
+    else:
+        for i in self.items:
+            change_delivery_authority(i.delivery_docname)
 
 def delete_sales_invoice(self):
     ref_name = self.ref_invoice
