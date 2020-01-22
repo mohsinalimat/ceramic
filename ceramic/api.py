@@ -24,5 +24,19 @@ def docs_before_naming(self, method):
 		self.fiscal = fiscal
 
 @frappe.whitelist()
-def check_counter_series(name = None):
-	pass
+def check_counter_series(name = None, company_series = None):
+	if check_sub(name, '.fiscal.'):
+		current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
+		fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
+		name = name.replace('.YYYY.', str(current_fiscal))
+	
+	if check_sub(name, '.company_series.'):
+		
+	 
+	check = frappe.db.get_value('Series', name, 'current', order_by="name")
+
+	if not check:
+		frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
+		return 1
+	else:
+		return int(frappe.db.get_value('Series', name, 'current', order_by="name")) + 1
