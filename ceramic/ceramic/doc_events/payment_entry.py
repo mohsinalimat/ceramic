@@ -80,7 +80,7 @@ def create_main_payment_entry(self):
     if authority == "Authorized":
         pe = get_payment_entry_entry(self.name)
         try:
-            pe.save()
+            pe.save(ignore_permissions= True)
             self.db_set('ref_payment', pe.name)
             frappe.db.commit()
             pe.submit()
@@ -106,9 +106,14 @@ def cancel_payment_entry(self):
 
 def delete_payment_entry(self):
     ref_name = self.ref_payment
+    try:
+        frappe.db.set_value("Payment Entry", self.name, 'ref_payment', '')    
+        frappe.db.set_value("Payment Entry", ref_name, 'ref_payment', '')
+        frappe.delete_doc("Payment Entry", ref_name, force = 1)
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.throw(e)
+    else:
+        frappe.db.commit()
 
-    frappe.db.set_value("Payment Entry", self.name, 'ref_payment', '')    
-    frappe.db.set_value("Payment Entry", ref_name, 'ref_payment', '')    
-    frappe.db.commit()
-
-    frappe.delete_doc("Payment Entry", ref_name, force = 1)
+    

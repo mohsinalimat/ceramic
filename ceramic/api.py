@@ -17,8 +17,8 @@ def naming_series_name(name, company_series):
         name = name.replace('.2020.')
 
     if company_series:
-        if check_sub(name, '.company_series.'):
-            name = name.replace('.company_series.', str(company_series))
+        if check_sub(name, 'company_series.'):
+            name = name.replace('company_series.', str(company_series))
     
     return name
 
@@ -59,11 +59,11 @@ def before_naming(self, test):
         if self.series_value:
             if self.series_value > 0:
                 name = naming_series_name(self.naming_series, self.company_series)
-            
+                
                 check = frappe.db.get_value('Series', name, 'current', order_by="name")
                 if check == 0:
                     pass
                 elif not check:
                     frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
-                    
+                
                 frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")

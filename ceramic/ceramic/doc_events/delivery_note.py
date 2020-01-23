@@ -5,7 +5,7 @@ from frappe.contacts.doctype.address.address import get_company_address
 
 @frappe.whitelist()
 def on_submit(self, test):
-    change_delivery_authority(self)
+    change_delivery_authority(self.name)
 
 def change_delivery_authority(name):
     dn_status = frappe.get_value("Delivery Note", name, "status")
@@ -139,7 +139,6 @@ def on_update_after_submit(self, test):
     change_authority(self)
 
 def change_authority(self):
-    frappe.msgprint("Hello Anuj")
     if self.status == 'Completed':
         self.db_set("authority", "Unauthorized")
     else:

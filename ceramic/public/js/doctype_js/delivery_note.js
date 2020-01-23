@@ -44,7 +44,7 @@ frappe.ui.form.on('Delivery Note', {
 		if (!frm.doc.__islocal && frm.doc.docstatus == 1 && frm.doc.status != 'Cancelled') {
 			frm.add_custom_button(__("Sales Invoice"), function () {
 				frappe.model.open_mapped_doc({
-					method: "ceramic.ceramic.doc_events.delivery_notes.create_invoice",
+					method: "ceramic.ceramic.doc_events.delivery_note.create_invoice",
                     frm: cur_frm
 				})
 			},

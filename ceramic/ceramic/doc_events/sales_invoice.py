@@ -107,8 +107,9 @@ def create_main_sales_invoice(self):
     # If company is authorized then only cancel another invoice
     if authority == "Authorized":
         si = get_sales_invoice_entry(self.name)
+        si.flags.ignore_permissions = True
         try:
-            si.save()
+            si.save(ignore_permissions= True)
             self.db_set('ref_invoice', si.name)
             frappe.db.commit()
             si.submit()
@@ -144,9 +145,12 @@ def cancel_main_sales_invoice(self):
 
 def delete_sales_invoice(self):
     ref_name = self.ref_invoice
-
-    frappe.db.set_value("Sales Invoice", self.name, 'ref_invoice', '')    
-    frappe.db.set_value("Sales Invoice", ref_name, 'ref_invoice', '')    
-    frappe.db.commit()
-
-    frappe.delete_doc("Sales Invoice", ref_name, force = 1)
+    try:
+        frappe.db.set_value("Sales Invoice", self.name, 'ref_invoice', '')    
+        frappe.db.set_value("Sales Invoice", ref_name, 'ref_invoice', '') 
+        frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.throw(e)
+    else:
+        frappe.db.commit()
