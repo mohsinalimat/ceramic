@@ -4,31 +4,25 @@ from frappe.model.mapper import get_mapped_doc
 
 def on_submit(self, test):
     """On Submit Custom Function for Sales Invoice"""
-    create_main_sales_invoice(self)
+    create_main_purchase_invoice(self)
 
 def on_cancel(self, test):
     """On Cancel Custom Function for Sales Invoice"""
-    cancel_main_sales_invoice(self)
+    cancel_main_purchase_invoice(self)
 
 def on_trash(self, test):
-    delete_sales_invoice(self)
+    delete_purchase_invoice(self)
 
-def change_delivery_authority(name):
-    dn_status = frappe.get_value("Delivery Note", name, "status")
-    if dn_status == 'Completed':
-        frappe.db.set_value("Delivery Note",name, "authority", "Unauthorized")
-    else:
-        frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
-    
-    frappe.db.commit()
+def change_purchase_reciept_authority(name):
+    pass
 
 # Create New Invouice on Submit
-def create_main_sales_invoice(self):
+def create_main_purchase_invoice(self):
     
     # Getting authority of company
     authority = frappe.db.get_value("Company", self.company, "authority")
 
-    def get_sales_invoice_entry(source_name, target_doc=None, ignore_permissions= True):
+    def get_purchase_invoice_entry(source_name, target_doc=None, ignore_permissions= True):
         def set_target_values(source, target):
             target_company = frappe.db.get_value("Company", source.company, "alternate_company")
             target.company = target_company
@@ -38,8 +32,8 @@ def create_main_sales_invoice(self):
             target.ref_invoice = self.name
             target.authority = "Unauthorized"
 
-            if source.debit_to:
-                target.debit_to = source.debit_to.replace(source_company_abbr, target_company_abbr)
+            if source.credit_to:
+                target.credit_to = source.credit_to.replace(source_company_abbr, target_company_abbr)
             if source.taxes_and_charges:
                 target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
 
@@ -55,6 +49,8 @@ def create_main_sales_invoice(self):
 
         def account_details(source_doc, target_doc, source_parent):
             target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+            target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
+            source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
 
             doc = frappe.get_doc("Company", target_company)
 
@@ -62,9 +58,15 @@ def create_main_sales_invoice(self):
             target_doc.expense_account = doc.default_expense_account
             target_doc.cost_center = doc.cost_center
 
+            if source_doc.warehouse:
+                target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
+            
+            if source_doc.rejected_warehouse:
+                target_doc.rejected_warehouse = source_doc.rejected_warehouse.replace(source_company_abbr, target_company_abbr)
+
         fields = {
-            "Sales Invoice": {
-                "doctype": "Sales Invoice",
+            "Purchase Invoice": {
+                "doctype": "Purchase Invoice",
                 "field_map": {
                     "ref_invoice": "name",
                 },
@@ -72,17 +74,24 @@ def create_main_sales_invoice(self):
                     "authority",
                 }
             },
-            "Sales Invoice Item": {
-                "doctype": "Sales Invoice Item",
+            "Purchase Invoice Item": {
+                "doctype": "Purchase Invoice Item",
                 "field_map": {
                     "item_design": "item_code",
                     "item_code": "item_design",
+                    # Rate
                     "full_rate": "rate",
-                    "full_qty": "qty",
                     "rate": "discounted_rate",
+                    # Quantity
+                    "full_qty": "qty",
+                    "received_full_qty": "received_qty",
+                    "rejected_full_qty": "rejected_qty",
                     "qty": "real_qty",
-                    "delivery_docname": "delivery_note",
-                    "delivery_childname": "dn_detail",
+                    "received_real_qty": "received_full_qty",
+                    "rejected_real_qty": "rejected_full_qty",
+                    # Ref Links
+                    "purchase_receipt_docname": "purchase_receipt",
+                    "purchase_receipt_childname": "pr_detail",
                 },
                 "field_no_map": {
                     "full_rate",
@@ -94,7 +103,7 @@ def create_main_sales_invoice(self):
         }
 
         doclist = get_mapped_doc(
-            "Sales Invoice",
+            "Purchase Invoice",
             source_name,
             fields,
             target_doc,
@@ -106,15 +115,13 @@ def create_main_sales_invoice(self):
 
     # If company is authorized then only cancel another invoice
     if authority == "Authorized":
-        si = get_sales_invoice_entry(self.name)
-        si.flags.ignore_permissions = True
+        pi = get_purchase_invoice_entry(self.name)
+        pi.flags.ignore_permissions = True
         try:
-            si.save(ignore_permissions= True)
-            self.db_set('ref_invoice', si.name)
+            pi.save(ignore_permissions= True)
+            self.db_set('ref_invoice', pi.name)
             frappe.db.commit()
-            si.submit()
-            for i in self.items:
-                change_delivery_authority(i.delivery_docname)
+            pi.submit()
         except Exception as e:
             frappe.db.rollback()
             frappe.throw(e)
@@ -123,32 +130,28 @@ def create_main_sales_invoice(self):
 
 
 # Cancel Invoice on Cancel
-def cancel_main_sales_invoice(self):
+def cancel_main_purchase_invoice(self):
     if self.ref_invoice:
-        si = frappe.get_doc("Sales Invoice", {'ref_invoice':self.name})
+        pi = frappe.get_doc("Purchase Invoice", {'ref_invoice':self.name})
     else:
-        si = None
+        pi = None
     
-    if si:
-        if si.docstatus == 1:
-            si.flags.ignore_permissions = True
+    if pi:
+        if pi.docstatus == 1:
+            pi.flags.ignore_permissions = True
             try:
-                si.cancel()
-                for i in self.items:
-                    change_delivery_authority(i.delivery_docname)
+                pi.cancel()
             except Exception as e:
                 frappe.db.rollback()
                 frappe.throw(e)
-    else:
-        for i in self.items:
-            change_delivery_authority(i.delivery_docname)
 
-def delete_sales_invoice(self):
+
+def delete_purchase_invoice(self):
     ref_name = self.ref_invoice
     try:
-        frappe.db.set_value("Sales Invoice", self.name, 'ref_invoice', '')    
-        frappe.db.set_value("Sales Invoice", ref_name, 'ref_invoice', '') 
-        frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
+        frappe.db.set_value("Purchase Invoice", self.name, 'ref_invoice', '')    
+        frappe.db.set_value("Purchase Invoice", ref_name, 'ref_invoice', '') 
+        frappe.delete_doc("Purchase Invoice", ref_name, force = 1, ignore_permissions=True)  
     except Exception as e:
         frappe.db.rollback()
         frappe.throw(e)

@@ -40,7 +40,13 @@ def create_main_payment_entry(self):
 
         def payment_ref(source_doc, target_doc, source_parent):
             reference_name = source_doc.reference_name
-            target_doc.reference_name = frappe.db.get_value("Sales Invoice", reference_name, 'ref_invoice')
+            if source_parent.payment_type == 'Pay':
+                if source_doc.reference_doctype == 'Purchase Invoice':
+                    target_doc.reference_name = frappe.db.get_value("Purchase Invoice", reference_name, 'ref_invoice')
+
+            if source_parent.payment_type == 'Receive':
+                if source_doc.reference_doctype == 'Sales Invoice':
+                    target_doc.reference_name = frappe.db.get_value("Sales Invoice", reference_name, 'ref_invoice')
 
         fields = {
             "Payment Entry": {

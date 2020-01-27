@@ -8,17 +8,23 @@ def check_sub(string, sub_str):
         return True
 
 def naming_series_name(name, company_series):
+    
     if check_sub(name, '.fiscal.'):
         current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
         fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
         name = name.replace('.fiscal.', str(fiscal))
 
     if check_sub(name, '.YYYY.'):
-        name = name.replace('.2020.')
+        name = name.replace('.YYYY.', '.2020.')
 
     if company_series:
         if check_sub(name, 'company_series.'):
             name = name.replace('company_series.', str(company_series))
+            
+    if check_sub(name, ".#"):
+        name = name.replace('#', '')
+        if name[-1] == '.':
+            name = name[:-1]
     
     return name
 
