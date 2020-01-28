@@ -2,21 +2,33 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 
-def on_submit(self, test):
-    """On Submit Custom Function for Sales Invoice"""
-    create_main_payment_entry(self)
 
-def on_cancel(self, test):
-    """On Cancel Custom Function for Sales Invoice"""
+def on_submit(self, method):
+    """On Submit Custom Function for Payment Entry"""
+    create_payment_entry(self)
+
+
+def on_cancel(self, method):
+    """On Cancel Custom Function for Payment Entry"""
     cancel_payment_entry(self)
 
-def on_trash(self, test):
+
+def on_trash(self, method):
+    """On Delete Custom Function for Payment Entry"""
     delete_payment_entry(self)
 
-def create_main_payment_entry(self):
-    authority = frappe.db.get_value("Company", self.company, "authority")
 
-    def get_payment_entry_entry(source_name, target_doc=None, ignore_permissions= True):
+def create_payment_entry(self):
+    """Function to create Payment Entry
+
+    This function is use to create Payment Entry from 
+    one company to another company if company is authorized.
+
+    Args:
+        self (obj): The submited payment entry object
+    """
+
+    def get_payment_entry(source_name, target_doc=None, ignore_permissions= True):
         def set_missing_values(source, target):
             target_company = frappe.db.get_value("Company", source.company, "alternate_company")
             target.company = target_company
@@ -25,17 +37,11 @@ def create_main_payment_entry(self):
 
             target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
             target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
-            
-            # target.ref_payment = self.name
 
             if source.deductions:
                 for index, i in enumerate(source.deductions):
                     target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
                     target.deductions[index].cost_center.replace(source_company_abbr, target_company_abbr)
-
-            # frappe.throw("Hulalalal")
-            # frappe.throw(str(target.deductions[0]))
-            # target.set_missing_values()
             
 
         def payment_ref(source_doc, target_doc, source_parent):
@@ -83,8 +89,11 @@ def create_main_payment_entry(self):
 
         return doclist
     
+    # getting authority of company
+    authority = frappe.db.get_value("Company", self.company, "authority")
+
     if authority == "Authorized":
-        pe = get_payment_entry_entry(self.name)
+        pe = get_payment_entry(self.name)
         try:
             pe.save(ignore_permissions= True)
             self.db_set('ref_payment', pe.name)

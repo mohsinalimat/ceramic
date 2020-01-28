@@ -55,10 +55,10 @@ def make_purchase_invoice(source_name, target_doc=None):
             target.company = alternate_company
 
     def update_item(source_doc, target_doc, source_parent):
-        target_doc.qty, returned_qty = get_pending_qty(source_doc)
-        returned_qty_map[source_doc.item_code] = returned_qty
         target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+
         doc = frappe.get_doc("Company", target_company)
+        
         target_doc.income_account = doc.default_income_account
         target_doc.expense_account = doc.default_expense_account
         target_doc.cost_center = doc.cost_center
@@ -122,11 +122,6 @@ def make_purchase_invoice(source_name, target_doc=None):
                 "rejected_real_qty",
             ],
             "postprocess": update_item,
-            "filter": lambda d: get_pending_qty(d)[0] <= 0 if not doc.get("is_return") else get_pending_qty(d)[0] > 0
-        },
-        "Purchase Taxes and Charges": {
-            "doctype": "Purchase Taxes and Charges",
-            "add_if_empty": True
         }
     }, target_doc, set_missing_values)
 

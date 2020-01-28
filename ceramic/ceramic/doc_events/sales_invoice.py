@@ -109,7 +109,7 @@ def create_main_sales_invoice(self):
         si = get_sales_invoice_entry(self.name)
         si.flags.ignore_permissions = True
         try:
-            si.save(ignore_permissions= True)
+            si.save(ignore_permissions = True)
             self.db_set('ref_invoice', si.name)
             frappe.db.commit()
             si.submit()
