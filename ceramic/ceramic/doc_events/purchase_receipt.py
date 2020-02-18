@@ -116,13 +116,8 @@ def make_purchase_invoice(source_name, target_doc=None):
                 "expense_account",
                 "cost_center",
                 "warehouse",
-                "discounted_rate",
-                "received_real_qty",
-                "real_qty",
-                "rejected_real_qty",
             ],
             "postprocess": update_item,
-            "filter": lambda d: get_pending_qty(d)[0] <= 0 if not doc.get("is_return") else get_pending_qty(d)[0] > 0
         },
         "Purchase Taxes and Charges": {
             "doctype": "Purchase Taxes and Charges",

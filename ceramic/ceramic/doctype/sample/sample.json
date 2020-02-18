@@ -1,0 +1,104 @@
+{
+ "autoname": "naming_series:",
+ "creation": "2020-01-28 10:42:23.798459",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "item",
+  "party_type",
+  "party",
+  "posting_date",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Party Type",
+   "options": "Lead\nCustomer\nSupplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Naming Series",
+   "options": "SAMPLE-"
+  }
+ ],
+ "modified": "2020-01-30 19:59:17.329869",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Sample",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

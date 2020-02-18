@@ -1,0 +1,96 @@
+{
+ "autoname": "field:item_name",
+ "creation": "2020-02-17 10:24:35.312473",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_name",
+  "item_series",
+  "tile_surface",
+  "tile_size",
+  "maintain_stock",
+  "column_break_6",
+  "uom",
+  "item_group"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Item Name",
+   "unique": 1
+  },
+  {
+   "fieldname": "item_series",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Series",
+   "options": "Item"
+  },
+  {
+   "fieldname": "tile_surface",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tile Surface",
+   "options": "Tile Surface"
+  },
+  {
+   "fieldname": "tile_size",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tile Size",
+   "options": "Tile Size"
+  },
+  {
+   "default": "0",
+   "fieldname": "maintain_stock",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Maintain Stock"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Group",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "modified": "2020-02-17 15:14:43.464972",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Tile Item Creation Tool",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
