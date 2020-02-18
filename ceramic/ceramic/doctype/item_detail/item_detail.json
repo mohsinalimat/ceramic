@@ -1,0 +1,30 @@
+{
+ "creation": "2020-02-18 12:16:44.824139",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_detail"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_detail",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Detail",
+   "options": "Item",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-02-18 12:18:17.866238",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Item Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

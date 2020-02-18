@@ -116,12 +116,15 @@ def make_purchase_invoice(source_name, target_doc=None):
                 "expense_account",
                 "cost_center",
                 "warehouse",
-                "discounted_rate",
-                "received_real_qty",
-                "real_qty",
-                "rejected_real_qty",
             ],
             "postprocess": update_item,
+<<<<<<< HEAD
+=======
+        },
+        "Purchase Taxes and Charges": {
+            "doctype": "Purchase Taxes and Charges",
+            "add_if_empty": True
+>>>>>>> b852d625a37b9aee479cc5e5633a0bef31ee4d33
         }
     }, target_doc, set_missing_values)
 

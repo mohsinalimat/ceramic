@@ -128,44 +128,53 @@ app_license = "GPL 3.0"
 # }
 
 doctype_js = {
-    "Delivery Note": "public/js/doctype_js/delivery_note.js",
-    "Sales Invoice": "public/js/doctype_js/sales_invoice.js",
-    "Sales Order": "public/js/doctype_js/sales_order.js",
-    "Payment Entry": "public/js/doctype_js/payment_entry.js",
-    "Purchase Order": "public/js/doctype_js/purchase_order.js",
-    "Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
+	"Delivery Note": "public/js/doctype_js/delivery_note.js",
+	"Sales Invoice": "public/js/doctype_js/sales_invoice.js",
+	"Sales Order": "public/js/doctype_js/sales_order.js",
+	"Payment Entry": "public/js/doctype_js/payment_entry.js",
+	"Purchase Order": "public/js/doctype_js/purchase_order.js",
+	"Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
+	"BOM": "public/js/doctype_js/bom.js",
+	"Work Order": "public/js/doctype_js/work_order.js",
 }
 
 doc_events = {
-    "Sales Invoice": {
-		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
-        "on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
-        "on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
-        "before_naming": "ceramic.api.before_naming",
+	"BOM": {
+		"before_naming": "ceramic.ceramic.doc_events.bom.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.bom.before_validate",
+		"before_cancel": "ceramic.ceramic.doc_events.bom.before_cancel",
+		"before_submit": "ceramic.ceramic.doc_events.bom.before_submit",
+		"before_update_after_submit": "ceramic.ceramic.doc_events.bom.before_update_after_submit"
 	},
-    "Delivery Note": {
-        "on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
-        "before_naming": "ceramic.api.before_naming",
-    },
-    "Sales Order": {
-        "before_naming": "ceramic.api.before_naming",
-    },
-    "Payment Entry": {
-        "on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
-        "on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
-        "on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
-        "before_naming": "ceramic.api.before_naming",
-    },
-    "Purchase Invoice": {
-        "on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
-        "on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
-        "on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
-        # "before_naming": "ceramic.api.before_naming",
-    },
-    "Warehouse": {
-        "validate": "ceramic.ceramic.doc_events.warehouse.before_save",
-    },
-    ("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
+	"Sales Invoice": {
+		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
+		"before_naming": "ceramic.api.before_naming",
+	},
+	"Delivery Note": {
+		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
+		"before_naming": "ceramic.api.before_naming",
+	},
+	"Sales Order": {
+		"before_naming": "ceramic.api.before_naming",
+	},
+	"Payment Entry": {
+		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
+		"before_naming": "ceramic.api.before_naming",
+	},
+	"Purchase Invoice": {
+		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
+		# "before_naming": "ceramic.api.before_naming",
+	},
+	"Warehouse": {
+		"validate": "ceramic.ceramic.doc_events.warehouse.before_save",
+	},
+	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
 	}
 }

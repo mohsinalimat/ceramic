@@ -73,3 +73,46 @@ def before_naming(self, test):
                     frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
                 
                 frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
+        
+@frappe.whitelist()
+def get_party_details(party=None, party_type=None, ignore_permissions=True):
+
+	if not party:
+		return {}
+
+	if not frappe.db.exists(party_type, party):
+		frappe.throw(_("{0}: {1} does not exists").format(party_type, party))
+
+	return _get_party_details(party, party_type, ignore_permissions)
+
+def _get_party_details(party=None, party_type=None, ignore_permissions=True):
+
+	out = frappe._dict({
+		party_type.lower(): party
+	})
+
+	party = out[party_type.lower()]
+
+	# if not ignore_permissions and not frappe.has_permission(party_type, "read", party):
+	# 	frappe.throw(_("Not permitted for {0}").format(party), frappe.PermissionError)
+
+	party = frappe.get_doc(party_type, party)
+	
+	# set_address_details(out, party, party_type)
+	# set_contact_details(out, party, party_type)
+	# set_other_values(out, party, party_type)
+	set_organization_details(out, party, party_type)
+	return out
+		
+def set_organization_details(out, party, party_type):
+
+	organization = None
+
+	if party_type == 'Lead':
+		organization = frappe.db.get_value("Lead", {"name": party.name}, "company_name")
+	elif party_type == 'Customer':
+		organization = frappe.db.get_value("Customer", {"name": party.name}, "customer_name")
+	elif party_type == 'Supplier':
+		organization = frappe.db.get_value("Supplier", {"name": party.name}, "supplier_name")
+
+	out.update({'party_name': organization})

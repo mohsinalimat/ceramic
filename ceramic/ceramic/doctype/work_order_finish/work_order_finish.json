@@ -1,0 +1,141 @@
+{
+ "creation": "2020-02-18 11:49:37.047697",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "work_order",
+  "from_bom",
+  "column_break_3",
+  "company",
+  "posting_date",
+  "posting_time",
+  "section_break_7",
+  "item_series",
+  "finish_item",
+  "column_break_10",
+  "source_warehouse",
+  "target_warehouse",
+  "section_break_13",
+  "get_item",
+  "items",
+  "total_additional_cost"
+ ],
+ "fields": [
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Work Order",
+   "options": "Work Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "from_bom",
+   "fieldtype": "Link",
+   "label": "From BOM",
+   "options": "BOM"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time"
+  },
+  {
+   "fieldname": "item_series",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Series",
+   "options": "Item"
+  },
+  {
+   "fetch_from": "work_order.source_warehouse",
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fetch_from": "work_order.fg_warehouse",
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Target Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "finish_item",
+   "fieldtype": "Table MultiSelect",
+   "label": "Finish Item",
+   "options": "Item Detail"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Work Order Finish Item"
+  },
+  {
+   "fieldname": "total_additional_cost",
+   "fieldtype": "Float",
+   "label": "Total Additional Cost",
+   "options": "Work Order Additional Cost"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_13",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "get_item",
+   "fieldtype": "Button",
+   "label": "Get Item"
+  }
+ ],
+ "modified": "2020-02-18 14:24:25.525157",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Work Order Finish",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

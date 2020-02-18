@@ -1,0 +1,33 @@
+{
+ "creation": "2020-02-18 13:48:09.372211",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "description",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-02-18 13:48:09.372211",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Work Order Additional Cost",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
