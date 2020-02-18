@@ -146,6 +146,10 @@ doc_events = {
 		"before_submit": "ceramic.ceramic.doc_events.bom.before_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.bom.before_update_after_submit"
 	},
+	"Work Order":{
+		'before_submit': "ceramic.ceramic.doc_events.work_order.before_submit",
+		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
+	},
 	"Sales Invoice": {
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",

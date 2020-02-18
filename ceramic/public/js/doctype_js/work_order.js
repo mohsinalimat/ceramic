@@ -22,5 +22,8 @@ frappe.ui.form.on('Work Order', {
                 frm.set_value('bom_no',r.name)
             }
         })
-	},
+    },
+    source_warehouse: function (frm, cdt, cdn) {
+        erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "required_items", "source_warehouse");
+    },
 });
