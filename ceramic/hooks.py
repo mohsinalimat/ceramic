@@ -180,6 +180,11 @@ doc_events = {
 	"Warehouse": {
 		"validate": "ceramic.ceramic.doc_events.warehouse.before_save",
 	},
+	"Stock Entry":{
+		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",
+		'before_submit': "ceramic.ceramic.doc_events.stock_entry.before_submit",
+		'before_cancel': "ceramic.ceramic.doc_events.stock_entry.before_cancel",
+	},
 	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
 	}
