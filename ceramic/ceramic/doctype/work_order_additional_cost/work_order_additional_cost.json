@@ -11,16 +11,18 @@
   {
    "fieldname": "description",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Description"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Amount"
   }
  ],
  "istable": 1,
- "modified": "2020-02-18 13:48:09.372211",
+ "modified": "2020-02-19 11:25:36.601831",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Work Order Additional Cost",

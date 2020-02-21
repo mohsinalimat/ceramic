@@ -1,15 +1,18 @@
 {
  "creation": "2020-02-18 12:33:37.613833",
  "doctype": "DocType",
+ "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "item_code",
   "item_name",
   "quantity_and_rate_section",
   "qty",
-  "basic_rate_as_per_stock_uom",
+  "basic_rate",
   "basic_amount",
+  "additional_cost",
   "amount",
+  "valuation_rate",
   "column_break_8",
   "uom",
   "conversion_factor",
@@ -25,6 +28,7 @@
  ],
  "fields": [
   {
+   "columns": 3,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -47,33 +51,29 @@
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Qty"
-  },
-  {
-   "fieldname": "basic_rate_as_per_stock_uom",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Basic Rate (as per Stock UOM)",
-   "options": "Company:company:default_currency"
+   "label": "Qty",
+   "width": "0"
   },
   {
    "fieldname": "basic_amount",
    "fieldtype": "Currency",
    "label": "Basic Amount",
-   "options": "Company:company:default_currency"
+   "options": "Company:company:default_currency",
+   "read_only": 1
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Amount",
-   "options": "Company:company:default_currency"
+   "options": "Company:company:default_currency",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_8",
    "fieldtype": "Column Break"
   },
   {
+   "columns": 1,
    "fieldname": "uom",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -133,10 +133,29 @@
    "fieldname": "actual_qty_at_sourcetarget",
    "fieldtype": "Float",
    "label": "Actual Qty (at source/target)"
+  },
+  {
+   "fieldname": "basic_rate",
+   "fieldtype": "Currency",
+   "label": "Basic Rate",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "additional_cost",
+   "fieldtype": "Currency",
+   "label": "Additional Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "valuation_rate",
+   "fieldtype": "Currency",
+   "label": "Valuation Rate",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-02-18 14:15:24.380719",
+ "modified": "2020-02-21 12:24:59.797005",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Work Order Finish Item",

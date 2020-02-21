@@ -16,7 +16,9 @@ app_license = "GPL 3.0"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/ceramic/css/ceramic.css"
-# app_include_js = "/assets/ceramic/js/ceramic.js"
+app_include_js = [
+	"/assets/ceramic/js/restrict_access.js"
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/ceramic/css/ceramic.css"

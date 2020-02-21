@@ -1,0 +1,100 @@
+{
+ "allow_import": 1,
+ "creation": "2020-02-18 17:35:33.365260",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "allow",
+  "column_break_3",
+  "for_value",
+  "is_default",
+  "advanced_control_section",
+  "apply_to_all_doctypes",
+  "applicable_for"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "allow",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Allow",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "for_value",
+   "fieldtype": "Dynamic Link",
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "For Value",
+   "options": "allow",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default"
+  },
+  {
+   "fieldname": "advanced_control_section",
+   "fieldtype": "Section Break",
+   "label": "Advanced Control"
+  },
+  {
+   "default": "1",
+   "fieldname": "apply_to_all_doctypes",
+   "fieldtype": "Check",
+   "label": "Apply To All Document Types"
+  },
+  {
+   "depends_on": "eval:!doc.apply_to_all_doctypes",
+   "fieldname": "applicable_for",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Applicable For",
+   "options": "DocType"
+  }
+ ],
+ "modified": "2020-02-18 17:44:12.593608",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Backup User Permission",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "user",
+ "track_changes": 1
+}
