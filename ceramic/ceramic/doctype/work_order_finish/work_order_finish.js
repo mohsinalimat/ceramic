@@ -28,6 +28,15 @@ frappe.ui.form.on('Work Order Finish', {
 				}
 			}
 		});
+		frm.set_query("expense_account", "additional_cost", function () {
+			return {
+				query: "erpnext.controllers.queries.tax_account_query",
+				filters: {
+					"account_type": ["Tax", "Chargeable", "Income Account", "Expenses Included In Valuation", "Expenses Included In Asset Valuation"],
+					"company": frm.doc.company
+				}
+			};
+		});
 	},
 	get_item:function(frm){
 		var finish_item_list = [];
@@ -71,6 +80,7 @@ frappe.ui.form.on('Work Order Finish', {
 							var new_name = finish_item + categories[j];
 							let fi = frm.add_child("items");
 							fi.item_code = new_name;
+							// fi.uom = get_item_details(new_name);
 						}
 					}
 				}
@@ -83,6 +93,7 @@ frappe.ui.form.on('Work Order Finish', {
 						
 						let fi = frm.add_child("items");
 						fi.item_code = new_name;
+						console.log(fi.uom)
 					
 					});
 				});
@@ -114,8 +125,7 @@ frappe.ui.form.on('Work Order Finish', {
 		frm.doc.items.forEach(function (d){
 			total_Qty +=d.qty;
 			total_amount_itmes +=d.amount;
-			frappe.model.set_value(d.doctype,d.name,"basic_amount",flt(d.qty * d.basic_rate))
-			frappe.model.set_value(d.doctype,d.name,"amount",flt(d.qty * d.basic_rate))
+			frappe.model.set_value(d.doctype,d.name,"basic_amount",flt(d.qty * d.basic_rate));
 		});
 		frm.set_value("total_additional_cost",total_amount);
 		frm.set_value("total_qty",total_Qty);
@@ -233,7 +243,6 @@ frappe.ui.form.on('Work Order Finish Item', {
 		frm.events.set_basic_rate(frm, cdt, cdn);
 		var d = locals[cdt][cdn];
 		frappe.model.set_value(d.doctype, d.name, "basic_amount", flt(d.qty * d.basic_rate))
-		frappe.model.set_value(d.doctype, d.name, "amount", flt(d.qty * d.basic_rate))
 
 		// if (d.item_code) {
 		//     var args = {
@@ -279,7 +288,6 @@ frappe.ui.form.on('Work Order Finish Item', {
 		var d = locals[cdt][cdn];
 		frm.events.calculate_basic_amount(frm, d);
 		frappe.model.set_value(d.doctype, d.name, "basic_amount", flt(d.qty * d.basic_rate))
-		frappe.model.set_value(d.doctype, d.name, "amount", flt(d.qty * d.basic_rate))
 
 	},
 	uom: function (doc, cdt, cdn) {
@@ -342,3 +350,13 @@ frappe.ui.form.on('Work Order Finish Item', {
 		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "cost_center");
 	},
 });
+
+function get_item_details(item_code) {
+	if (item_code) {
+		return frappe.xcall('erpnext.stock.doctype.pick_list.pick_list.get_item_details', {
+			item_code
+		}).then(data => {
+			return data.stock_uom
+		});
+	}
+}

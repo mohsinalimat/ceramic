@@ -4,6 +4,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "expense_account",
   "description",
   "amount"
  ],
@@ -12,17 +13,27 @@
    "fieldname": "description",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Description"
+   "label": "Description",
+   "reqd": 1
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Amount"
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expense Account",
+   "options": "Account",
+   "reqd": 1
   }
  ],
  "istable": 1,
- "modified": "2020-02-19 11:25:36.601831",
+ "modified": "2020-02-21 14:42:35.850598",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Work Order Additional Cost",

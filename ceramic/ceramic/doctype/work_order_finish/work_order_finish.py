@@ -26,7 +26,7 @@ class WorkOrderFinish(Document):
 
 	def on_cancel(self):
 		self.cancel_stock_entry()
-		
+
 	def get_required_items(self):
 		bom = frappe.get_doc("BOM",self.from_bom)
 		self.required_items = []
@@ -122,6 +122,7 @@ class WorkOrderFinish(Document):
 		if self.additional_cost:
 			for row in self.additional_cost:
 				se.append("additional_costs",{
+					'expense_account': row.expense_account,
 					'description': row.description,
 					'amount': row.amount
 				})
@@ -141,6 +142,7 @@ class WorkOrderFinish(Document):
 		
 		se.db_set('reference_doctype','')
 		se.db_set('reference_docname','')
+
 
 	def get_item_details(self, args=None, for_update=False):
 		item = frappe.db.sql("""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
@@ -203,3 +205,7 @@ class WorkOrderFinish(Document):
 			# args.batch_no = get_batch_no(args['item_code'], args['s_warehouse'], args['qty'])
 
 		return ret
+
+	def update_planned_qty(self):
+		pass
+
