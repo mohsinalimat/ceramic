@@ -138,6 +138,7 @@ doctype_js = {
 	"Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
 	"BOM": "public/js/doctype_js/bom.js",
 	"Work Order": "public/js/doctype_js/work_order.js",
+	"Stock Entry": "public/js/doctype_js/stock_entry.js",
 }
 
 doc_events = {

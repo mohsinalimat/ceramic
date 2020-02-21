@@ -39,6 +39,12 @@ frappe.ui.form.on('Work Order Finish', {
 		});
 	},
 	get_item:function(frm){
+		if(!frm.doc.items){
+			frm.doc.items = []
+		}
+		if(!frm.doc.finish_item){
+			frm.doc.finish_item = []
+		}
 		var finish_item_list = [];
 		var item_list = [];
 		var categories = ['Premium','Golden','Economy','Classic'];
@@ -78,9 +84,17 @@ frappe.ui.form.on('Work Order Finish', {
 					if(count === 0){
 						for(var j = 0; j < categories.length; j++){
 							var new_name = finish_item + categories[j];
-							let fi = frm.add_child("items");
-							fi.item_code = new_name;
-							// fi.uom = get_item_details(new_name);
+							let item_row = frm.add_child("items");
+							frappe.model.set_value(item_row.doctype, item_row.name , 'item_code', new_name);
+							frappe.model.set_value(item_row.doctype, item_row.name , 'qty', 1);
+							// console.log(item_row.doctype);
+							// console.log(item_row.name);
+							// item_row.item_code = new_name;
+							get_item_details(item_row.item_code).then(data => {
+								frappe.model.set_value(item_row.doctype, item_row.name , 'uom', data.stock_uom);
+								// frappe.model.set_value(item_row.doctype, item_row.name , 'stock_uom', data.stock_uom);
+								frappe.model.set_value(item_row.doctype, item_row.name , 'conversion_factor', 1);
+							});
 						}
 					}
 				}
@@ -91,10 +105,16 @@ frappe.ui.form.on('Work Order Finish', {
 						
 						var new_name = originial_item["item_detail"].replace(originial_item["item_detail"].split("-").splice(-1),item);
 						
-						let fi = frm.add_child("items");
-						fi.item_code = new_name;
-						console.log(fi.uom)
-					
+						let item_row = frm.add_child("items");
+						frappe.model.set_value(item_row.doctype, item_row.name , 'item_code', new_name);
+						frappe.model.set_value(item_row.doctype, item_row.name , 'qty', 1);
+						// console.log(item_row.doctype);
+						// console.log(item_row.name);
+						get_item_details(item_row.item_code).then(data => {
+							frappe.model.set_value(item_row.doctype, item_row.name , 'uom', data.stock_uom);
+							// frappe.model.set_value(item_row.doctype, item_row.name , 'stock_uom', data.stock_uom);
+							frappe.model.set_value(item_row.doctype, item_row.name , 'conversion_factor', 1);
+						});
 					});
 				});
 				frm.refresh_field('items');
@@ -308,41 +328,35 @@ frappe.ui.form.on('Work Order Finish Item', {
 			});
 		}
 	},
-	item_code: function (frm, cdt, cdn) {
-		var d = locals[cdt][cdn];
-		if (d.item_code) {
-			var args = {
-				'item_code': d.item_code,
-				'warehouse': cstr(d.s_warehouse) || cstr(d.t_warehouse),
-				'transfer_qty': d.transfer_qty,
-				'serial_no': d.serial_no,
-				'bom_no': d.bom_no,
-				'expense_account': d.expense_account,
-				'cost_center': d.cost_center,
-				'company': frm.doc.company,
-				'qty': d.qty,
-				'voucher_type': frm.doc.doctype,
-				'voucher_no': d.name,
-				'allow_zero_valuation': 1,
-			};
+	// item_code: function (frm, cdt, cdn) {
+	// 	var d = locals[cdt][cdn];
+	// 	if (d.item_code) {
+	// 		var args = {
+	// 			'item_code': d.item_code,
+	// 			'warehouse': cstr(d.s_warehouse) || cstr(d.t_warehouse),
+	// 			'serial_no': d.serial_no,
+	// 			'expense_account': d.expense_account,
+	// 			'cost_center': d.cost_center,
+	// 			'company': frm.doc.company,
+	// 			'qty': d.qty,
+	// 		};
 
-			return frappe.call({
-				doc: frm.doc,
-				method: "get_item_details",
-				args: args,
-				callback: function (r) {
-					if (r.message) {
-						var d = locals[cdt][cdn];
-						$.each(r.message, function (k, v) {
-							d[k] = v;
-						});
-						frm.events.calculate_amount(frm);
-						refresh_field("items");
-					}
-				}
-			});
-		}
-	},
+	// 		return frappe.call({
+	// 			doc: frm.doc,
+	// 			method: "get_item_details",
+	// 			args: args,
+	// 			callback: function (r) {
+	// 				if (r.message) {
+	// 					$.each(r.message, function (key, value) {
+	// 						frappe.model.set_value(d.doctype,d.name,key,value);
+	// 					});
+	// 					frm.events.calculate_amount(frm);
+	// 					refresh_field("items");
+	// 				}
+	// 			}
+	// 		});
+	// 	}
+	// },
 	expense_account: function (frm, cdt, cdn) {
 		erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "expense_account");
 	},
@@ -355,8 +369,6 @@ function get_item_details(item_code) {
 	if (item_code) {
 		return frappe.xcall('erpnext.stock.doctype.pick_list.pick_list.get_item_details', {
 			item_code
-		}).then(data => {
-			return data.stock_uom
-		});
+		})
 	}
 }
