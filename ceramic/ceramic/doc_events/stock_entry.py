@@ -3,44 +3,50 @@ from frappe import _
 from frappe.utils import flt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 
+def before_save(self, method):
+	abbr = frappe.db.get_value('Company',self.company,'abbr')
+	if self.is_opening == 'Yes':
+		for row in self.items:
+			row.expense_account = f"Temporary Opening - {abbr}"
+
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
 
 def before_submit(self,method):
-    StockEntry.update_work_order = update_work_order
+	StockEntry.update_work_order = update_work_order
 
 def before_cancel(self,method):
-    StockEntry.update_work_order = update_work_order  
+	StockEntry.update_work_order = update_work_order  
 
 def validate_finished_goods(self):
-    """validation: finished good quantity should be same as manufacturing quantity"""
-    if not self.work_order: return
+	"""validation: finished good quantity should be same as manufacturing quantity"""
+	if not self.work_order: return
 
-    items_with_target_warehouse = []
-    allowance_percentage = flt(frappe.db.get_single_value("Manufacturing Settings",
-        "overproduction_percentage_for_work_order"))
+	items_with_target_warehouse = []
+	allowance_percentage = flt(frappe.db.get_single_value("Manufacturing Settings",
+		"overproduction_percentage_for_work_order"))
 
-    production_item, wo_qty = frappe.db.get_value("Work Order",
-        self.work_order, ["production_item", "qty"])
+	production_item, wo_qty = frappe.db.get_value("Work Order",
+		self.work_order, ["production_item", "qty"])
 
-    for d in self.get('items'):
-        if (self.purpose != "Send to Subcontractor" and d.bom_no
-            and flt(d.transfer_qty) > flt(self.fg_completed_qty) and d.item_code == production_item):
-            frappe.throw(_("Quantity in row {0} ({1}) must be same as manufactured quantity {2}"). \
-                format(d.idx, d.transfer_qty, self.fg_completed_qty))
+	for d in self.get('items'):
+		if (self.purpose != "Send to Subcontractor" and d.bom_no
+			and flt(d.transfer_qty) > flt(self.fg_completed_qty) and d.item_code == production_item):
+			frappe.throw(_("Quantity in row {0} ({1}) must be same as manufactured quantity {2}"). \
+				format(d.idx, d.transfer_qty, self.fg_completed_qty))
 
-        if self.work_order and self.purpose == "Manufacture" and d.t_warehouse:
-            items_with_target_warehouse.append(d.item_code)
+		if self.work_order and self.purpose == "Manufacture" and d.t_warehouse:
+			items_with_target_warehouse.append(d.item_code)
 
-    if self.work_order and self.purpose == "Manufacture":
-        allowed_qty = wo_qty + (allowance_percentage/100 * wo_qty)
-        if self.fg_completed_qty > allowed_qty:
-            frappe.throw(_("For quantity {0} should not be greater than work order quantity {1}")
-                .format(flt(self.fg_completed_qty), wo_qty))
+	if self.work_order and self.purpose == "Manufacture":
+		allowed_qty = wo_qty + (allowance_percentage/100 * wo_qty)
+		if self.fg_completed_qty > allowed_qty:
+			frappe.throw(_("For quantity {0} should not be greater than work order quantity {1}")
+				.format(flt(self.fg_completed_qty), wo_qty))
 
-        # if production_item not in items_with_target_warehouse:
-        # 	frappe.throw(_("Finished Item {0} must be entered for Manufacture type entry")
-        # 		.format(production_item))
+		# if production_item not in items_with_target_warehouse:
+		# 	frappe.throw(_("Finished Item {0} must be entered for Manufacture type entry")
+		# 		.format(production_item))
 
 def update_work_order(self):
 		def _validate_work_order(pro_doc):

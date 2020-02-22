@@ -154,16 +154,18 @@ def restrict_access():
 				pass
 	frappe.set_value("Global Defaults", "Global Defaults", "restricted_access", 1)
 	frappe.db.commit()
+	frappe.msgprint("Restricted Access")
 
 @frappe.whitelist()
 def reverse_restrict_access():
 	permission_list = frappe.get_all("Backup User Permission")
 	for item in permission_list:
+		print(item['name'])
 		doc = get_mapped_doc("Backup User Permission", item['name'], {
-			"User Permission": {
+			"Backup User Permission": {
 				"doctype": "User Permission",
 			}
-		}, ignore_permissions = True)
+		})
 
 		doc.save()
 		
@@ -176,3 +178,5 @@ def reverse_restrict_access():
 
 	frappe.set_value("Global Defaults", "Global Defaults", "restricted_access", 0)
 	frappe.db.commit()
+
+	frappe.msgprint("All Permission Reversed")
