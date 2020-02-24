@@ -18,6 +18,7 @@ cur_frm.fields_dict.target_warehouse.get_query = function (doc) {
 	}
 }
 
+
 frappe.ui.form.on('Work Order Finish', {
 	setup: function(frm){
 		frm.set_query("finish_item", function() {

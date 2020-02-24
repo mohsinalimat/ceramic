@@ -10,10 +10,7 @@ class TileItemCreationTool(Document):
 
 	def on_submit(self):
 		self.create_items()
-
-	def before_save(self):
-		pass
-
+	
 	def create_items(self):
 		# Last changed
 		categories = ['Premium','Golden','Economy','Classic']
@@ -23,7 +20,8 @@ class TileItemCreationTool(Document):
 			item.tile_size = self.tile_size
 			item.tile_surface = self.tile_surface
 			item.stock_uom = self.uom
-			item.item_code = self.item_name + "-" + self.tile_surface + "-" + self.tile_size + "-" + category
+			item.item_code = self.item_name + "-" + category
+			#item.item_code = self.item_name + "-" + self.tile_surface or '' + "-" + self.tile_size or '' + "-" + category
 			if self.item_series:
 				each_series = self.item_series.replace(self.item_series.split("-")[-1], category)
 				item.item_series = each_series

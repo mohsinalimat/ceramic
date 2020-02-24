@@ -129,6 +129,11 @@ app_include_js = [
 # 	"Task": "ceramic.task.get_dashboard_data"
 # }
 
+app_include_css = [
+	"/assets/engineering/css/restricted.css",
+	"/assets/permission/css/permission.min.css",
+]
+
 doctype_js = {
 	"Delivery Note": "public/js/doctype_js/delivery_note.js",
 	"Sales Invoice": "public/js/doctype_js/sales_invoice.js",
@@ -180,12 +185,26 @@ doc_events = {
 	},
 	"Warehouse": {
 		"validate": "ceramic.ceramic.doc_events.warehouse.before_save",
+		"before_rename": "ceramic.ceramic.doc_events.warehouse.before_rename",
+	},
+	"Cost Center": {
+		"validate": "ceramic.ceramic.doc_events.cost_center.before_save",
+	},
+	"Account": {
+		"validate": "ceramic.ceramic.doc_events.account.before_save",
 	},
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",
 		'before_submit': "ceramic.ceramic.doc_events.stock_entry.before_submit",
 		'before_cancel': "ceramic.ceramic.doc_events.stock_entry.before_cancel",
 		'before_save': "ceramic.ceramic.doc_events.stock_entry.before_save",
+		'validate': "ceramic.ceramic.doc_events.stock_entry.validate",
+		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
+		'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
+	},
+	"Purchase Receipt":{
+		'on_submit': "ceramic.batch_creation.pr_on_sumbit",
+		'on_cancel': "ceramic.batch_creation.pr_on_cancelt"
 	},
 	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",

@@ -3,11 +3,14 @@ from frappe import _
 from frappe.utils import flt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 
-def before_save(self, method):
+def before_save(self, method):	
 	abbr = frappe.db.get_value('Company',self.company,'abbr')
 	if self.is_opening == 'Yes':
 		for row in self.items:
 			row.expense_account = f"Temporary Opening - {abbr}"
+
+def validate(self,method):
+	pass
 
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
@@ -68,3 +71,14 @@ def update_work_order(self):
 				pro_doc.run_method("update_work_order_qty")
 				# if self.purpose == "Manufacture":
 				# 	pro_doc.run_method("update_planned_qty")
+
+@frappe.whitelist()
+def get_product_price(doc):
+	se = frappe.get_doc("Stock Entry", doc)
+	if se.stock_entry_type == 'Material Receipt' and se.is_opening != "Yes" and se.price_list:
+		for row in se.items:
+			rate = frappe.db.get_value("Item Price",{'price_list':se.price_list,'buying':1,'item_code':row.item_code},'price_list_rate')
+			if not rate:
+				frappe.throw(_("ROW: {}  Price not found for item <b>{}</b> and Price list <b>{}/b>").format(row.idx,row.item_code,se.price_list))
+			else:
+				return rate

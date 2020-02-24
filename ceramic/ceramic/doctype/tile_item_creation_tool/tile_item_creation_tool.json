@@ -13,13 +13,16 @@
   "column_break_6",
   "uom",
   "item_group",
-  "amended_from"
+  "amended_from",
+  "section_break_10",
+  "item_defaults"
  ],
  "fields": [
   {
    "bold": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
+   "in_global_search": 1,
    "label": "Item Name",
    "unique": 1
   },
@@ -31,6 +34,7 @@
    "options": "Item"
   },
   {
+   "fetch_from": "item_series.tile_surface",
    "fieldname": "tile_surface",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -38,6 +42,7 @@
    "options": "Tile Surface"
   },
   {
+   "fetch_from": "item_series.tile_size",
    "fieldname": "tile_size",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -52,6 +57,7 @@
    "label": "Maintain Stock"
   },
   {
+   "fetch_from": "item_series.stock_uom",
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
@@ -59,11 +65,13 @@
    "reqd": 1
   },
   {
+   "fetch_from": "item_series.item_group",
    "fieldname": "item_group",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Item Group",
-   "options": "Item Group"
+   "options": "Item Group",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_6",
@@ -77,10 +85,20 @@
    "options": "Tile Item Creation Tool",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_10",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_defaults",
+   "fieldtype": "Table",
+   "label": "Item Defaults",
+   "options": "Item Creation Defaults"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-02-21 14:03:24.920717",
+ "modified": "2020-02-24 11:44:59.196346",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",
@@ -96,6 +114,7 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
@@ -112,7 +131,6 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "track_changes": 1
