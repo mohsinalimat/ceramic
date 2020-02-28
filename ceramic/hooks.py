@@ -227,4 +227,14 @@ doc_events = {
 	}
 }
 
-fixtures = ['Custom Field']	
+fixtures = ['Custom Field']
+
+from erpnext.stock.stock_ledger import update_entries_after
+from ceramic.override_default_class_method import raise_exceptions
+
+from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from ceramic.override_default_class_method import set_actual_qty
+
+# override default class method
+update_entries_after.raise_exceptions = raise_exceptions
+StockEntry.set_actual_qty = set_actual_qty

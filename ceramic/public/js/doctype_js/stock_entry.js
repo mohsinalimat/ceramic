@@ -151,45 +151,43 @@ function get_item_details(item_code) {
 		})
 	}
 }
+// Duplicate button
+// frappe.ui.form.on('Stock Entry Detail', {
+// 	duplicate : function (frm, cdt, cdn){
+// 		let d = locals[cdt][cdn];
+// 		doc = frappe.get_doc('Stock Entry Detail', d.item_code)
+// 		doc.append('items', {
+// 			'item_code': 'item_code',
+// 			'item_name': 'item_name',
+// 	})
+// 		// frappe.model.with_doc("Stock Entry Detail", frm.doc.quality_inspection_name, function() {
+//         //     var qmtable= frappe.model.get_doc("Stock Entry Detail", frm.doc.quality_inspection_name)
+//         //     $.each(qmtable.item_quality_inspection_parameter, function(index, row){
+//         //         let d = frm.add_child("item_quality_inspection_parameter");
+//         //         d.specification=row.specification;
+//         //         d.value= row.value;
+//         //     })
+//         // });
 
-frappe.ui.form.on('Stock Entry Detail', {
-	duplicate : function (frm, cdt, cdn){
-		let d = locals[cdt][cdn];
-		doc = frappe.get_doc('Stock Entry Detail', d.item_code)
-		doc.append('items', {
-		'company': 'company_name',
-		'item_code': 'item_code',
-		'item_name': 'item_name',
-		'field': 'field_value'
-})
-		// frappe.model.with_doc("Stock Entry Detail", frm.doc.quality_inspection_name, function() {
-        //     var qmtable= frappe.model.get_doc("Stock Entry Detail", frm.doc.quality_inspection_name)
-        //     $.each(qmtable.item_quality_inspection_parameter, function(index, row){
-        //         let d = frm.add_child("item_quality_inspection_parameter");
-        //         d.specification=row.specification;
-        //         d.value= row.value;
-        //     })
-        // });
-
-		// console.log("duplicate");
-		// frappe.model.with_doc("Stock Entry Detail", frm.doc.items.item_code, function() {
-		// 	let d = frm.add_child("Stock_entry_detail");
-		// 	console.log(d.item_code);
-		// })
+// 		// console.log("duplicate");
+// 		// frappe.model.with_doc("Stock Entry Detail", frm.doc.items.item_code, function() {
+// 		// 	let d = frm.add_child("Stock_entry_detail");
+// 		// 	console.log(d.item_code);
+// 		// })
 		
 
-		// let d = locals[cdt][cdn];
-		// var new_item = frappe.model.copy_doc(frmSe);
-		// console.log(new_item);
-		// if(new_item.item_name===new_item.item_code) {
-		// 	new_item.item_name = null;
-		// }
-		// if(new_item.description===new_item.description) {
-		// 	new_item.description = null;
-		// }
-		// frappe.set_route('Form', 'Stock Entry Detail', new_item.name);
-	}
-});
+// 		// let d = locals[cdt][cdn];
+// 		// var new_item = frappe.model.copy_doc(frmSe);
+// 		// console.log(new_item);
+// 		// if(new_item.item_name===new_item.item_code) {
+// 		// 	new_item.item_name = null;
+// 		// }
+// 		// if(new_item.description===new_item.description) {
+// 		// 	new_item.description = null;
+// 		// }
+// 		// frappe.set_route('Form', 'Stock Entry Detail', new_item.name);
+// 	}
+// });
 
 // add_new_row(idx, callback, show, copy_doc) {
 // 	if(this.is_editable()) {
