@@ -141,12 +141,28 @@ doctype_js = {
 	"Payment Entry": "public/js/doctype_js/payment_entry.js",
 	"Purchase Order": "public/js/doctype_js/purchase_order.js",
 	"Purchase Receipt": "public/js/doctype_js/purchase_receipt.js",
+	"Item": "public/js/doctype_js/item.js",
 	"BOM": "public/js/doctype_js/bom.js",
 	"Work Order": "public/js/doctype_js/work_order.js",
 	"Stock Entry": "public/js/doctype_js/stock_entry.js",
 }
 
 doc_events = {
+	"Account": {
+		"validate": "ceramic.ceramic.doc_events.account.validate",
+		"on_trash": "ceramic.ceramic.doc_events.account.on_trash",
+	},
+	"Cost Center": {
+		"after_rename": "ceramic.ceramic.doc_events.warehouse.after_rename",
+		"validate": "ceramic.ceramic.doc_events.cost_center.validate",
+		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
+	},
+	"Warehouse": {
+		"after_rename": "ceramic.ceramic.doc_events.warehouse.after_rename",
+		"validate": "ceramic.ceramic.doc_events.warehouse.validate",
+		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
+	},
+	
 	"BOM": {
 		"before_naming": "ceramic.ceramic.doc_events.bom.before_naming",
 		"before_validate": "ceramic.ceramic.doc_events.bom.before_validate",
@@ -154,58 +170,58 @@ doc_events = {
 		"before_submit": "ceramic.ceramic.doc_events.bom.before_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.bom.before_update_after_submit"
 	},
+	
 	"Work Order":{
 		'before_submit': "ceramic.ceramic.doc_events.work_order.before_submit",
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
+	
 	"Sales Invoice": {
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
 		"before_naming": "ceramic.api.before_naming",
 	},
+	
 	"Delivery Note": {
 		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
 		"before_naming": "ceramic.api.before_naming",
 	},
+	
 	"Sales Order": {
 		"before_naming": "ceramic.api.before_naming",
 	},
+	
 	"Payment Entry": {
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
 		"before_naming": "ceramic.api.before_naming",
 	},
+	
 	"Purchase Invoice": {
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
 		# "before_naming": "ceramic.api.before_naming",
 	},
-	"Warehouse": {
-		"validate": "ceramic.ceramic.doc_events.warehouse.before_save",
-		"before_rename": "ceramic.ceramic.doc_events.warehouse.before_rename",
-	},
-	"Cost Center": {
-		"validate": "ceramic.ceramic.doc_events.cost_center.before_save",
-	},
-	"Account": {
-		"validate": "ceramic.ceramic.doc_events.account.before_save",
-	},
+	
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",
 		'before_submit': "ceramic.ceramic.doc_events.stock_entry.before_submit",
 		'before_cancel': "ceramic.ceramic.doc_events.stock_entry.before_cancel",
+		# 'on_cancel': "ceramic.ceramic.doc_events.stock_entry.on_cancel",
 		'before_save': "ceramic.ceramic.doc_events.stock_entry.before_save",
 		'validate': "ceramic.ceramic.doc_events.stock_entry.validate",
 		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
-		'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
+		# 'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
 	},
+	
 	"Purchase Receipt":{
 		'on_submit': "ceramic.batch_creation.pr_on_sumbit",
-		'on_cancel': "ceramic.batch_creation.pr_on_cancelt"
+		'on_cancel': "ceramic.batch_creation.pr_on_cancel"
 	},
+	
 	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
 	}

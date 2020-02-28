@@ -12,6 +12,15 @@ cur_frm.fields_dict.item_defaults.grid.get_field("default_warehouse").get_query 
 	}
 };
 
+cur_frm.fields_dict.item_series.get_query = function(doc) {
+	return {
+		filters: {
+			"item_name": ["LIKE", "%Premium%"],
+			"authority": "Authorized",
+		}
+	}
+};
+
 frappe.ui.form.on('Tile Item Creation Tool', {
 	// refresh: function(frm) {
 
