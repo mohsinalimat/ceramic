@@ -211,3 +211,19 @@ function get_item_details(item_code) {
 
 // 	return d;
 // }
+
+
+frappe.ui.form.on('Stock Entry Detail', {
+	duplicate: function(frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		let m = frm.add_child("items");
+		frappe.model.set_value(m.doctype, m.name, 's_warehouse', d.s_warehouse);
+		frappe.model.set_value(m.doctype, m.name, 's_warehouse', d.s_warehouse);
+		frappe.model.set_value(m.doctype, m.name, 'item_code', d.item_code);
+		frappe.model.set_value(m.doctype, m.name, 'packing_type', d.packing_type);
+		frappe.model.set_value(m.doctype, m.name, 'lot_no', d.lot_no);
+		frappe.model.set_value(m.doctype, m.name, 'rate', d.rate);
+		
+		frm.refresh();
+	},
+});
