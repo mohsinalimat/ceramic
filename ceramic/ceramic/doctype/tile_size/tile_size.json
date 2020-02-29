@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:tile_size",
  "creation": "2020-01-10 11:43:59.061074",
  "doctype": "DocType",
@@ -33,8 +33,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 18:00:04.552792",
+ "modified": "2020-02-29 12:52:41.077813",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Size",

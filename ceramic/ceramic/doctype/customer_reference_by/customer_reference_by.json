@@ -1,4 +1,5 @@
 {
+ "allow_rename": 1,
  "autoname": "field:reference_name",
  "creation": "2020-01-30 19:57:45.451695",
  "doctype": "DocType",
@@ -38,7 +39,7 @@
    "label": "Email Address"
   }
  ],
- "modified": "2020-01-30 19:57:45.451695",
+ "modified": "2020-02-29 12:53:48.938180",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Customer Reference By",

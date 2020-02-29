@@ -1,9 +1,11 @@
 {
+ "autoname": "naming_series:",
  "creation": "2020-02-24 11:18:19.617129",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "naming_series",
   "company",
   "account",
   "party_type",
@@ -63,9 +65,15 @@
   {
    "fieldname": "column_break_6",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "ACR-.YY.-"
   }
  ],
- "modified": "2020-02-24 15:39:02.463165",
+ "modified": "2020-02-29 12:48:08.262090",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Account Reco",

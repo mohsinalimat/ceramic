@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:price",
  "creation": "2020-01-10 13:34:01.639519",
  "doctype": "DocType",
@@ -18,8 +18,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 13:34:19.618690",
+ "modified": "2020-02-29 12:54:50.768683",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Price",

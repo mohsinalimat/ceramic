@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:body_composition",
  "creation": "2020-01-10 11:35:46.403160",
  "doctype": "DocType",
@@ -18,8 +18,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 11:39:41.884269",
+ "modified": "2020-02-29 12:56:45.461261",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Body Composition",

@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:surface",
  "creation": "2020-01-10 12:41:29.797392",
  "doctype": "DocType",
@@ -18,8 +18,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 12:41:55.679394",
+ "modified": "2020-02-29 12:56:18.758107",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Surface",

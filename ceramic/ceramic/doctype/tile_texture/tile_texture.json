@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:texture",
  "creation": "2020-01-10 12:44:50.145333",
  "doctype": "DocType",
@@ -18,8 +18,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 12:45:07.847930",
+ "modified": "2020-02-29 12:56:05.286427",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Texture",

@@ -1,5 +1,5 @@
 {
- "actions": [],
+ "allow_rename": 1,
  "autoname": "field:anti_slip_properties",
  "creation": "2020-01-10 13:37:44.042542",
  "doctype": "DocType",
@@ -18,8 +18,7 @@
    "unique": 1
   }
  ],
- "links": [],
- "modified": "2020-01-10 13:37:58.684843",
+ "modified": "2020-02-29 12:54:23.107812",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Anti Slip Properties",

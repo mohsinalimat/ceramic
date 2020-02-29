@@ -29,7 +29,7 @@ def make_batches(self, warehouse_field):
 				batch.item = row.item_code
 				batch.supplier = getattr(self, 'supplier', None)
 				batch.lot_no = cstr(row.lot_no)
-				batch.packaging_material = cstr(row.packaging_material)
+				batch.packing_type = cstr(row.packing_type)
 				batch.valuation_rate = flt(row.valuation_rate, 4)
 				batch.posting_date = datetime.datetime.strptime(self.posting_date, "%Y-%m-%d").strftime("%y%m%d")
 				batch.actual_quantity = flt(row.qty * row.conversion_factor)

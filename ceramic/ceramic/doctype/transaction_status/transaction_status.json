@@ -1,4 +1,5 @@
 {
+ "allow_rename": 1,
  "autoname": "field:transaction_status",
  "creation": "2020-02-24 11:47:13.871301",
  "doctype": "DocType",
@@ -17,7 +18,7 @@
    "unique": 1
   }
  ],
- "modified": "2020-02-24 11:47:33.825421",
+ "modified": "2020-02-29 12:48:38.617860",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Transaction Status",
