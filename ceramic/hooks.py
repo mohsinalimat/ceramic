@@ -130,8 +130,7 @@ app_include_js = [
 # }
 
 app_include_css = [
-	"/assets/engineering/css/restricted.css",
-	"/assets/permission/css/permission.min.css",
+	"/assets/css/ceramic.min.css",
 ]
 
 doctype_js = {

@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
+from frappe.model.utils import get_fetch_values
 
 @frappe.whitelist()
 def on_submit(self, test):

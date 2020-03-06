@@ -1,4 +1,5 @@
 {
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:shape",
  "creation": "2020-01-10 12:52:28.531028",
@@ -18,7 +19,7 @@
    "unique": 1
   }
  ],
- "modified": "2020-02-29 12:55:15.138696",
+ "modified": "2020-03-02 14:32:11.156600",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Shape",

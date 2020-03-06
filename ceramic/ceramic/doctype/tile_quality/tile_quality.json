@@ -1,28 +1,34 @@
 {
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:body_composition",
- "creation": "2020-01-10 11:35:46.403160",
+ "autoname": "field:tile_quality",
+ "creation": "2020-03-04 17:45:44.390014",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "body_composition"
+  "tile_quality",
+  "tile_grade"
  ],
  "fields": [
   {
-   "fieldname": "body_composition",
+   "fieldname": "tile_quality",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Body Composition",
+   "label": "Tile Quality",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "tile_grade",
+   "fieldtype": "Data",
+   "label": "Tile Grade"
   }
  ],
- "modified": "2020-03-02 14:23:38.783042",
+ "modified": "2020-03-04 17:45:56.258085",
  "modified_by": "Administrator",
  "module": "Ceramic",
- "name": "Tile Body Composition",
+ "name": "Tile Quality",
  "owner": "Administrator",
  "permissions": [
   {

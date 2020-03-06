@@ -1,5 +1,5 @@
 {
-	"css/restricted.css": [
+	"css/ceramic.min.css": [
 		"public/css/restricted.css"
 	]
 }

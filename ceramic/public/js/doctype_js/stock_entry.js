@@ -3,7 +3,7 @@ frappe.ui.form.on('Stock Entry', {
 		frm.set_query("finish_item", function () {
 			return {
 				filters: {
-					"name": ["LIKE", "%Premium%"],
+					"tile_quality": "Premium",
 					"is_stock_item": 1,
 				}
 			}
