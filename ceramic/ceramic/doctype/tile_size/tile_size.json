@@ -9,7 +9,8 @@
  "field_order": [
   "length",
   "width",
-  "tile_size"
+  "tile_size",
+  "size_code"
  ],
  "fields": [
   {
@@ -32,9 +33,15 @@
    "label": "Tile Size",
    "read_only": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "size_code",
+   "fieldtype": "Data",
+   "label": "Size Code",
+   "reqd": 1
   }
  ],
- "modified": "2020-03-02 14:08:07.930771",
+ "modified": "2020-03-06 11:17:39.687097",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Size",

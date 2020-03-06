@@ -1,0 +1,38 @@
+{
+ "creation": "2020-03-06 11:36:10.418756",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tile_quality",
+  "item"
+ ],
+ "fields": [
+  {
+   "fieldname": "tile_quality",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tile Quality",
+   "options": "Tile Quality"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-03-06 12:38:48.663468",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Tile Item TIle Quality",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -7,14 +7,30 @@
  "engine": "InnoDB",
  "field_order": [
   "item_name",
+  "item_design",
+  "is_item_series",
   "item_series",
-  "tile_surface",
-  "tile_size",
   "maintain_stock",
   "column_break_6",
   "uom",
   "item_group",
   "amended_from",
+  "item_detail_section",
+  "tile_body_composition",
+  "tile_use",
+  "tile_size",
+  "tile_type",
+  "tile_surface",
+  "tile_texture",
+  "tile_technical",
+  "column_break_18",
+  "tile_color",
+  "tile_shape",
+  "tile_price",
+  "tile_thickness",
+  "tile_anti_slip_properties",
+  "section_break_12",
+  "tile_quality",
   "section_break_10",
   "item_defaults"
  ],
@@ -25,9 +41,11 @@
    "fieldtype": "Data",
    "in_global_search": 1,
    "label": "Item Name",
+   "read_only": 1,
    "unique": 1
   },
   {
+   "depends_on": "eval:!doc.is_item_series",
    "fieldname": "item_series",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -35,27 +53,32 @@
    "options": "Item"
   },
   {
-   "fetch_from": "item_series.tile_surface",
+   "fetch_from": "item_group.tile_surface",
+   "fetch_if_empty": 1,
    "fieldname": "tile_surface",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tile Surface",
-   "options": "Tile Surface"
+   "options": "Tile Surface",
+   "reqd": 1
   },
   {
-   "fetch_from": "item_series.tile_size",
+   "fetch_from": "item_group.tile_size",
+   "fetch_if_empty": 1,
    "fieldname": "tile_size",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Tile Size",
-   "options": "Tile Size"
+   "options": "Tile Size",
+   "reqd": 1
   },
   {
    "default": "0",
    "fieldname": "maintain_stock",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Maintain Stock"
+   "label": "Maintain Stock",
+   "reqd": 1
   },
   {
    "fetch_from": "item_series.stock_uom",
@@ -96,10 +119,121 @@
    "fieldtype": "Table",
    "label": "Item Defaults",
    "options": "Item Creation Defaults"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_item_series",
+   "fieldtype": "Check",
+   "label": "Is Item Series"
+  },
+  {
+   "fieldname": "item_design",
+   "fieldtype": "Data",
+   "label": "Item Design"
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tile_quality",
+   "fieldtype": "Table",
+   "label": "Tile Quality",
+   "options": "Tile Item TIle Quality"
+  },
+  {
+   "fetch_from": "item_group.tile_type",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_type",
+   "fieldtype": "Link",
+   "label": "Tile Type",
+   "options": "Tile Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_detail_section",
+   "fieldtype": "Section Break",
+   "label": "Item Detail"
+  },
+  {
+   "fetch_from": "item_group.tile_body_composition",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_body_composition",
+   "fieldtype": "Link",
+   "label": "Tile Body Composition",
+   "options": "Tile Body Composition"
+  },
+  {
+   "fetch_from": "item_group.tile_use",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_use",
+   "fieldtype": "Link",
+   "label": "Tile Use",
+   "options": "Tile Use"
+  },
+  {
+   "fetch_from": "item_group.tile_texture",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_texture",
+   "fieldtype": "Link",
+   "label": "Tile Texture",
+   "options": "Tile Texture"
+  },
+  {
+   "fetch_from": "item_group.tile_technical",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_technical",
+   "fieldtype": "Link",
+   "label": "Tile Technical",
+   "options": "Tile Technical"
+  },
+  {
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "item_group.tile_color",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_color",
+   "fieldtype": "Link",
+   "label": "Tile Color",
+   "options": "Tile Color"
+  },
+  {
+   "fetch_from": "item_group.tile_shape",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_shape",
+   "fieldtype": "Link",
+   "label": "Tile Shape",
+   "options": "Tile Shape"
+  },
+  {
+   "fetch_from": "item_group.tile_price",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_price",
+   "fieldtype": "Link",
+   "label": "Tile Price",
+   "options": "Tile Price"
+  },
+  {
+   "fetch_from": "item_group.tile_thickness",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_thickness",
+   "fieldtype": "Link",
+   "label": "Tile Thickness",
+   "options": "Tile Thickness"
+  },
+  {
+   "fetch_from": "item_group.tile_anti_slip_properties",
+   "fetch_if_empty": 1,
+   "fieldname": "tile_anti_slip_properties",
+   "fieldtype": "Link",
+   "label": "Tile Anti Slip Properties",
+   "options": "Tile Anti Slip Properties"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-02-29 12:49:08.900837",
+ "modified": "2020-03-06 14:49:32.422692",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",
