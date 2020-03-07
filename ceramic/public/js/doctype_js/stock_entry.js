@@ -50,7 +50,6 @@ frappe.ui.form.on('Stock Entry', {
 				}
 				
 				frm.doc.items = new_item_list;
-				console.log(new_item_list)
 				for (i = 0; i < frm.doc.finish_item.length; i++) {
 					var count = 0;
 					var finish_item = frm.doc.finish_item[i].item_detail;
@@ -65,11 +64,14 @@ frappe.ui.form.on('Stock Entry', {
 					if (count === 0) {
 						for (var j = 0; j < categories.length; j++) {
 							var new_name = finish_item.replace('-I-', categories[j]);
-							let item_row = frm.add_child("items");
-							item_row.item_code = new_name;
-							frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 1);
-							get_item_details(item_row.item_code).then(data => {
+							let item_row = frappe.model.add_child(frm.doc,'Stock Entry Detail','items');
+							// item_row.item_code = new_name;
+							frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+							frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
+							get_item_details(new_name).then(data => {
+								console.log(data)
 								frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
+								frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
 								frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
 							});
 						}
@@ -82,11 +84,15 @@ frappe.ui.form.on('Stock Entry', {
 						
 						var new_name = originial_item["item_detail"].	replace('-I-',item);
 						
-						let item_row = frm.add_child("items");
-						item_row.item_code = new_name
-						frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 1);
-						get_item_details(item_row.item_code).then(data => {
+						let item_row = frappe.model.add_child(frm.doc,'Stock Entry Detail','items');
+						// item_row.item_code = new_name;
+
+						frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+						frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
+						get_item_details(new_name).then(data => {
+							console.log(data)
 							frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
+							frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
 							frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
 						});
 					});
@@ -104,6 +110,7 @@ frappe.ui.form.on('Stock Entry', {
 		frm.refresh_field('items');
 	},
 	before_validate: function (frm) {
+		console.log("Before Validate get price");
 		frm.doc.items.forEach(function (d) { 
 			frappe.call({
 				method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',

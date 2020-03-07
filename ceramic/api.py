@@ -124,7 +124,7 @@ def set_organization_details(out, party, party_type):
 def restrict_access():
 	role_permission_list = frappe.get_all("User Permission", filters = {
 		"allow": "Authority", "for_value": "Unauthorized"
-	}, fields = ['name', 'system_genrated'])
+	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
 	for item in role_permission_list:
 		if not item['system_genrated']:
 			doc = get_mapped_doc("User Permission", item['name'], {
@@ -133,28 +133,38 @@ def restrict_access():
 				}
 			}, ignore_permissions = True)
 
-			doc.save(ignore_permissions = True)
-		
-		frappe.delete_doc("User Permission", item['name'], ignore_permissions = True)
-	
-	user_list = frappe.get_all("User", filters = {'enabled': 1}, fields = ['email', 'username'])
-	for user in user_list:
-		if user['username'] != 'administrator' and user['email'] != 'guest@example.com':
-			doc = frappe.new_doc("User Permission")
-
-			doc.user = user['email']
-			doc.allow = 'Authority'
-			doc.for_value = 'Authorized'
-			doc.apply_to_all_doctypes = 1
-			doc.system_genrated = 1
-
 			try:
 				doc.save(ignore_permissions = True)
 			except:
 				pass
-	frappe.set_value("Global Defaults", "Global Defaults", "restricted_access", 1)
+		frappe.delete_doc("User Permission", item['name'], ignore_permissions = True)
+	
+	user_list = frappe.get_all("User", filters = {'enabled': 1}, fields = ['email', 'username'], ignore_permissions = True)
+	for user in user_list:
+		if user['username'] != 'administrator' and user['email'] != 'guest@example.com':
+			
+			if not frappe.db.exists({
+				'doctype': 'User Permission',
+				'user': user['email'],
+				'allow': 'Authority',
+				'for_value': 'Authorized'
+			}):
+				doc = frappe.new_doc("User Permission")
+
+				doc.user = user['email']
+				doc.allow = 'Authority'
+				doc.for_value = 'Authorized'
+				doc.apply_to_all_doctypes = 1
+				doc.system_genrated = 1
+
+				try:
+					doc.save(ignore_permissions = True)
+				except:
+					pass
+	frappe.db.set_value("Global Defaults", "Global Defaults", "restricted_access", 1)
 	frappe.db.commit()
-	frappe.msgprint("Restricted Access")
+	# frappe.msgprint("Restricted Access")
+	return "success"
 
 @frappe.whitelist()
 def reverse_restrict_access():
