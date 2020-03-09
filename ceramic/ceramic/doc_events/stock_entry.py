@@ -73,12 +73,9 @@ def update_work_order(self):
 				# 	pro_doc.run_method("update_planned_qty")
 
 @frappe.whitelist()
-def get_product_price(doc):
-	se = frappe.get_doc("Stock Entry", doc)
-	if se.stock_entry_type == 'Material Receipt' and se.is_opening != "Yes" and se.price_list:
-		for row in se.items:
-			rate = frappe.db.get_value("Item Price",{'price_list':se.price_list,'buying':1,'item_code':row.item_code},'price_list_rate')
-			if not rate:
-				frappe.throw(_("ROW: {}  Price not found for item <b>{}</b> and Price list <b>{}/b>").format(row.idx,row.item_code,se.price_list))
-			else:
-				return rate
+def get_product_price(item_code,price_list):
+	rate = frappe.db.get_value("Item Price",{'price_list':price_list,'buying':1,'item_code':item_code},'price_list_rate')
+	if not rate:
+		frappe.throw(_("Price not found for item <b>{}</b> in Price list <b>{}/b>").format(item_code,price_list))
+	else:
+		return rate

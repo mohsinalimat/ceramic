@@ -65,14 +65,34 @@ frappe.ui.form.on('Stock Entry', {
 						for (var j = 0; j < categories.length; j++) {
 							var new_name = finish_item.replace('-I-', categories[j]);
 							let item_row = frappe.model.add_child(frm.doc,'Stock Entry Detail','items');
-							// item_row.item_code = new_name;
-							frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+							item_row.item_code = new_name;
+							// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
 							frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
 							get_item_details(new_name).then(data => {
 								console.log(data)
 								frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
 								frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
 								frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
+							});
+							frappe.call({
+								method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
+								args: {
+									'item_code': item_row.item_code,
+									'price_list': frm.doc.price_list
+								},
+								callback: function (r) {
+									if (r.message) {
+										frappe.model.set_value(cdt, cdn, 'basic_rate', r.message);
+										frappe.model.set_value(cdt, cdn, 'valuation_rate', r.message);
+									}
+									if (r.error) {
+										frappe.throw({
+											title: __('Item Price not found'),
+											message: r.error
+										});
+									}
+					
+								}
 							});
 						}
 					}
@@ -85,15 +105,35 @@ frappe.ui.form.on('Stock Entry', {
 						var new_name = originial_item["item_detail"].	replace('-I-',item);
 						
 						let item_row = frappe.model.add_child(frm.doc,'Stock Entry Detail','items');
-						// item_row.item_code = new_name;
+						item_row.item_code = new_name;
 
-						frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+						// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
 						frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
 						get_item_details(new_name).then(data => {
-							console.log(data)
+							frappe.model.set_value(item_row.doctype, item_row.name, 'name', data.name);
 							frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
 							frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
 							frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
+						});
+						frappe.call({
+							method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
+							args: {
+								'item_code': item_row.item_code,
+								'price_list': frm.doc.price_list
+							},
+							callback: function (r) {
+								if (r.message) {
+									frappe.model.set_value(cdt, cdn, 'basic_rate', r.message);
+									frappe.model.set_value(cdt, cdn, 'valuation_rate', r.message);
+								}
+								if (r.error) {
+									frappe.throw({
+										title: __('Item Price not found'),
+										message: r.error
+									});
+								}
+				
+							}
 						});
 					});
 				});
@@ -109,7 +149,7 @@ frappe.ui.form.on('Stock Entry', {
 
 		frm.refresh_field('items');
 	},
-	before_validate: function (frm) {
+	before_validate2: function (frm) {
 		console.log("Before Validate get price");
 		frm.doc.items.forEach(function (d) { 
 			frappe.call({
