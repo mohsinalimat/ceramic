@@ -10,7 +10,9 @@
   "length",
   "width",
   "tile_size",
-  "size_code"
+  "column_break_3",
+  "size_code",
+  "tile_size_item"
  ],
  "fields": [
   {
@@ -31,7 +33,6 @@
    "fieldname": "tile_size",
    "fieldtype": "Data",
    "label": "Tile Size",
-   "read_only": 1,
    "unique": 1
   },
   {
@@ -39,9 +40,19 @@
    "fieldtype": "Data",
    "label": "Size Code",
    "reqd": 1
+  },
+  {
+   "fieldname": "tile_size_item",
+   "fieldtype": "Data",
+   "label": "Tile Size Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
   }
  ],
- "modified": "2020-03-06 11:17:39.687097",
+ "modified": "2020-03-13 14:29:52.621543",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Size",

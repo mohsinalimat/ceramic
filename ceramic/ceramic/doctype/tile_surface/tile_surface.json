@@ -8,7 +8,8 @@
  "engine": "InnoDB",
  "field_order": [
   "surface",
-  "surface_code"
+  "surface_code",
+  "tile_surface_item"
  ],
  "fields": [
   {
@@ -24,9 +25,15 @@
    "fieldtype": "Data",
    "label": "Surface Code",
    "reqd": 1
+  },
+  {
+   "fieldname": "tile_surface_item",
+   "fieldtype": "Data",
+   "label": "Tile Surface Item",
+   "reqd": 1
   }
  ],
- "modified": "2020-03-06 11:16:21.407589",
+ "modified": "2020-03-13 12:15:36.961544",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Surface",

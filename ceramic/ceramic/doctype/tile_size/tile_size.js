@@ -8,4 +8,9 @@ frappe.ui.form.on('Tile Size', {
 	// 		frm.set_value("tile_size", tile_size);
 	// 	}
 	// }
+	validate: function(frm) {
+		var tile_size= frm.doc.length +"x"+ frm.doc.width;
+		frm.set_value("tile_size_item", tile_size);
+		
+	}
 });

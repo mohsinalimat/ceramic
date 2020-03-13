@@ -5,7 +5,8 @@
  "engine": "InnoDB",
  "field_order": [
   "tile_quality",
-  "item"
+  "item",
+  "production_price"
  ],
  "fields": [
   {
@@ -22,10 +23,16 @@
    "label": "Item",
    "options": "Item",
    "read_only": 1
+  },
+  {
+   "fieldname": "production_price",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Production Price"
   }
  ],
  "istable": 1,
- "modified": "2020-03-06 12:38:48.663468",
+ "modified": "2020-03-13 14:08:48.584143",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item TIle Quality",

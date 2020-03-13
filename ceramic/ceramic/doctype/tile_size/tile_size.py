@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 
 class TileSize(Document):
-	def before_naming(self):
-		self.tile_size = str(self.length) + "x" + str(self.width)
-
+	# def before_naming(self):
+	# 	self.tile_size = str(self.length) + "x" + str(self.width)
+	pass
 		

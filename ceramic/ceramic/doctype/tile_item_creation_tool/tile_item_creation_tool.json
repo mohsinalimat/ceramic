@@ -11,16 +11,21 @@
   "is_item_series",
   "item_series",
   "maintain_stock",
+  "image",
   "column_break_6",
   "uom",
   "item_group",
   "amended_from",
+  "cover_image",
   "item_detail_section",
   "tile_body_composition",
   "tile_use",
   "tile_size",
+  "tile_size_item",
   "tile_type",
+  "tile_type_item",
   "tile_surface",
+  "tile_surface_item",
   "tile_texture",
   "tile_technical",
   "column_break_18",
@@ -29,10 +34,23 @@
   "tile_price",
   "tile_thickness",
   "tile_anti_slip_properties",
+  "default_production_price",
   "section_break_12",
   "tile_quality",
   "section_break_10",
-  "item_defaults"
+  "item_defaults",
+  "website_section",
+  "show_in_website",
+  "show_in_website_variant",
+  "route",
+  "weightage",
+  "slideshow",
+  "website_image",
+  "thumbnail",
+  "column_break_37",
+  "website_warehouse",
+  "website_item_groups",
+  "set_meta_tags"
  ],
  "fields": [
   {
@@ -73,7 +91,7 @@
    "reqd": 1
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "maintain_stock",
    "fieldtype": "Check",
    "in_list_view": 1,
@@ -139,7 +157,8 @@
    "fieldname": "tile_quality",
    "fieldtype": "Table",
    "label": "Tile Quality",
-   "options": "Tile Item TIle Quality"
+   "options": "Tile Item TIle Quality",
+   "reqd": 1
   },
   {
    "fetch_from": "item_group.tile_type",
@@ -230,10 +249,128 @@
    "fieldtype": "Link",
    "label": "Tile Anti Slip Properties",
    "options": "Tile Anti Slip Properties"
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "cover_image",
+   "fieldtype": "Attach Image",
+   "label": "Cover Image"
+  },
+  {
+   "fieldname": "website_section",
+   "fieldtype": "Section Break",
+   "label": "Website"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.variant_of",
+   "fieldname": "show_in_website",
+   "fieldtype": "Check",
+   "label": "Show in Website"
+  },
+  {
+   "default": "0",
+   "depends_on": "variant_of",
+   "fieldname": "show_in_website_variant",
+   "fieldtype": "Check",
+   "label": "Show in Website (Variant)"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "route",
+   "fieldtype": "Small Text",
+   "label": "Route"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "weightage",
+   "fieldtype": "Int",
+   "label": "Weightage"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "slideshow",
+   "fieldtype": "Link",
+   "label": "Slideshow",
+   "options": "Website Slideshow"
+  },
+  {
+   "depends_on": "eval: (doc.show_in_website || doc.show_variant_in_website) && !doc.__islocal",
+   "fieldname": "website_image",
+   "fieldtype": "Attach",
+   "label": "Website Image"
+  },
+  {
+   "fieldname": "thumbnail",
+   "fieldtype": "Data",
+   "label": "Thumbnail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_37",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "website_warehouse",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Website Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "website_item_groups",
+   "fieldtype": "Table",
+   "label": "Website Item Groups",
+   "options": "Website Item Group"
+  },
+  {
+   "depends_on": "eval: doc.show_in_website || doc.show_variant_in_website",
+   "fieldname": "set_meta_tags",
+   "fieldtype": "Button",
+   "label": "Set Meta Tags"
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fetch_from": "tile_size.tile_size_item",
+   "fieldname": "tile_size_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Tile Size Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "tile_type.tile_type_item",
+   "fieldname": "tile_type_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Tile Type Item",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "tile_surface.tile_surface_item",
+   "fieldname": "tile_surface_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Tile Surface Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "default_production_price",
+   "fieldtype": "Currency",
+   "label": "Default Production Price",
+   "reqd": 1
   }
  ],
+ "image_field": "image",
  "is_submittable": 1,
- "modified": "2020-03-06 14:49:32.422692",
+ "modified": "2020-03-13 14:07:47.811240",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",

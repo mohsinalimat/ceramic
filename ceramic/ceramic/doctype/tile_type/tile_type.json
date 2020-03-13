@@ -8,7 +8,8 @@
  "engine": "InnoDB",
  "field_order": [
   "type",
-  "type_code"
+  "type_code",
+  "tile_type_item"
  ],
  "fields": [
   {
@@ -24,9 +25,15 @@
    "fieldtype": "Data",
    "label": "Type Code",
    "reqd": 1
+  },
+  {
+   "fieldname": "tile_type_item",
+   "fieldtype": "Data",
+   "label": "Tile Type Item",
+   "reqd": 1
   }
  ],
- "modified": "2020-03-06 11:16:36.179056",
+ "modified": "2020-03-13 12:13:08.688436",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Type",

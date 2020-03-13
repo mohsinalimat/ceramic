@@ -8,7 +8,8 @@
  "engine": "InnoDB",
  "field_order": [
   "tile_quality",
-  "tile_grade"
+  "tile_grade",
+  "show_in_website"
  ],
  "fields": [
   {
@@ -17,15 +18,26 @@
    "in_list_view": 1,
    "label": "Tile Quality",
    "reqd": 1,
+   "set_only_once": 1,
    "unique": 1
   },
   {
    "fieldname": "tile_grade",
    "fieldtype": "Data",
-   "label": "Tile Grade"
+   "label": "Tile Grade",
+   "reqd": 1,
+   "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "show_in_website",
+   "fieldtype": "Check",
+   "label": "Show in Website",
+   "read_only": 1
   }
  ],
- "modified": "2020-03-04 17:45:56.258085",
+ "modified": "2020-03-13 14:36:35.352559",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Quality",

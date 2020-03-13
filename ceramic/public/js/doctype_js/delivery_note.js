@@ -1,3 +1,24 @@
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if (!d.item_code) {
+			frappe.msgprint(__("Please select Item Code"));
+		}
+		else if (!d.warehouse) {
+			frappe.msgprint(__("Please select warehouse"));
+		}
+		else {
+			return {
+				query: "ceramic.query.get_batch_no",
+				filters: {
+					'item_code': d.item_code,
+					'warehouse': d.warehouse
+				}
+			}
+		}
+	});
+}
+
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
 		if (frm.doc.__islocal){

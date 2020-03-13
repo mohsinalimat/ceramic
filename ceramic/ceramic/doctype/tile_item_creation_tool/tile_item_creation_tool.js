@@ -30,7 +30,6 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 
 						$.each(r.message, function(index, value){
 							var row = frm.add_child('tile_quality');
-
 							frappe.model.set_value(row.doctype, row.name, 'tile_quality', value);
 						});
 
@@ -46,7 +45,7 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 	},
 	before_save: function(frm){
 		if (frm.doc.__islocal){
-			frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.tile_surface + '-' + frm.doc.tile_type + '-' + frm.doc.tile_size
+			frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.tile_surface_item + '-' + frm.doc.tile_type_item + '-' + frm.doc.tile_size_item
 		}
 		if (frm.doc.is_item_series) {
 			frm.doc.item_series = ''
@@ -56,5 +55,12 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 				validated = false;
 			}
 		}
-	}
+	},
+
+	production_price: function(frm) {
+		$.each(frm.doc.tile_quality || [], function(i, d) {
+			d.production_price = frm.doc.default_production_price;
+		});
+		refresh_field("tile_quality");
+	},
 });

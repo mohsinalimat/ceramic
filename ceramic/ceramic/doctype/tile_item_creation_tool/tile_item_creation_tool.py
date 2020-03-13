@@ -48,6 +48,15 @@ class TileItemCreationTool(Document):
 				item.tile_thickness = self.tile_thickness
 				item.tile_anti_slip_properties = self.tile_anti_slip_properties
 				item.tile_quality = tile.tile_quality
+				item.cover_image = self.cover_image
+				item.image = self.image
+
+				if self.show_in_website:
+					if frappe.db.get_value("Tile Quality", tile.tile_quality, 'show_in_website'):
+						item.show_in_website = self.show_in_website
+						item.weightage = self.weightage
+						item.website_image = self.website_image
+						item.website_warehouse = self.website_warehouse
 
 				if not self.is_item_series and self.maintain_stock == True:
 					item.has_batch_no = True
