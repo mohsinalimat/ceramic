@@ -49,7 +49,8 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 		}
 		if (frm.doc.is_item_series) {
 			frm.doc.item_series = ''
-		} else {
+		} 
+		else {
 			if (!frm.doc.item_series) {
 				msgprint("Please Select Item Series");
 				validated = false;
@@ -57,7 +58,7 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 		}
 	},
 
-	production_price: function(frm) {
+	default_production_price: function(frm) {
 		$.each(frm.doc.tile_quality || [], function(i, d) {
 			d.production_price = frm.doc.default_production_price;
 		});

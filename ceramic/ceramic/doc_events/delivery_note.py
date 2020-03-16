@@ -32,6 +32,7 @@ def create_invoice(source_name, target_doc=None):
         target.run_method("set_po_nos")
         alternate_company = frappe.db.get_value("Company", source.company, "alternate_company")
         target.expense_account = ""
+        target.update_stock = 0
         # target_doc.delivery_note = "T"
 
         if alternate_company:
@@ -77,12 +78,15 @@ def create_invoice(source_name, target_doc=None):
         target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
         # item_code = frappe.db.get_value("Item", source_doc.item_code, "item_series")
         doc = frappe.get_doc("Company", target_company)
+        target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
+        source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
         # frappe.msgprint(item_code)
         # target_doc.item_code = item_code
         # target_doc.name = item_code
         target_doc.income_account = doc.default_income_account
         target_doc.expense_account = doc.default_expense_account
         target_doc.cost_center = doc.cost_center
+        target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
 
 
     doc = get_mapped_doc("Delivery Note", source_name, {

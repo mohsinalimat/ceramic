@@ -218,7 +218,7 @@ doc_events = {
 	
 	"Purchase Receipt":{
 		'on_submit': "ceramic.batch_creation.pr_on_submit",
-		'on_cancel': "ceramic.batch_creation.pr_on_cancel"
+		# 'on_cancel': "ceramic.batch_creation.pr_on_cancel"
 	},
 	
 	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {

@@ -251,3 +251,87 @@ def get_open_count(doctype, name, items=[]):
 
 	return out
 
+def item_patch():
+	data = frappe.db.sql("SELECT * FROM `tabItem` WHERE is_tile = 1 and tile_quality = 'Premium' AND is_item_series = 0", as_dict = 1)
+	tile_categries = ['Premium', 'Golden', 'Economy', 'Classic']
+
+	for item in data:
+		if not frappe.db.exists("Tile Item Creation Tool", item.item_name.replace("-Premium", '')):
+			tile_item = frappe.new_doc("Tile Item Creation Tool")
+			tile_item.item_name = item.item_name.replace("-Premium", '')
+		else:
+			tile_item = frappe.get_doc("Tile Item Creation Tool", item.item_name.replace("-Premium", ''))
+			if tile_item.docstatus == 1:
+				continue
+		tile_item.item_series = item.item_series
+		tile_item.item_group = item.item_group
+		tile_item.item_design = item.item_design
+		
+		tile_item.tile_quality = []
+		tile_item.default_production_price = 0
+
+		tile_item.image = item.image
+		tile_item.cover_image = item.cover_image
+
+		for j in tile_categries:
+			item_name = item.item_name.replace('Premium', j)
+			item_doc = frappe.get_doc('Item', {'item_name': item_name})
+			item_doc.db_set("item_creation_tool", tile_item.item_name)
+
+			tile_item.append('tile_quality', {
+				'tile_quality': j,
+				'item_code': item_doc.item_code,
+				'production_price': 0
+			})
+
+
+			tile_item.item_defaults = []
+			for k in item_doc.item_defaults:
+				tile_item.append('item_defaults', {
+					'company': k.company,
+					'default_warehouse': k.default_warehouse,
+				})
+			
+			if item_doc.show_in_website:
+				tile_item.show_in_website = 1
+				tile_item.weightage = item_doc.weightage
+				tile_item.slideshow = item.slideshow
+				tile_item.website_warehouse = item.website_warehouse
+				tile_item.website_image = item.website_image
+		lst = []
+		
+		for k in tile_item.tile_quality:
+			if k.tile_quality:
+				lst.append(k)
+
+		tile_item.tile_quality = []
+		tile_item.tile_quality = lst
+			
+		tile_item.save()
+		
+		frappe.db.commit()
+		
+		print(tile_item.item_name)
+
+def tile_item_creation_update():
+	data = frappe.get_all("Tile Item Creation Tool")
+
+	for item in data:
+		doc = frappe.get_doc("Tile Item Creation Tool", item.name)
+
+		doc.item_defaults = []
+
+		doc.append('item_defaults', {
+			'company': 'Millennium Vitrified Tiles Pvt. Ltd. Testing',
+			'default_warehouse': 'Stores - MVTT'
+		})
+
+		for tile in doc.tile_quality:
+			item_price = frappe.get_doc("Item Price", {'item_code': tile.item_code})
+			
+			tile.production_price = item_price.price_list_rate
+			doc.default_production_price = item_price.price_list_rate
+
+		doc.save()
+		frappe.db.commit()
+		print(doc.name)

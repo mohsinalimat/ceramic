@@ -5,7 +5,8 @@
  "engine": "InnoDB",
  "field_order": [
   "tile_quality",
-  "item",
+  "item_code",
+  "item_name",
   "production_price"
  ],
  "fields": [
@@ -17,22 +18,30 @@
    "options": "Tile Quality"
   },
   {
-   "fieldname": "item",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Item",
-   "options": "Item",
-   "read_only": 1
-  },
-  {
+   "allow_on_submit": 1,
    "fieldname": "production_price",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Production Price"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "item_code.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
   }
  ],
  "istable": 1,
- "modified": "2020-03-13 14:08:48.584143",
+ "modified": "2020-03-14 10:36:20.880217",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item TIle Quality",
