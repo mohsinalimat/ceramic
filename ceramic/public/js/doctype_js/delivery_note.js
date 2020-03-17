@@ -21,6 +21,7 @@ this.frm.cscript.onload = function (frm) {
 
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
+		frm.trigger('add_get_items_button')
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
@@ -78,5 +79,29 @@ frappe.ui.form.on('Delivery Note', {
 			},
 			__("Create"));
 		}
+	},
+	add_get_items_button: (frm) => {
+		let get_query_filters = {
+			docstatus: 1,
+			customer: frm.doc.customer,
+			company: frm.doc.company,
+		};
+		frm.get_items_btn = frm.add_custom_button(__('Get Items From Pick List'), () => {
+			if (!frm.doc.customer) {
+				frappe.msgprint(__('Please select Customer first'));
+				return;
+			}
+			erpnext.utils.map_current_doc({
+				method: 'ceramic.ceramic.doc_events.pick_list.make_delivery_note',
+				source_doctype: 'Pick List',
+				target: frm,
+				setters: {
+					company: frm.doc.company,
+					customer: frm.doc.customer
+				},
+				// date_field: 'transaction_date',
+				get_query_filters: get_query_filters
+			});
+		});
 	}
 });

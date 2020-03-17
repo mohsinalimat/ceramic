@@ -161,6 +161,10 @@ doc_events = {
 		"validate": "ceramic.ceramic.doc_events.warehouse.validate",
 		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
 	},
+	"Pick List": {
+		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
+	},
 	
 	"BOM": {
 		"before_naming": "ceramic.ceramic.doc_events.bom.before_naming",

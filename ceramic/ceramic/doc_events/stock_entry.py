@@ -11,9 +11,17 @@ def before_save(self, method):
 
 def validate(self,method):
 	pass
+		
+
 
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
+	
+	to_list = []
+	for row in self.items:
+		if row.qty == 0:
+			to_list.append(row)	
+	[self.remove(row) for row in to_list]
 
 def before_submit(self,method):
 	StockEntry.update_work_order = update_work_order
@@ -79,3 +87,4 @@ def get_product_price(item_code,price_list):
 		frappe.throw(_("Price not found for item <b>{}</b> in Price list <b>{}/b>").format(item_code,price_list))
 	else:
 		return rate
+
