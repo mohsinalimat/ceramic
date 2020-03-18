@@ -35,18 +35,33 @@ def create_main_sales_invoice(self):
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
+			for index, item in enumerate(source.items):
+				if item.net_rate:
+					if item.net_rate != item.rate:
+						full_amount = item.full_qty * item.full_rate
+						amount_diff = item.amount - item.net_amount
+						try:
+							target.items[index].rate = (full_amount - amount_diff) / item.full_qty
+						except:
+							pass
+
 			target.ref_invoice = self.name
 			target.authority = "Unauthorized"
 
 			if source.debit_to:
 				target.debit_to = source.debit_to.replace(source_company_abbr, target_company_abbr)
 			if source.taxes_and_charges:
-				target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+				taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+				if frappe.db.exists("Sales Taxes and Charges Template", taxes_and_charges):
+					target.taxes_and_charges = taxes_and_charges
+				else:
+					target.taxes_and_charges = ''
 
+			if source.taxes:
 				for index, i in enumerate(source.taxes):
 					target.taxes[index].charge_type = "Actual"
+					target.taxes[index].included_in_print_rate = 0
 					target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
-
 			if self.amended_from:
 				name = frappe.db.get_value("Sales Invoice", {"ref_invoice": source.amended_from}, "name")
 				target.amended_from = name

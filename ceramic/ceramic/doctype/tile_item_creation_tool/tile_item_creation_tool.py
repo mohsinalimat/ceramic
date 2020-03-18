@@ -120,6 +120,8 @@ class TileItemCreationTool(Document):
 				item.save(ignore_permissions=True)
 		else:
 			item = frappe.new_doc("Item")
+			item.is_item_series = 1
+			item.item_code = self.item_name
 			item.item_name = self.item_name
 			item.item_creation_tool = self.name
 			item.item_group = self.item_group
@@ -138,8 +140,21 @@ class TileItemCreationTool(Document):
 			item.tile_price = self.tile_price
 			item.tile_thickness = self.tile_thickness
 			item.tile_anti_slip_properties = self.tile_anti_slip_properties
-			item.tile_quality = tile.tile_quality
-	
+			# item.tile_quality = tile.tile_quality
+
+			if self.item_defaults:
+				for i in self.item_defaults:
+					item.append('item_defaults', {
+						'company': i.company,
+						'default_warehouse': i.default_warehouse,
+						'default_price_list': i.default_price_list,
+						'buying_cost_center': i.buying_cost_center,
+						'default_supplier': i.default_supplier,
+						'expense_account': i.expense_account,
+						'selling_cost_center': i.selling_cost_center,
+						'income_account': i.income_account,
+					})
+			item.save(ignore_permissions = True)
 	# def after_submit(self):
 	# 	for tile in self.tile_quality:
 	# 		if not frappe.db.exists("Item Price", {'item_code': tile.item_code}):
