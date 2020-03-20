@@ -6,6 +6,11 @@ def on_submit(self):
     """On Submit Custom Function"""
     create_sales_order(self)
 
+def on_update(self, method):
+    for row in self.items:
+        if row.rate == 0:
+            frappe.throw(_("Rate can not be 0 in row {}".format(row.idx)))
+
 def create_sales_order(self):
     def get_sales_order_doc(source_name, target_doc=None, ignore_permissions= True):
         def set_missing_values(source, target):

@@ -187,11 +187,14 @@ doc_events = {
 	},
 	
 	"Delivery Note": {
+		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
 		"before_naming": "ceramic.api.before_naming",
+		
 	},
 	
 	"Sales Order": {
+		"on_update": "ceramic.ceramic.doc_events.sales_order.on_update",
 		"before_naming": "ceramic.api.before_naming",
 	},
 	

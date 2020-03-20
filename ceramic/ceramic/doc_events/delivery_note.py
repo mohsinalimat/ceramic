@@ -8,6 +8,10 @@ from frappe.model.utils import get_fetch_values
 def on_submit(self, test):
 	change_delivery_authority(self.name)
 
+def before_save(self, method):
+	for row in self.items:
+		row.real_qty = max(row.qty,row.real_qty)
+
 def change_delivery_authority(name):
 	dn_status = frappe.get_value("Delivery Note", name, "status")
 	if dn_status == 'Completed':

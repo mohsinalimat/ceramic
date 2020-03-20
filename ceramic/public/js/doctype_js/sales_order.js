@@ -28,12 +28,11 @@ frappe.ui.form.on('Sales Order', {
 			frm.doc.items.forEach(function (d) {
 			frappe.model.set_value(d.doctype, d.name, 'real_qty', d.qty);
 		});
-		
 	},
-
+	
 })
 frappe.ui.form.on("Sales Order Item", {
 	qty: function (frm, cdt, cdn) {
 		frm.events.set_rate(frm);
-	},
+	}
 });
