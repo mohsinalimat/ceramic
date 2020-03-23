@@ -125,6 +125,7 @@ def restrict_access():
 	role_permission_list = frappe.get_all("User Permission", filters = {
 		"allow": "Authority", "for_value": "Unauthorized"
 	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
+	
 	for item in role_permission_list:
 		if not item['system_genrated']:
 			doc = get_mapped_doc("User Permission", item['name'], {
@@ -161,6 +162,7 @@ def restrict_access():
 					doc.save(ignore_permissions = True)
 				except:
 					pass
+	
 	frappe.db.set_value("Global Defaults", "Global Defaults", "restricted_access", 1)
 	frappe.db.commit()
 	# frappe.msgprint("Restricted Access")

@@ -144,6 +144,7 @@ doctype_js = {
 	"BOM": "public/js/doctype_js/bom.js",
 	"Work Order": "public/js/doctype_js/work_order.js",
 	"Stock Entry": "public/js/doctype_js/stock_entry.js",
+	"Pick List": "public/js/doctype_js/pick_list.js",
 }
 
 doc_events = {
@@ -194,7 +195,7 @@ doc_events = {
 	},
 	
 	"Sales Order": {
-		"on_update": "ceramic.ceramic.doc_events.sales_order.on_update",
+		"validate": "ceramic.ceramic.doc_events.sales_order.validate",
 		"before_naming": "ceramic.api.before_naming",
 	},
 	
@@ -235,12 +236,13 @@ doc_events = {
 
 fixtures = ['Custom Field']
 
-from erpnext.stock.stock_ledger import update_entries_after
-from ceramic.override_default_class_method import raise_exceptions
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations
 
+from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
-from ceramic.override_default_class_method import set_actual_qty
+from erpnext.stock.doctype.pick_list.pick_list import PickList
 
 # override default class method
 update_entries_after.raise_exceptions = raise_exceptions
 StockEntry.set_actual_qty = set_actual_qty
+PickList.set_item_locations = set_item_locations
