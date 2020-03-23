@@ -7,15 +7,18 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc) {
 	}
 };
 
-frappe.ui.form.on('Purchase Order', {
+frappe.ui.form.on('Purchase Invoice', {
 	refresh: function(frm){
+		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+			frm.set_value("ref_invoice", "");
+		}
+		if (cur_frm.doc.company){
+			frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {
+				frm.set_value('company_series', r.company_series);
+			});
+		}
 		if (frm.doc.__islocal){
-			if (cur_frm.doc.company){
-				frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {
-					frm.set_value('company_series', r.company_series);
-				});
-			}
-			frm.trigger('company');
+			frm.trigger('naming_series');
 		}
 	},
 	naming_series: function(frm) {
@@ -33,6 +36,11 @@ frappe.ui.form.on('Purchase Order', {
 		}
 	},
 	company: function(frm){
+		if (frm.doc.__islocal){
+			frm.trigger('naming_series');
+		}
+	},
+	company_series: function(frm){
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}

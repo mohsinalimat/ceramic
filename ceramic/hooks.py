@@ -162,11 +162,42 @@ doc_events = {
 		"validate": "ceramic.ceramic.doc_events.warehouse.validate",
 		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
 	},
+	"Sales Order": {
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.sales_order.before_validate",
+		"validate": "ceramic.ceramic.doc_events.sales_order.validate",
+	},
+	"Delivery Note": {
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.delivery_note.before_validate",
+		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
+		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
+	},
+	"Sales Invoice": {
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.sales_invoice.before_validate",
+		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
+	},
+	"Purchase Order": {
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.purchase_order.before_validate",
+	},
+	"Purchase Receipt":{
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.purchase_receipt.before_validate",
+	},
+	"Purchase Invoice": {
+		"before_naming": "ceramic.api.before_naming",
+		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
+	},
 	"Pick List": {
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 	},
-	
 	"BOM": {
 		"before_naming": "ceramic.ceramic.doc_events.bom.before_naming",
 		"before_validate": "ceramic.ceramic.doc_events.bom.before_validate",
@@ -179,40 +210,12 @@ doc_events = {
 		'before_submit': "ceramic.ceramic.doc_events.work_order.before_submit",
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
-	
-	"Sales Invoice": {
-		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
-		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
-		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
-		"before_naming": "ceramic.api.before_naming",
-	},
-	
-	"Delivery Note": {
-		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
-		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
-		"before_naming": "ceramic.api.before_naming",
-		
-	},
-	
-	"Sales Order": {
-		"validate": "ceramic.ceramic.doc_events.sales_order.validate",
-		"before_naming": "ceramic.api.before_naming",
-	},
-	
 	"Payment Entry": {
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
 		"before_naming": "ceramic.api.before_naming",
-	},
-	
-	"Purchase Invoice": {
-		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
-		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
-		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
-		# "before_naming": "ceramic.api.before_naming",
-	},
-	
+	},	
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",
 		'before_submit': "ceramic.ceramic.doc_events.stock_entry.before_submit",
@@ -223,12 +226,6 @@ doc_events = {
 		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
 		# 'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
 	},
-	
-	"Purchase Receipt":{
-		'on_submit': "ceramic.batch_creation.pr_on_submit",
-		# 'on_cancel': "ceramic.batch_creation.pr_on_cancel"
-	},
-	
 	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
 	}
@@ -236,13 +233,17 @@ doc_events = {
 
 fixtures = ['Custom Field']
 
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate
 
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 from erpnext.stock.doctype.pick_list.pick_list import PickList
+from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 
 # override default class method
 update_entries_after.raise_exceptions = raise_exceptions
 StockEntry.set_actual_qty = set_actual_qty
 PickList.set_item_locations = set_item_locations
+calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
+calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
+

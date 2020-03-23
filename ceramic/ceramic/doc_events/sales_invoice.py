@@ -2,6 +2,11 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 
+def before_validate(self, method):
+	for item in self.items:
+		item.discounted_amount = item.discounted_rate * item.real_qty
+		item.discounted_net_amount = item.discounted_amount
+
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
 	create_main_sales_invoice(self)
@@ -35,16 +40,6 @@ def create_main_sales_invoice(self):
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-			for index, item in enumerate(source.items):
-				if item.net_rate:
-					if item.net_rate != item.rate:
-						full_amount = item.full_qty * item.full_rate
-						amount_diff = item.amount - item.net_amount
-						try:
-							target.items[index].rate = (full_amount - amount_diff) / item.full_qty
-						except:
-							pass
-
 			target.ref_invoice = self.name
 			target.authority = "Unauthorized"
 
@@ -59,8 +54,9 @@ def create_main_sales_invoice(self):
 
 			if source.taxes:
 				for index, i in enumerate(source.taxes):
-					target.taxes[index].charge_type = "Actual"
-					target.taxes[index].included_in_print_rate = 0
+					target.taxes[index].charge_type = source.taxes[index].charge_type
+					target.taxes[index].included_in_print_rate = source.taxes[index].included_in_print_rate
+					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 					target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
 			if self.amended_from:
 				name = frappe.db.get_value("Sales Invoice", {"ref_invoice": source.amended_from}, "name")
@@ -123,8 +119,13 @@ def create_main_sales_invoice(self):
 	# If company is authorized then only cancel another invoice
 	if authority == "Authorized":
 		si = get_sales_invoice_entry(self.name)
+		si.naming_series = 'A' + si.naming_series
+		si.series_value = self.series_value
 		si.flags.ignore_permissions = True
+		
 		try:
+			si.save(ignore_permissions = True)
+			si.real_difference_amount = si.rounded_total - self.rounded_total
 			si.save(ignore_permissions = True)
 			self.db_set('ref_invoice', si.name)
 			frappe.db.commit()

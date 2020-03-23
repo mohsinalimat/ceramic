@@ -2,32 +2,49 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint, nowdate, cstr, getdate
 from frappe.model.mapper import get_mapped_doc
+from datetime import date
+from frappe.utils import getdate
+from erpnext.accounts.utils import get_fiscal_year
+from frappe.desk.notifications import get_filters_for
 
-def check_sub(string, sub_str): 
-	if (string.find(sub_str) == -1): 
-	   return False 
-	else: 
-		return True
+def check_sub_string(string, sub_string): 
+	"""Function to check if string has sub string"""
 
-def naming_series_name(name, company_series):
+	return not string.find(sub_string) == -1
+
+
+def naming_series_name(name, company_series = None):
+	"""Function to convert naming series name"""
+
+	from erpnext.accounts.utils import get_fiscal_year
 	
-	if check_sub(name, '.fiscal.'):
+	if check_sub_string(name, '.YYYY.'):
+		name = name.replace('.YYYY.', str(date.today().year))
+
+	if check_sub_string(name, '.YY.'):
+		name = name.replace('.YY.', str(date.today().year)[2:])
+	
+	if check_sub_string(name, 'MM.'):
+		name = name.replace('MM', f'{date.today().month:02d}')
+	
+	# changing value of fiscal according to current fiscal year 
+	if check_sub_string(name, '.fiscal.'):
 		current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
 		fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
 		name = name.replace('.fiscal.', str(fiscal))
 
-	if check_sub(name, '.YYYY.'):
-		name = name.replace('.YYYY.', '.2020.')
-
+	# changing value of company series according to company
 	if company_series:
-		if check_sub(name, 'company_series.'):
+		if check_sub_string(name, 'company_series.'):
 			name = name.replace('company_series.', str(company_series))
-			
-	if check_sub(name, ".#"):
+		elif check_sub_string(name, '.company_series.'):
+			name = name.replace('.company_series.', str(company_series))
+
+	# removing the hash symbol from naming series
+	if check_sub_string(name, "#"):
 		name = name.replace('#', '')
 		if name[-1] == '.':
 			name = name[:-1]
-	
 	return name
 
 @frappe.whitelist()
@@ -59,7 +76,6 @@ def check_counter_series(name = None, company_series = None):
 		return 1
 	else:
 		return int(frappe.db.get_value('Series', name, 'current', order_by="name")) + 1
-
 
 @frappe.whitelist()
 def before_naming(self, method):
@@ -125,7 +141,6 @@ def restrict_access():
 	role_permission_list = frappe.get_all("User Permission", filters = {
 		"allow": "Authority", "for_value": "Unauthorized"
 	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
-	
 	for item in role_permission_list:
 		if not item['system_genrated']:
 			doc = get_mapped_doc("User Permission", item['name'], {
@@ -162,7 +177,6 @@ def restrict_access():
 					doc.save(ignore_permissions = True)
 				except:
 					pass
-	
 	frappe.db.set_value("Global Defaults", "Global Defaults", "restricted_access", 1)
 	frappe.db.commit()
 	# frappe.msgprint("Restricted Access")

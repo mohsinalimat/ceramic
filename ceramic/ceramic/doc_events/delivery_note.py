@@ -4,6 +4,11 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
 
+def before_validate(self, method):
+	for item in self.items:
+		item.discounted_amount = item.discounted_rate * item.real_qty
+		item.discounted_net_amount = item.discounted_amount
+
 @frappe.whitelist()
 def on_submit(self, test):
 	change_delivery_authority(self.name)
@@ -32,11 +37,12 @@ def create_invoice(source_name, target_doc=None):
 	def set_missing_values(source, target):
 		target.is_pos = 0
 		target.ignore_pricing_rule = 1
-		target.run_method("set_missing_values")
-		target.run_method("set_po_nos")
 		alternate_company = frappe.db.get_value("Company", source.company, "alternate_company")
 		target.expense_account = ""
-		target.update_stock = 0
+
+		
+		
+		target.update_stock = 1
 		# target_doc.delivery_note = "T"
 
 		if alternate_company:
@@ -57,6 +63,20 @@ def create_invoice(source_name, target_doc=None):
 		if target.company_address:
 			target.update(get_fetch_values("Sales Invoice", 'company_address', target.company_address))
 
+		target_company_abbr = frappe.db.get_value("Company", target.company, "abbr")
+		source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
+		
+		target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
+		
+		if source.taxes_and_charges:
+			target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+		target.taxes = source.taxes
+		if source.taxes:
+			for index, value in enumerate(source.taxes):
+				target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
+
+		target.run_method("set_missing_values")
+		target.run_method("set_po_nos")
 
 	def get_pending_qty(item_row):
 		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0)

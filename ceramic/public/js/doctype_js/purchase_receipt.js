@@ -1,3 +1,107 @@
+cur_frm.fields_dict.taxes_and_charges.get_query = function(doc) {
+	return {
+		filters: {
+			"docstatus": 0 && 1,
+			"company": doc.company
+		}
+	}
+};
+
+erpnext.stock.PurchaseReceiptController = erpnext.stock.PurchaseReceiptController.extend({
+	refresh: function(doc, dt, dn) {
+		var me = this;
+		if(doc.docstatus===1) {
+			this.show_stock_ledger();
+			//removed for temporary
+			this.show_general_ledger();
+
+			this.frm.add_custom_button(__('Asset'), function() {
+				frappe.route_options = {
+					purchase_receipt: me.frm.doc.name,
+				};
+				frappe.set_route("List", "Asset");
+			}, __("View"));
+
+			this.frm.add_custom_button(__('Asset Movement'), function() {
+				frappe.route_options = {
+					reference_name: me.frm.doc.name,
+				};
+				frappe.set_route("List", "Asset Movement");
+			}, __("View"));
+		}
+
+		if(!doc.is_return && doc.status!="Closed") {
+			if (doc.docstatus == 0) {
+				this.frm.add_custom_button(__('Purchase Order'),
+					function () {
+						erpnext.utils.map_current_doc({
+							method: "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt",
+							source_doctype: "Purchase Order",
+							target: me.frm,
+							setters: {
+								supplier: me.frm.doc.supplier || undefined,
+							},
+							get_query_filters: {
+								docstatus: 1,
+								status: ["not in", ["Closed", "On Hold"]],
+								per_received: ["<", 99.99],
+								company: me.frm.doc.company
+							}
+						})
+					}, __("Get items from"));
+			}
+
+			if(doc.docstatus == 1 && doc.status!="Closed") {
+				if (this.frm.has_perm("submit")) {
+					cur_frm.add_custom_button(__("Close"), this.close_purchase_receipt, __("Status"))
+				}
+
+				cur_frm.add_custom_button(__('Purchase Return'), this.make_purchase_return, __('Create'));
+
+				cur_frm.add_custom_button(__('Make Stock Entry'), cur_frm.cscript['Make Stock Entry'], __('Create'));
+
+				if(flt(doc.per_billed) < 100) {
+					this.frm.add_custom_button(__('Purchase Invoice'), function() {me.make_purchase_invoice()}, 
+					__('Create'));
+					this.frm.add_custom_button(__('Purchase Invoice Test'), function() {me.make_purchase_invoice_test()}, 
+					__('Create'));
+				}
+				cur_frm.add_custom_button(__('Retention Stock Entry'), this.make_retention_stock_entry, __('Create'));
+
+				if(!doc.auto_repeat) {
+					cur_frm.add_custom_button(__('Subscription'), function() {
+						erpnext.utils.make_subscription(me.frm.doc.doctype, me.frm.doc.name)
+					}, __('Create'))
+				}
+
+				cur_frm.page.set_inner_btn_group_as_primary(__('Create'));
+			}
+		}
+
+
+		if(doc.docstatus==1 && doc.status === "Closed" && this.frm.has_perm("submit")) {
+			cur_frm.add_custom_button(__('Reopen'), this.reopen_purchase_receipt, __("Status"))
+		}
+
+		this.frm.toggle_reqd("supplier_warehouse", doc.is_subcontracted==="Yes");
+	},
+	make_purchase_invoice: function() {
+		frappe.model.open_mapped_doc({
+			method: "ceramic.ceramic.doc_events.purchase_receipt.make_purchase_invoice",
+			frm: cur_frm
+		})
+	},
+
+	make_purchase_invoice_test: function() {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice",
+			frm: cur_frm
+		})
+	},
+})
+
+$.extend(cur_frm.cscript, new erpnext.stock.PurchaseReceiptController({frm: cur_frm}));
+
 frappe.ui.form.on('Purchase Receipt', {
 	refresh: function(frm) {
 		if (frm.doc.__islocal){
@@ -22,40 +126,6 @@ frappe.ui.form.on('Purchase Receipt', {
 	company: function(frm) {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
-		}
-	},
-    onload_post_render: function(frm){
-		frm.trigger('pi_menu_hide');
-	},
-	on_submit: function(frm){
-		frm.trigger('pi_menu_hide');
-	},
-	pi_menu_hide: function(frm){
-		
-		let $group = cur_frm.page.get_inner_group_button("Create");
-				
-		let li_length = $group.find("ul li");
-		for (let i = 0; i < li_length.length -1; i++) {		
-			var li = $group.find(".dropdown-menu").children("li")[i];
-			if (li.getElementsByTagName("a")[0].innerHTML == "Purchase Invoice")
-				$group.find(".dropdown-menu").children("li")[i].remove();
-		}
-		
-		if (!frm.doc.__islocal && frm.doc.docstatus == 1 && frm.doc.status != 'Cancelled') {
-			frm.add_custom_button(__("Purchase Invoice"), function () {
-				frappe.model.open_mapped_doc({
-					method: "ceramic.ceramic.doc_events.purchase_receipt.make_purchase_invoice",
-                    frm: cur_frm
-				})
-			},
-			__("Create"));
-			frm.add_custom_button(__("Purchase Invoice Test"), function () {
-				frappe.model.open_mapped_doc({
-					method: "erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice",
-					frm: cur_frm
-				})
-			},
-			__("Create"));
 		}
 	}
 });
