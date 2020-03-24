@@ -197,7 +197,7 @@ def determine_exclusive_rate(self):
 		if cumulated_tax_fraction and not self.discount_amount_applied and item.qty:
 			# Finbyz Changes for Tax Calculation on Real Rate
 			if self.doc.authority == "Unauthorized":
-				item.discounted_amount = item.discounted_rate * item.real_qty
+				# item.discounted_amount = item.discounted_rate * item.real_qty
 				amount_diff = item.amount - item.discounted_amount
 				item.discounted_net_amount = flt((item.amount - amount_diff) / (1 + cumulated_tax_fraction))
 				

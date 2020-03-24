@@ -95,11 +95,13 @@ def create_main_sales_invoice(self):
 					"qty": "real_qty",
 					"delivery_docname": "delivery_note",
 					"delivery_childname": "dn_detail",
+					"real_batch_no": "batch_no"
 				},
 				"field_no_map": {
 					"full_rate",
 					"full_qty",
 					"series",
+					"real_batch_no"
 				},
 				"postprocess": account_details,
 			}

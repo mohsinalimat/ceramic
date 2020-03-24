@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.utils import today
-from frappe.model.mapper import get_mapped_doc, map_child_doc
+from frappe.model.mapper import get_mapped_doc, map_child_doc, map_doc, map_fields
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note as create_delivery_note_from_sales_order
 from erpnext.stock.doctype.pick_list.pick_list import get_items_with_location_and_quantity
 
@@ -39,7 +39,7 @@ def get_avaliable_qty(self, item_code, warehouse, batch_no):
 		AND pl.docstatus = 1
 	""")
 	
-	return batch_locations[0][0] - pick_list_available[0][0]
+	return batch_locations[0][0] - pick_list_available[0][0] or 0.0
 
 def on_cancel(self, method):
 	update_delivery_note(self, "cancel")
@@ -269,12 +269,128 @@ def get_items(filters):
 		""")
 
 		item['available_qty'] = item['actual_qty'] - (pick_list_available[0][0] or 0.0)
-		if item['available_qty'] <= 0.0:
-			item = None
 		del item['actual_qty']
 		item['picked_qty'] = item['available_qty']
+		if item['available_qty'] <= 0.0:
+			item = None
 
 		if item:
 			data.append(item)
 	
 	return data
+from erpnext.stock.doctype.pick_list.pick_list import update_delivery_note_item, set_delivery_note_missing_values, create_delivery_note_from_sales_order
+@frappe.whitelist()
+def create_delivery_note(source_name, target_doc=None):
+	# frappe.throw('uh')
+	pick_list = frappe.get_doc('Pick List', source_name)
+	sales_orders = [d.sales_order for d in pick_list.locations]
+	sales_orders = set(sales_orders)
+
+	delivery_note = None
+	for sales_order in sales_orders:
+		delivery_note = create_delivery_note_from_sales_order(sales_order,
+			delivery_note, skip_item_mapping=True)
+
+	item_table_mapper = {
+		'doctype': 'Delivery Note Item',
+		'field_map': {
+			'rate': 'rate',
+			'name': 'so_detail',
+			'parent': 'against_sales_order',
+		},
+		'condition': lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier!=1
+	}
+
+	for location in pick_list.locations:
+		sales_order_item = frappe.get_cached_doc('Sales Order Item', location.sales_order_item)
+		dn_item = map_child_doc(sales_order_item, delivery_note, item_table_mapper)
+
+		if dn_item:
+			dn_item.warehouse = location.warehouse
+			dn_item.qty = location.picked_qty
+			dn_item.batch_no = location.batch_no
+			dn_item.serial_no = location.serial_no
+
+			dn_item.against_pick_list = pick_list.name
+			dn_item.against_pick_list_item = location.name
+
+			update_delivery_note_item(sales_order_item, dn_item, delivery_note)
+
+	set_delivery_note_missing_values(delivery_note)
+	
+	return delivery_note
+
+@frappe.whitelist()
+def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
+	
+	mapper = {
+		'doctype': 'Delivery Note Item',
+		'field_map': {
+			'rate': 'rate',
+			'name': 'so_detail',
+			'parent': 'against_sales_order',
+		},
+	}
+	def set_missing_values(source, target):
+		target.run_method("set_missing_values")
+		target.run_method("set_po_nos")
+	
+	def get_item_details(source_doc, target_doc, source_parent):
+		table_map = {
+			'doctype': 'Delivery Note Item',
+			'field_map': {
+				'rate': 'rate',
+				'name': 'so_detail',
+				'parent': 'against_sales_order',
+			},
+			'condition': lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier!=1
+		}
+
+		sales_order_item = frappe.get_doc('Sales Order Item', source_doc.sales_order_item)
+
+		if target_doc:
+			target_doc.rate = sales_order_item.rate
+			target_doc.discounted_rate = sales_order_item.discounted_rate
+			target_doc.real_qty = source_doc.real_qty
+
+			target_doc.uom = sales_order_item.uom
+			target_doc.item_series = sales_order_item.item_series
+
+			target_doc.amount = target_doc.rate * target_doc.qty
+
+			target_doc.against_sales_order = sales_order_item.parent
+			target_doc.so_detail = sales_order_item.name
+
+			target_doc.warehouse = source_doc.warehouse
+			target_doc.qty = source_doc.picked_qty
+			target_doc.batch_no = source_doc.batch_no
+			target_doc.serial_no = source_doc.serial_no
+
+			target_doc.against_pick_list = source_parent.name
+			target_doc.against_pick_list_item = source_doc.name
+	
+	doc = get_mapped_doc("Pick List",
+		source_name,
+		{
+			"Pick List": {
+				"doctype": "Delivery Note",
+				"field_map": {
+				},
+				"field_no_map": [
+					'customer',
+					'transaction_date'
+				]
+			},
+			"Pick List Item": {
+				"doctype": "Delivery Note Item",
+				"field_map": {
+					"item_code": "item_code",
+				},
+				"postprocess": get_item_details,
+			}
+		},
+		target_doc,
+		set_missing_values
+	)
+	# frappe.throw(dir(doc))
+	return doc

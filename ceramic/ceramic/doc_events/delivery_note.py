@@ -11,7 +11,45 @@ def before_validate(self, method):
 
 @frappe.whitelist()
 def on_submit(self, test):
+	for item in self.items:
+		if item.against_pick_list:
+			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list_item)
+			delivered_qty = item.qty + pick_list_item.delivered_qty
+			if delivered_qty > pick_list_item.qty:
+				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
+			pick_list_item.db_set("delivered_qty", delivered_qty)
+	update_status_pick_list(self)
+
+def update_status_pick_list(self):
+	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
+
+	for pick in pick_list:
+		pl = frappe.get_doc("Pick List", pick)
+
+		flag = True
+		for item in pl.locations:
+			if item.delivered_qty >= item.qty:
+				continue
+			else:
+				flag = False
+				break
+		
+		if flag:
+			pl.db_set('status', 'Delivered')
+		else:
+			pl.db_set('status', 'To Deliver')
+
 	change_delivery_authority(self.name)
+
+def on_cancel(self, method):
+	for item in self.items:
+		if item.against_pick_list:
+			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list_item)
+			delivered_qty = pick_list_item.delivered_qty - item.qty
+			if delivered_qty < 0:
+				frappe.throw("You can not deliver more tha picked qty")
+			pick_list_item.db_set("delivered_qty", delivered_qty)
+	update_status_pick_list(self)
 
 def before_save(self, method):
 	for row in self.items:
@@ -66,7 +104,8 @@ def create_invoice(source_name, target_doc=None):
 		target_company_abbr = frappe.db.get_value("Company", target.company, "abbr")
 		source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 		
-		target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
+		if source.set_warehouse:
+			target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
 		
 		if source.taxes_and_charges:
 			target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
@@ -137,14 +176,18 @@ def create_invoice(source_name, target_doc=None):
 				"discounted_rate": "rate",
 				"qty": "full_qty",
 				"rate":"full_rate",
+				"batch_no": "real_batch_no",
 			},
 			"field_no_map": [
 				"income_account",
 				"expense_account",
 				"cost_center",
 				"warehouse",
+				"batch_no",
+				"lot_no",
 			],
 			"postprocess": update_item,
+			"condition": lambda doc: abs(doc.real_qty) > 0,
 			"filter": lambda d: get_pending_qty(d) <= 0 if not doc.get("is_return") else get_pending_qty(d) > 0
 		},
 		# "Sales Taxes and Charges": {

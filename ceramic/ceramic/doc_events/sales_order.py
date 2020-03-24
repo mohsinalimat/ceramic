@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.utils import flt
 
 def validate(self, method):
 	if((str(self._action)) == "submit"):
@@ -10,7 +11,7 @@ def validate(self, method):
 
 def before_validate(self, method):
 	for item in self.items:
-		item.discounted_amount = item.discounted_rate * item.real_qty
+		item.discounted_amount = item.discounted_rate * flt(item.real_qty)
 		item.discounted_net_amount = item.discounted_amount
 
 def on_submit(self):

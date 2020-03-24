@@ -29,7 +29,7 @@ app_include_js = [
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_list_js = {"Pick List" : "public/js/doctype_js/pick_list_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -171,6 +171,7 @@ doc_events = {
 		"before_naming": "ceramic.api.before_naming",
 		"before_validate": "ceramic.ceramic.doc_events.delivery_note.before_validate",
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
+		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
 	},
 	"Sales Invoice": {
@@ -231,6 +232,7 @@ doc_events = {
 	}
 }
 
+
 fixtures = ['Custom Field']
 
 from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate
@@ -247,3 +249,6 @@ PickList.set_item_locations = set_item_locations
 calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
 calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
 
+from ceramic.ceramic.doc_events.pick_list import create_delivery_note
+import erpnext
+erpnext.stock.doctype.pick_list.pick_list.create_delivery_note = create_delivery_note
