@@ -176,7 +176,7 @@ def get_columns():
 		},
 		{
 			"fieldname": "posting_date",
-			"label": _("Delivery Date"),
+			"label": _("Picked Date"),
 			"fieldtype": "Date",
 			"width": 90
 		},
