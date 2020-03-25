@@ -79,6 +79,8 @@ def get_data(filters):
 			`tabSales Order Item` as soi JOIN
 			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1 JOIN
 			`tabItem` as i on i.`name` = soi.`item_code`
+		WHERE
+			{conditions}
 		GROUP BY
 			soi.`item_code`
 	""", as_dict = True)
@@ -102,13 +104,12 @@ def get_data(filters):
 def get_conditions(filters):
 	conditions = ''
 	if filters.get('company'):
-		conditions += f""
+		conditions += f"so.`company` = '{filters.get('company')}'"
 
-	# if filters.get('item_group'):
-	# 	conditions += f" AND sle.`item_group` = '{filters.get('item_group')}'"
+	if filters.get('item_group'):
+		conditions += f" AND i.`item_group` = '{filters.get('item_group')}'"
 	
-	# if filters.get('item_code'):
-	# 	conditions += f" AND sle.`item_code` = '{filters.get('item_code')}'"
+	if filters.get('item_code'):
+		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
 	
-
 	return conditions
