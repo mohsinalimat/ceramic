@@ -95,7 +95,7 @@ def get_data(filters):
 		""")
 
 		item['actual_qty'] = actual_qty[0][0] or 0.0
-		item['to_manufacture'] = item['to_picked_qty'] - item['actual_qty'] if item['to_picked_qty'] - item['actual_qty'] > 0 else 0
+		item['to_manufacture'] = item['to_picked_qty'] - item['actual_qty'] if item['to_picked_qty'] > item['actual_qty'] else 0
 
 	return data
 

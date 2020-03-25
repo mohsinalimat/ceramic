@@ -44,3 +44,47 @@ def create_sales_order(self):
 		frappe.db.rollback()
 		frappe.throw(e)
 	
+@frappe.whitelist()
+def get_rate_discounted_rate(item_code, customer, company):
+
+	item_group, tile_quality = frappe.get_value("Item", item_code, ['item_group', 'tile_quality'])
+	parent_group = frappe.get_value("Item Group", item_group, 'parent_item_group')
+	
+	data = frappe.db.sql(f"""
+		SELECT 
+			soi.`rate`, soi.`discounted_rate` 
+		FROM 
+			`tabSales Order Item` as soi JOIN
+			`tabSales Order` as so
+		WHERE
+			soi.`item_group` = '{item_group}' AND
+			soi.`tile_quality` = '{tile_quality}' AND
+			so.`customer` = '{customer}' AND
+			so.`company` = '{company}' AND
+			so.`docstatus` = 1
+		ORDER BY
+			so.`transaction_date` DESC
+		LIMIT 
+			1
+	""", as_dict = True)
+
+	if not data:
+		data = frappe.db.sql(f"""
+		SELECT 
+			soi.`rate`, soi.`discounted_rate` 
+		FROM 
+			`tabSales Order Item` as soi JOIN
+			`tabSales Order` as so
+		WHERE
+			soi.`item_parent_group` = '{parent_group}' AND
+			soi.`tile_quality` = '{tile_quality}' AND
+			so.`customer` = '{customer}' AND
+			so.`company` = '{company}' AND
+			so.`docstatus` = 1
+		ORDER BY
+			so.`transaction_date` DESC
+		LIMIT 
+			1
+	""", as_dict = True)
+	
+	return data[0] if data else {'rate': 0, 'discounted_rate': 0}

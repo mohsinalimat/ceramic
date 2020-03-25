@@ -32,7 +32,30 @@ frappe.ui.form.on('Sales Order', {
 	
 })
 frappe.ui.form.on("Sales Order Item", {
-	qty: function (frm, cdt, cdn) {
-		frm.events.set_rate(frm);
+	// qty: function (frm, cdt, cdn) {
+	// 	frm.events.set_rate(frm);
+	// },
+
+	item_code: function(frm, cdt, cdn) {
+		var d = locals[cdt][cdn];
+
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.sales_order.get_rate_discounted_rate",
+			args: {
+				"item_code": d.item_code,
+				"customer": frm.doc.customer,
+				"company": frm.doc.company
+			},
+			callback: function(r){
+				if (r.message){
+					// d.rate = 0
+					// d.discounted_rate = 0
+					frappe.model.set_value(cdt, cdt, 'rate', r.message.rate);
+					// frappe.model.set_value(cdt, cdt, 'discounted_rate', r.message.discounted_rate);
+					console.log(r.message);
+					frm.refresh_field('items');
+				}
+			}
+		});
 	}
 });
