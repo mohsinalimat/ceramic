@@ -68,7 +68,7 @@ def get_data(filters):
 def insert_pick_list(data, row, idx):
 
 	dn_data = frappe.db.sql("""
-		SELECT pni.parent as pick_list, pl.posting_date, pni.qty as picked_qty
+		SELECT pni.parent as pick_list, pni.lot_no, pni.warehouse, pl.posting_date, pni.qty as picked_qty
 		FROM `tabPick List` as pl LEFT JOIN `tabPick List Item` as pni ON (pl.name = pni.parent)
 		WHERE 
 			pl.docstatus = 1
@@ -80,6 +80,8 @@ def insert_pick_list(data, row, idx):
 	total_qty_picked = 0.0
 	if dn_data:
 		row.pick_list = dn_data[0].pick_list
+		row.lot_no = dn_data[0].lot_no
+		row.warehouse = dn_data[0].warehouse
 		row.posting_date = dn_data[0].posting_date
 		row.picked_qty = dn_data[0].picked_qty
 		total_qty_picked += dn_data[0].picked_qty
@@ -172,6 +174,19 @@ def get_columns():
 			"label": _("Pick List"),
 			"fieldtype": "Link",
 			"options": "Pick List",
+			"width": 100
+		},
+		{
+			"fieldname": "picked_warehouse",
+			"label": _("Picked Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"width": 100
+		},
+		{
+			"fieldname": "picked_lot_no",
+			"label": _("Picked Lot No"),
+			"fieldtype": "Data",
 			"width": 100
 		},
 		{

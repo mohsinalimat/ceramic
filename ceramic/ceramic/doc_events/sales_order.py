@@ -4,6 +4,13 @@ from frappe import _
 from frappe.utils import flt
 
 def validate(self, method):
+	self.flags.ignore_permissions = True
+
+	for item in self.items:
+		if not item.rate:
+			rate = get_rate_discounted_rate(item.item_code, self.customer, self.company)['rate']
+			item.rate = rate
+
 	if((str(self._action)) == "submit"):
 		for row in self.items:
 			if (row.rate == 0):
@@ -48,20 +55,20 @@ def create_sales_order(self):
 def get_rate_discounted_rate(item_code, customer, company):
 
 	item_group, tile_quality = frappe.get_value("Item", item_code, ['item_group', 'tile_quality'])
-	parent_group = frappe.get_value("Item Group", item_group, 'parent_item_group')
+	parent_item_group = frappe.get_value("Item Group", item_group, 'parent_item_group')
 	
 	data = frappe.db.sql(f"""
 		SELECT 
 			soi.`rate`, soi.`discounted_rate` 
 		FROM 
 			`tabSales Order Item` as soi JOIN
-			`tabSales Order` as so
+			`tabSales Order` as so ON soi.parent = so.name
 		WHERE
 			soi.`item_group` = '{item_group}' AND
 			soi.`tile_quality` = '{tile_quality}' AND
 			so.`customer` = '{customer}' AND
 			so.`company` = '{company}' AND
-			so.`docstatus` = 1
+			so.`docstatus` != 0
 		ORDER BY
 			so.`transaction_date` DESC
 		LIMIT 
@@ -74,9 +81,9 @@ def get_rate_discounted_rate(item_code, customer, company):
 			soi.`rate`, soi.`discounted_rate` 
 		FROM 
 			`tabSales Order Item` as soi JOIN
-			`tabSales Order` as so
+			`tabSales Order` as so ON soi.parent = so.name
 		WHERE
-			soi.`item_parent_group` = '{parent_group}' AND
+			soi.`parent_item_group` = '{parent_item_group}' AND
 			soi.`tile_quality` = '{tile_quality}' AND
 			so.`customer` = '{customer}' AND
 			so.`company` = '{company}' AND

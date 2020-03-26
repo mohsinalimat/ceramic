@@ -197,6 +197,7 @@ def get_available_item_locations_for_batched_item(item_code, from_warehouses, re
 		SELECT
 			sle.`warehouse`,
 			sle.`batch_no`,
+			batch.`lot_no`
 			SUM(sle.`actual_qty`) AS `qty`
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch
@@ -233,6 +234,7 @@ def get_items(filters):
 			sle.`item_code`,
 			sle.`warehouse`,
 			sle.`batch_no`,
+			batch.`lot_no`,
 			SUM(sle.`actual_qty`) AS `actual_qty`
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch

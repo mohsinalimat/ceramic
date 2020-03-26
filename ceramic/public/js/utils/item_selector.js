@@ -183,6 +183,13 @@ ItemSelector = Class.extend({
 						'fieldname': 'batch_no',
 						'options': 'Batch',
 						'read_only': 1,
+						'in_list_view': 0,
+					},
+					{
+						'label': 'Lot No',
+						'fieldtype': 'Data',
+						'fieldname': 'lot_no',
+						'read_only': 1,
 						'in_list_view': 1,
 					},
 					{

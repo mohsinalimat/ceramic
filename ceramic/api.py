@@ -7,50 +7,26 @@ from frappe.utils import getdate
 from erpnext.accounts.utils import get_fiscal_year
 from frappe.desk.notifications import get_filters_for
 
-def check_sub_string(string, sub_string): 
-	"""Function to check if string has sub string"""
-
-	return not string.find(sub_string) == -1
-
+check_sub_string = lambda string, sub_string: not string.find(sub_string) == -1
 
 def naming_series_name(name, company_series = None):
-	"""Function to convert naming series name"""
+	current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
+	fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
 
-	from erpnext.accounts.utils import get_fiscal_year
-	
-	if check_sub_string(name, '.YYYY.'):
-		name = name.replace('.YYYY.', str(date.today().year))
-
-	if check_sub_string(name, '.YY.'):
-		name = name.replace('.YY.', str(date.today().year)[2:])
-	
-	if check_sub_string(name, 'MM.'):
-		name = name.replace('MM', f'{date.today().month:02d}')
-	
-	# changing value of fiscal according to current fiscal year 
-	if check_sub_string(name, '.fiscal.'):
-		current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
-		fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
-		name = name.replace('.fiscal.', str(fiscal))
-
-	# changing value of company series according to company
 	if company_series:
-		if check_sub_string(name, 'company_series.'):
-			name = name.replace('company_series.', str(company_series))
-		elif check_sub_string(name, '.company_series.'):
-			name = name.replace('.company_series.', str(company_series))
+		name = name.replace('company_series', str(company_series))
+	
+	name = name.replace('YYYY', str(date.today().year))
+	name = name.replace('YY', str(date.today().year)[2:])
+	name = name.replace('MM', f'{date.today().month:02d}')
+	name = name.replace('fiscal', str(fiscal))
+	name = name.replace('#', '')
+	name = name.replace('.', '')
 
-	# removing the hash symbol from naming series
-	if check_sub_string(name, "#"):
-		name = name.replace('#', '')
-		if name[-1] == '.':
-			name = name[:-1]
 	return name
 
 @frappe.whitelist()
 def docs_before_naming(self, method):
-	from erpnext.accounts.utils import get_fiscal_year
-
 	date = self.get("transaction_date") or self.get("posting_date") or getdate()
 
 	fy = get_fiscal_year(date)[0]
@@ -60,7 +36,7 @@ def docs_before_naming(self, method):
 		self.fiscal = fiscal
 	else:
 		fy_years = fy.split("-")
-		fiscal = fy_years[0][2:] + "-" + fy_years[1][2:]
+		fiscal = fy_years[0][2:] + fy_years[1][2:]
 		self.fiscal = fiscal
 
 @frappe.whitelist()
