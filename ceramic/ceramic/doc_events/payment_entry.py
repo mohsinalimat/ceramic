@@ -131,7 +131,7 @@ def cancel_payment_entry(self):
 		pe = frappe.get_doc("Payment Entry", {'ref_payment':self.name})
 	else:
 		pe = None
-
+	authority = frappe.get_value("Company", self.company, 'authority')
 	if authority == "Unauthorized":
 		if not self.ref_pe:
 			for item in self.references:

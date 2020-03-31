@@ -196,6 +196,9 @@ doc_events = {
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
 	},
 	"Pick List": {
+		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.ceramic.doc_events.pick_list.validate",
+		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 	},
@@ -227,7 +230,7 @@ doc_events = {
 		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
 		# 'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
 	},
-	("Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
+	("Pick List", "Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.docs_before_naming",
 	}
 }
@@ -235,7 +238,7 @@ doc_events = {
 
 fixtures = ['Custom Field']
 
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes
 
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
@@ -248,7 +251,4 @@ StockEntry.set_actual_qty = set_actual_qty
 PickList.set_item_locations = set_item_locations
 calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
 calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
-
-from ceramic.ceramic.doc_events.pick_list import create_delivery_note
-import erpnext
-erpnext.stock.doctype.pick_list.pick_list.create_delivery_note = create_delivery_note
+calculate_taxes_and_totals.calculate_taxes = calculate_taxes

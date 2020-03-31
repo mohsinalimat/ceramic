@@ -31,16 +31,35 @@ frappe.query_reports["Sales Order Picked"] = {
 			"reqd": 1
 		},
 		{
-			"fieldname":"item_code",
-			"label": __("Item Code"),
-			"fieldtype": "Link",
-			"options": "Item",
-		},
-		{
 			"fieldname":"item_group",
 			"label": __("Item Group"),
 			"fieldtype": "Link",
 			"options": "Item Group",
+		},
+		{
+			"fieldname":"item_code",
+			"label": __("Item Code"),
+			"fieldtype": "Link",
+			"options": "Item",
+			get_query: function() {
+				var item_group = frappe.query_report.get_filter_value('item_group')
+				if (item_group){
+					return {
+						doctype: "Item",
+						filters: {
+							"item_group": item_group,
+							"is_item_series": 0
+						}
+					}
+				} else {
+					return {
+						doctype: "Item",
+						filters: {
+							"is_item_series": 0
+						}
+					}
+				}
+			}
 		},
 		// {
 		// 	"fieldname":"pending_so",
@@ -53,6 +72,7 @@ frappe.query_reports["Sales Order Picked"] = {
 			"label": __("Company"),
 			"fieldtype": "Link",
 			"options": "Company",
+			default: frappe.defaults.get_user_default("Company"),
 			reqd: 1
 		},
 	]

@@ -327,3 +327,7 @@ def tile_item_creation_update():
 		doc.save()
 		frappe.db.commit()
 		print(doc.name)
+
+@frappe.whitelist()
+def create_pick_list(source_name, target_doc=None):
+	frappe.throw("Testing")

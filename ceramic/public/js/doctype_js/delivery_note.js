@@ -48,14 +48,16 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 							target: me.frm,
 							setters: {
 								customer: me.frm.doc.customer || undefined,
+								company: me.frm.doc.company
 							},
 							get_query_filters: {
 								docstatus: 1,
-								// status: ["not in", ["Closed", "On Hold"]],
+								// status: ["not in", ["Delivered"]],
 								// per_delivered: ["<", 99.99],
 								company: me.frm.doc.company,
 								// project: me.frm.doc.project || undefined,
-							}
+							},
+							date_field: 'posting_date'
 						})
 					}, __("Get items from"));
 			}

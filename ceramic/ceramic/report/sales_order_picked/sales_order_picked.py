@@ -65,27 +65,27 @@ def get_data(filters):
 
 	return data
 
-def insert_pick_list(data, row, idx):
+def insert_pick_list(data, row , idx):
 
-	dn_data = frappe.db.sql("""
-		SELECT pni.parent as pick_list, pni.lot_no, pni.warehouse, pl.posting_date, pni.qty as picked_qty
+	dn_data = frappe.db.sql(f"""
+		SELECT pni.parent as pick_list, pni.lot_no as picked_lot_no, pni.warehouse as picked_warehouse, pl.posting_date, pni.qty as picked_qty
 		FROM `tabPick List` as pl LEFT JOIN `tabPick List Item` as pni ON (pl.name = pni.parent)
 		WHERE 
 			pl.docstatus = 1
-			AND pni.sales_order_item = '%s'
+			AND pni.sales_order_item = '{row.sales_order_item}'
 		ORDER BY
 			pl.posting_date
-		""" % row.sales_order_item, as_dict = 1)
-
+		""", as_dict = 1)
+	
 	total_qty_picked = 0.0
 	if dn_data:
 		row.pick_list = dn_data[0].pick_list
-		row.lot_no = dn_data[0].lot_no
-		row.warehouse = dn_data[0].warehouse
+		row.picked_lot_no = dn_data[0].picked_lot_no
+		row.picked_warehouse = dn_data[0].picked_warehouse
 		row.posting_date = dn_data[0].posting_date
 		row.picked_qty = dn_data[0].picked_qty
 		total_qty_picked += dn_data[0].picked_qty
-
+	
 	for i in dn_data[1:]:
 		data.insert(idx, i)
 		total_qty_picked += i.picked_qty
@@ -93,7 +93,6 @@ def insert_pick_list(data, row, idx):
 
 	row.picked_total = total_qty_picked
 	row.pending_qty = row.qty - total_qty_picked
-
 	return idx
 
 
@@ -104,7 +103,7 @@ def get_columns():
 			"label": _("Sales Order"),
 			"fieldtype": "Link",
 			"options": "Sales Order",
-			"width": 100
+			"width": 130
 		},
 		{
 			"fieldname": "transaction_date",
@@ -117,27 +116,27 @@ def get_columns():
 			"label": _("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
-			"width": 150
+			"width": 190
 		},
 		{
 			"fieldname": "item_code",
 			"label": _("Item Code"),
 			"fieldtype": "Link",
 			"options": "Item",
-			"width": 150
+			"width": 190
+		},
+		{
+			"fieldname": "item_name",
+			"label": _("Item Name"),
+			"fieldtype": "Data",
+			"width": 220
 		},
 		{
 			"fieldname": "item_group",
 			"label": _("Item Group"),
 			"fieldtype": "Link",
 			"options": "Item Group",
-			"width": 150
-		},
-		{
-			"fieldname": "item_name",
-			"label": _("Item Name"),
-			"fieldtype": "Data",
-			"width": 180
+			"width": 120
 		},
 		{
 			"fieldname": "qty",
@@ -178,16 +177,16 @@ def get_columns():
 		},
 		{
 			"fieldname": "picked_warehouse",
-			"label": _("Picked Warehouse"),
+			"label": _("Warehouse"),
 			"fieldtype": "Link",
 			"options": "Warehouse",
-			"width": 100
+			"width": 140
 		},
 		{
 			"fieldname": "picked_lot_no",
-			"label": _("Picked Lot No"),
+			"label": _("Lot No"),
 			"fieldtype": "Data",
-			"width": 100
+			"width": 80
 		},
 		{
 			"fieldname": "posting_date",
@@ -204,20 +203,3 @@ def get_columns():
 	]
 
 	return columns
-
-def _get_columns():
-	return [
-		_("Sales Order") + ":Link/Sales Order:100",
-		_("Date") + ":Date:100",
-		_("Customer") + ":Link/Customer:100",
-		_("Item Code") + ":Link/Item:100",
-		_("Item Name") + ":Data:100",
-		_("Qty") + ":Float:100",
-		_("Rate") + ":Currency:100",
-		_("Amount") + ":Currency:100",
-		_("Delivered Qty") + ":Float:100",
-		_("Pending Qty") + ":Float:100",
-		_("Pick List") + ":Link/Pick List:100",
-		_("Picked Date") + ":Date:100",
-		_("Picked Qty") + ":Float:100",
-	]
