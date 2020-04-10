@@ -38,15 +38,16 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 				group by batch_no having sum(sle.actual_qty) > 0
 				order by batch.expiry_date, sle.batch_no desc
 				limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), searchfields=searchfields), args)
-
-	if batch_nos:
 		return batch_nos
 	else:
-		return frappe.db.sql("""select name, lot_no, packing_type, expiry_date from `tabBatch` batch
-			where item = %(item_code)s
-			and name like %(txt)s
-			and docstatus < 2
+		return frappe.db.sql("""select batch.name, batch.lot_no, batch.packing_type, batch.expiry_date, sle.batch_no, batch.lot_no, round(sum(sle.actual_qty),2), sle.stock_uom from `tabBatch` batch
+			JOIN `tabStock Ledger Entry` sle on sle.batch_no = batch.name
+			where batch.item = %(item_code)s
+			and batch.name like %(txt)s
+			and batch.docstatus < 2
 			{0}
-			{match_conditions}
-			order by expiry_date, name desc
-			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype)), args)
+			{match_conditions} AND
+			sle.company = '{company}'
+			group by sle.batch_no having sum(sle.actual_qty) > 0
+			order by batch.expiry_date, batch.name desc
+			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), company=filters.get('company')), args)

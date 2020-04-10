@@ -56,8 +56,10 @@ def create_main_sales_invoice(self):
 				for index, i in enumerate(source.taxes):
 					target.taxes[index].charge_type = source.taxes[index].charge_type
 					target.taxes[index].included_in_print_rate = source.taxes[index].included_in_print_rate
-					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
-					target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
+					if source.taxes[index].cost_center:
+						target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
+					if source.taxes[index].account_head:
+						target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
 			if self.amended_from:
 				name = frappe.db.get_value("Sales Invoice", {"ref_invoice": source.amended_from}, "name")
 				target.amended_from = name
@@ -67,11 +69,17 @@ def create_main_sales_invoice(self):
 		def account_details(source_doc, target_doc, source_parent):
 			target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
 
+			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
+			source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
+
 			doc = frappe.get_doc("Company", target_company)
 
-			target_doc.income_account = doc.default_income_account
-			target_doc.expense_account = doc.default_expense_account
-			target_doc.cost_center = doc.cost_center
+			if source_doc.income_account:
+				target_doc.income_account = source_doc.income_account.replace(source_company_abbr, target_company_abbr)
+			if source_doc.expense_account:
+				target_doc.expense_account = source_doc.expense_account.replace(source_company_abbr, target_company_abbr)
+			if source_doc.cost_center:
+				target_doc.cost_center = source_doc.cost_center.replace(source_company_abbr, target_company_abbr)
 
 		fields = {
 			"Sales Invoice": {
@@ -95,6 +103,8 @@ def create_main_sales_invoice(self):
 					"qty": "real_qty",
 					"delivery_docname": "delivery_note",
 					"delivery_childname": "dn_detail",
+					"so_childname": "so_detail",
+					"so_docname": "sales_order",
 					"real_batch_no": "batch_no"
 				},
 				"field_no_map": {
@@ -125,19 +135,11 @@ def create_main_sales_invoice(self):
 		si.series_value = self.series_value
 		si.flags.ignore_permissions = True
 		
-		try:
-			si.save(ignore_permissions = True)
-			si.real_difference_amount = si.rounded_total - self.rounded_total
-			si.save(ignore_permissions = True)
-			self.db_set('ref_invoice', si.name)
-			frappe.db.commit()
-			si.submit()
-			for i in self.items:
-				change_delivery_authority(i.delivery_docname)
-		except Exception as e:
-			frappe.db.rollback()
-			frappe.throw(e)
-	
+		si.save(ignore_permissions = True)
+		si.real_difference_amount = si.rounded_total - self.rounded_total
+		si.save(ignore_permissions = True)
+		self.db_set('ref_invoice', si.name)
+		si.submit()
 	
 
 

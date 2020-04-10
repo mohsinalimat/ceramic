@@ -8,16 +8,34 @@ def before_validate(self, method):
 	for item in self.items:
 		item.discounted_amount = item.discounted_rate * item.real_qty
 		item.discounted_net_amount = item.discounted_amount
+	
+		# if item.discounted_rate > item.rate:
+		# 	item.discounted_rate = item.rate
+		
+		# if item.real_qty > item.qty:
+		# 	item.real_qty = item.qty
 
 @frappe.whitelist()
 def on_submit(self, test):
 	for item in self.items:
 		if item.against_pick_list:
-			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list_item)
+			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			if delivered_qty > pick_list_item.qty:
 				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+
+		if item.against_sales_order:
+			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
+			delivered_real_qty = item.real_qty + sales_order_item.delivered_real_qty
+
+			sales_order_item.db_set("delivered_real_qty", delivered_real_qty)
+		
+		if item.pl_detail:
+			pick_list_batch_no = frappe.db.get_value("Pick List Item", item.pl_detail, 'batch_no')
+
+			if item.batch_no != pick_list_batch_no:
+				frappe.throw(_(f"Row: {item.idx} : Batch No {frappe.bold(item.batch_no)} is Not same as Pick List Batch No {frappe.bold(pick_list_batch_no)}."))
 	update_status_pick_list(self)
 
 def update_status_pick_list(self):
@@ -25,35 +43,36 @@ def update_status_pick_list(self):
 
 	for pick in pick_list:
 		pl = frappe.get_doc("Pick List", pick)
+		delivered_qty = 0
+		picked_qty = 0
 
-		flag = True
 		for item in pl.locations:
-			if item.delivered_qty >= item.qty:
-				continue
-			else:
-				flag = False
-				break
-		
-		if flag:
-			pl.db_set('status', 'Delivered')
-		else:
-			pl.db_set('status', 'To Deliver')
+			delivered_qty += item.delivered_qty
+			picked_qty += item.qty
+
+			pl.db_set('per_delivered', (delivered_qty / picked_qty) * 100)
 
 	change_delivery_authority(self.name)
 
 def on_cancel(self, method):
 	for item in self.items:
 		if item.against_pick_list:
-			pick_list_item = frappe.get_doc("Pick List Item", item.against_pick_list_item)
+			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = pick_list_item.delivered_qty - item.qty
 			if delivered_qty < 0:
 				frappe.throw("You can not deliver more tha picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+	
+		if item.against_sales_order:
+			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
+			delivered_real_qty = sales_order_item.delivered_real_qty - item.real_qty
+
+			sales_order_item.db_set("delivered_real_qty", delivered_real_qty)
 	update_status_pick_list(self)
 
 def before_save(self, method):
 	for row in self.items:
-		row.real_qty = max(row.qty,row.real_qty)
+		row.full_qty = max(row.qty,row.real_qty)
 
 def change_delivery_authority(name):
 	dn_status = frappe.get_value("Delivery Note", name, "status")
@@ -78,8 +97,6 @@ def create_invoice(source_name, target_doc=None):
 		alternate_company = frappe.db.get_value("Company", source.company, "alternate_company")
 		target.expense_account = ""
 
-		
-		
 		target.update_stock = 1
 		# target_doc.delivery_note = "T"
 
@@ -113,6 +130,8 @@ def create_invoice(source_name, target_doc=None):
 		if source.taxes:
 			for index, value in enumerate(source.taxes):
 				target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
+				if source.taxes[index].cost_center:
+					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 
 		target.run_method("set_missing_values")
 		target.run_method("set_po_nos")

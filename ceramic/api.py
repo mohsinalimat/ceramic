@@ -2,46 +2,44 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint, nowdate, cstr, getdate
 from frappe.model.mapper import get_mapped_doc
-from datetime import date
+import datetime
 from frappe.utils import getdate
 from erpnext.accounts.utils import get_fiscal_year
 from frappe.desk.notifications import get_filters_for
 
 check_sub_string = lambda string, sub_string: not string.find(sub_string) == -1
 
-def naming_series_name(name, company_series = None):
-	current_fiscal = frappe.db.get_value('Global Defaults', None, 'current_fiscal_year')
-	fiscal = frappe.db.get_value("Fiscal Year", str(current_fiscal),'fiscal')
-
+def naming_series_name(name, fiscal, company_series=None):
 	if company_series:
 		name = name.replace('company_series', str(company_series))
 	
-	name = name.replace('YYYY', str(date.today().year))
-	name = name.replace('YY', str(date.today().year)[2:])
-	name = name.replace('MM', f'{date.today().month:02d}')
+	name = name.replace('YYYY', str(datetime.date.today().year))
+	name = name.replace('YY', str(datetime.date.today().year)[2:])
+	name = name.replace('MM', f'{datetime.date.today().month:02d}')
+	name = name.replace('DD', f'{datetime.date.today().day:02d}')
 	name = name.replace('fiscal', str(fiscal))
 	name = name.replace('#', '')
 	name = name.replace('.', '')
-
+	
 	return name
 
 @frappe.whitelist()
-def docs_before_naming(self, method):
-	date = self.get("transaction_date") or self.get("posting_date") or getdate()
-
+def get_fiscal(date):
 	fy = get_fiscal_year(date)[0]
 	fiscal = frappe.db.get_value("Fiscal Year", fy, 'fiscal')
 
-	if fiscal:
-		self.fiscal = fiscal
-	else:
-		fy_years = fy.split("-")
-		fiscal = fy_years[0][2:] + fy_years[1][2:]
-		self.fiscal = fiscal
+	return fiscal if fiscal else fy.split("-")[0][2:] + fy.split("-")[1][2:]
 
 @frappe.whitelist()
-def check_counter_series(name = None, company_series = None):
-	name = naming_series_name(name, company_series)
+def check_counter_series(name, company_series = None, date = None):
+	
+	if not date:
+		date = datetime.date.today()
+	
+	
+	fiscal = get_fiscal(date)
+	
+	name = naming_series_name(name, fiscal, company_series)
 	
 	check = frappe.db.get_value('Series', name, 'current', order_by="name")
 	
@@ -56,9 +54,14 @@ def check_counter_series(name = None, company_series = None):
 @frappe.whitelist()
 def before_naming(self, method):
 	if not self.amended_from:
-		if self.series_value:
+		
+		date = self.get("transaction_date") or self.get("posting_date") or getdate()
+		fiscal = get_fiscal(date)
+		self.fiscal = fiscal
+
+		if self.get('series_value'):
 			if self.series_value > 0:
-				name = naming_series_name(self.naming_series, self.company_series)
+				name = naming_series_name(self.naming_series, fiscal,self.company_series)
 				
 				check = frappe.db.get_value('Series', name, 'current', order_by="name")
 				if check == 0:

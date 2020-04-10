@@ -13,22 +13,20 @@
   "section_break_5",
   "warehouse",
   "quantity_section",
-  "qty",
-  "stock_qty",
   "picked_qty",
   "column_break_11",
   "uom",
-  "conversion_factor",
-  "stock_uom",
   "serial_no_and_batch_section",
   "serial_no",
   "column_break_20",
   "batch_no",
+  "lot_no",
   "column_break_15",
   "sales_order",
   "sales_order_item",
-  "material_request",
-  "material_request_item"
+  "pick_list",
+  "pick_list_item",
+  "unpick_item"
  ],
  "fields": [
   {
@@ -74,7 +72,6 @@
   {
    "fieldname": "warehouse",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Warehouse",
    "options": "Warehouse",
    "read_only": 1
@@ -85,20 +82,7 @@
    "label": "Quantity"
   },
   {
-   "default": "1",
-   "fieldname": "qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Qty"
-  },
-  {
-   "fieldname": "stock_qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Stock Qty",
-   "read_only": 1
-  },
-  {
+   "columns": 1,
    "fieldname": "picked_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -113,19 +97,6 @@
    "fieldtype": "Link",
    "label": "UOM",
    "options": "UOM"
-  },
-  {
-   "fieldname": "conversion_factor",
-   "fieldtype": "Float",
-   "label": "UOM Conversion Factor",
-   "read_only": 1
-  },
-  {
-   "fieldname": "stock_uom",
-   "fieldtype": "Link",
-   "label": "Stock UOM",
-   "options": "UOM",
-   "read_only": 1
   },
   {
    "fieldname": "serial_no_and_batch_section",
@@ -146,6 +117,7 @@
    "depends_on": "batch_no",
    "fieldname": "batch_no",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Batch No",
    "options": "Batch"
   },
@@ -157,6 +129,7 @@
   {
    "fieldname": "sales_order",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Sales Order",
    "options": "Sales Order",
    "read_only": 1
@@ -168,21 +141,33 @@
    "read_only": 1
   },
   {
-   "fieldname": "material_request",
-   "fieldtype": "Link",
-   "label": "Material Request",
-   "options": "Material Request",
-   "read_only": 1
+   "fieldname": "unpick_item",
+   "fieldtype": "Button",
+   "in_list_view": 1,
+   "label": "Unpick Item"
   },
   {
-   "fieldname": "material_request_item",
+   "fieldname": "pick_list",
+   "fieldtype": "Link",
+   "label": "Pick List",
+   "options": "Pick List"
+  },
+  {
+   "fieldname": "pick_list_item",
    "fieldtype": "Data",
-   "label": "Material Request Item",
-   "read_only": 1
+   "label": "Pick List Item"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "batch_no.lot_no",
+   "fieldname": "lot_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Lot No"
   }
  ],
  "istable": 1,
- "modified": "2020-03-30 10:56:58.900676",
+ "modified": "2020-04-02 12:51:25.157381",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Picked Sales Orders",
