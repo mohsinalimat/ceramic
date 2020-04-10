@@ -46,13 +46,24 @@ frappe.ui.form.on('Pick List', {
 				}
 			}
 		});
+		frm.set_query("sales_order", function () {
+			return {
+				query: "ceramic.api.sales_order_query",
+				filters: {
+					"customer": frm.doc.customer,
+					"item_code": frm.doc.item,
+					'company': frm.doc.company
+				}
+			}
+		});
 		frm.clear_custom_buttons()
 	},
 	refresh: function(frm) {
 		frm.clear_custom_buttons()
 		if (frm.doc.__islocal){
 			if ((frm.doc.customer || frm.doc.item) && frm.doc.available_qty.length == 0) {
-				frm.trigger('get_item_qty')
+				frm.trigger('get_item_qty');
+				frm.trigger('get_picked_items');
 			}
 			frm.trigger('naming_series');
 		}
@@ -87,7 +98,8 @@ frappe.ui.form.on('Pick List', {
 			args: {
 				company: frm.doc.company,
 				item_code: frm.doc.item,
-				customer: frm.doc.customer
+				customer: frm.doc.customer,
+				sales_order: frm.doc.sales_order,
 			},
 			callback: function(r){
 				if (r.message){
@@ -132,7 +144,8 @@ frappe.ui.form.on('Pick List', {
 			args: {
 				company: frm.doc.company,
 				item_code: frm.doc.item,
-				customer: frm.doc.customer
+				customer: frm.doc.customer,
+				sales_order: frm.doc.sales_order
 			},
 			callback: function(r){
 				if (r.message){
@@ -144,7 +157,8 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty - item.picked_qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
 							frappe.model.set_value(d.doctype, d.name, 'warehouse', frm.doc.warehouse);
-							frappe.model.set_value(d.doctype, d.name, 'date', item.delivery_date);
+							frappe.model.set_value(d.doctype, d.name, 'date', item.transaction_date);
+							frappe.model.set_value(d.doctype, d.name, 'delivery_date', item.delivery_date);
 							frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
 							frappe.model.set_value(d.doctype, d.name, 'item_name', item.item_name);
 							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty || 0);
@@ -171,6 +185,10 @@ frappe.ui.form.on('Pick List', {
 		frm.trigger('get_item_qty')
 		frm.trigger('get_picked_items')
 	},
+	sales_order: function(frm) {
+		frm.trigger('get_item_qty')
+		frm.trigger('get_picked_items')
+	},
 	get_item_qty: function(frm){
 		frm.doc.available_qty = []
 		frappe.call({
@@ -178,7 +196,8 @@ frappe.ui.form.on('Pick List', {
 			args: {
 				company: frm.doc.company,
 				item_code: frm.doc.item,
-				customer: frm.doc.customer
+				customer: frm.doc.customer,
+				sales_order: frm.doc.sales_order
 			},
 			callback: function(r){
 				if (r.message){

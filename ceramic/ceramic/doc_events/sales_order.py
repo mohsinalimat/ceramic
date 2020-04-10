@@ -167,7 +167,8 @@ def make_pick_list(source_name, target_doc=None):
 		target.picked_qty = source.picked_qty
 		target.remaining_qty = target.so_qty - target.qty - target.picked_qty
 		target.customer = source_parent.customer
-		target.date = source_parent.delivery_date
+		target.date = source_parent.transaction_date
+		target.delivery_date = source.delivery_date
 
 	doc = get_mapped_doc('Sales Order', source_name, {
 		'Sales Order': {

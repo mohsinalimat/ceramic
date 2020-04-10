@@ -334,3 +334,42 @@ def tile_item_creation_update():
 @frappe.whitelist()
 def create_pick_list(source_name, target_doc=None):
 	frappe.throw("Testing")
+
+
+@frappe.whitelist()	
+def sales_order_query(doctype, txt, searchfield, start, page_len, filters):
+	conditions = []
+
+	so_searchfield = frappe.get_meta("Sales Order").get_search_fields()
+	so_searchfields = " or ".join(["so.`" + field + "` like %(txt)s" for field in so_searchfield])
+
+	soi_searchfield = frappe.get_meta("Sales Order Item").get_search_fields()
+	soi_searchfield += ["item_code"]
+	soi_searchfields = " or ".join(["soi.`" + field + "` like %(txt)s" for field in soi_searchfield])
+
+	searchfield = so_searchfields + " or " + soi_searchfields
+
+	where_condition = ''
+	if filters.get("item_code"):
+		where_condition += " and soi.item_code = '{}'".format(filters.get("item_code"))
+	
+	if filters.get("customer"):
+		where_condition += " and so.customer = '{}'".format(filters.get("customer"))
+
+	return frappe.db.sql("""select so.name, so.status, so.transaction_date, so.customer, soi.item_code
+			from `tabSales Order` so
+		RIGHT JOIN `tabSales Order Item` soi ON (so.name = soi.parent)
+		where so.docstatus = 1
+			and so.status != "Closed" {where_condition}
+			and ({searchfield})
+			and so.company = '{company}'
+		order by
+			if(locate(%(_txt)s, so.name), locate(%(_txt)s, so.name), 99999)
+		limit %(start)s, %(page_len)s """.format(searchfield=searchfield, where_condition = where_condition, company = filters.get("company")), {
+			'txt': '%%%s%%' % txt,
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len,
+			'item_code': filters.get('item_code'),
+			'customer': filters.get('customer')
+		})

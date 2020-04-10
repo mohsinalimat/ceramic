@@ -11,6 +11,7 @@ def before_vaidate(self, method):
 
 def validate(self, method):
 	check_item_qty(self)
+	remove_items_without_batch_no(self)
 	update_remaining_qty(self)
 
 def before_submit(self, method):
@@ -52,7 +53,7 @@ def update_delivered_percent(self):
 
 def update_available_qty(self):
 	self.available_qty = []
-	data = get_item_qty(self.company, self.item, self.customer)
+	data = get_item_qty(self.company, self.item, self.customer, self.sales_order)
 	for item in data:
 		self.append('available_qty',{
 			'item_code': item.item_code,
@@ -122,11 +123,15 @@ def update_status_sales_order(self):
 		so.db_set('per_picked', (picked_qty / qty) * 100)
 
 @frappe.whitelist()
-def get_item_qty(company, item_code = None, customer = None):
-	if not item_code and not customer:
+def get_item_qty(company, item_code = None, customer = None, sales_order = None):
+	if not item_code and not customer and not sales_order:
 		return
 	
 	batch_locations = []
+
+	where_cond = ''
+	if sales_order:
+		where_cond = f" and soi.parent = '{sales_order}'"
 	
 	if customer:
 		item_code_list = frappe.db.sql(f"""
@@ -137,13 +142,25 @@ def get_item_qty(company, item_code = None, customer = None):
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty
+				soi.qty != soi.picked_qty {where_cond}
 		""")
 		item_codes = [item[0] for item in item_code_list]
 	
 	if item_code and customer:
 		if item_code not in item_codes:
 			frappe.throw(_(f"Item {item_code} is not in sales order for Customer {customer}"))
+	if sales_order:
+		item_code_list = frappe.db.sql(f"""
+			SELECT 
+				DISTINCT soi.item_code
+			FROM 
+				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
+			WHERE
+				so.docstatus = 1 AND
+				soi.qty != soi.picked_qty {where_cond}
+		""")
+		# where_clause += f" AND so.name = '{sales_order}'"
+		item_codes = [item[0] for item in item_code_list]
 	
 	if item_code:
 		item_codes = [item_code]
@@ -193,10 +210,13 @@ def get_item_qty(company, item_code = None, customer = None):
 	return batch_locations
 
 @frappe.whitelist()
-def get_item_from_sales_order(company, item_code = None, customer = None):
-	if not item_code and not customer:
+def get_item_from_sales_order(company, item_code = None, customer = None, sales_order = None):
+	if not item_code and not customer and not sales_order:
 		return
 	where_clause = ''
+	where_cond = ''
+	if sales_order:
+		where_cond = f" and soi.parent = '{sales_order}'"
 	sales_order_list = []
 
 	if customer:
@@ -208,7 +228,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None):
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty
+				soi.qty != soi.picked_qty {where_cond}
 		""")
 		where_clause += f" AND so.customer = '{customer}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -216,6 +236,24 @@ def get_item_from_sales_order(company, item_code = None, customer = None):
 	if item_code and customer:
 		if item_code not in item_codes:
 			frappe.throw(_(f"Item {item_code} is not in sales order for Customer {customer}"))
+	
+	if sales_order:
+		item_code_list = frappe.db.sql(f"""
+			SELECT 
+				DISTINCT soi.item_code
+			FROM 
+				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
+			WHERE
+				so.docstatus = 1 AND
+				soi.qty != soi.picked_qty {where_cond}
+		""")
+		where_clause += f" AND so.name = '{sales_order}'"
+		item_codes = [item[0] for item in item_code_list]
+	# frappe.throw(str(item_codes))
+	
+	if item_code and sales_order:
+		if item_code not in item_codes:
+			frappe.throw(_(f"Item {item_code} is not in sales order {sales_order}"))
 	
 	if item_code:
 		item_codes = [item_code]
@@ -240,12 +278,16 @@ def get_item_from_sales_order(company, item_code = None, customer = None):
 	return sales_order_list
 
 @frappe.whitelist()
-def get_picked_items(company, item_code = None, customer = None):
-	if not item_code and not customer:
+def get_picked_items(company, item_code = None, customer = None, sales_order = None):
+	if not item_code and not customer and not sales_order:
 		return
 	
 	where_clause = ''
 	pick_list_list = []
+	where_cond = ''
+	if sales_order:
+		where_cond = f" and so.name = '{sales_order}'"
+
 
 	if customer:
 		item_code_list = frappe.db.sql(f"""
@@ -256,13 +298,28 @@ def get_picked_items(company, item_code = None, customer = None):
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty
+				soi.qty != soi.picked_qty {where_cond}
 		""")
+		item_codes = [item[0] for item in item_code_list]
+	
+
+	if sales_order and not customer:
+		item_code_list = frappe.db.sql(f"""
+			SELECT 
+				DISTINCT soi.item_code
+			FROM 
+				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
+			WHERE
+				so.docstatus = 1 AND
+				soi.qty != soi.picked_qty {where_cond}
+		""")
+		# where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
 
 	if item_code and customer:
 		if item_code not in item_codes:
 			frappe.throw(_(f"Item {item_code} is not in sales order for Customer {customer}"))
+	
 	
 	if item_code:
 		item_codes = [item_code]
