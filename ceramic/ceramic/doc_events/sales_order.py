@@ -20,7 +20,12 @@ def on_submit(self, method):
 	checking_rate(self)
 	checking_real_qty(self)
 	update_picked_percent(self)
-
+def before_validate_after_submit(self, method):
+	setting_rate_qty(self)
+	calculate_order_priority(self)
+	update_discounted_amount(self)
+	update_idx(self)
+	
 def before_update_after_submit(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)

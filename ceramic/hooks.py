@@ -195,6 +195,7 @@ doc_events = {
 	"Sales Order": {
 		"before_naming": "ceramic.api.before_naming",
 		"before_validate": "ceramic.ceramic.doc_events.sales_order.before_validate",
+		"before_validate_after_submit": "ceramic.ceramic.doc_events.sales_order.before_validate_after_submit",
 		"on_submit": "ceramic.ceramic.doc_events.sales_order.on_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
 		"on_update_after_submit": "ceramic.ceramic.doc_events.sales_order.on_update_after_submit",

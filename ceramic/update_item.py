@@ -49,8 +49,6 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		child_item.qty = flt(d.get("qty"))
 		child_item.real_qty = flt(d.get("real_qty"))
-		child_item.discounted_rate = flt(d.get("discounted_rate"))
-		child_item.discounted_amount = child_item.real_qty * child_item.discounted_rate
 		precision = child_item.precision("rate") or 2
 		
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.picked_qty):
@@ -68,7 +66,10 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 						 .format(child_item.idx, child_item.item_code))
 		else:
 			child_item.rate = flt(d.get("rate"))
-
+			child_item.discounted_rate = flt(d.get("discounted_rate"))
+		
+		child_item.discounted_amount = child_item.real_qty * child_item.discounted_rate
+		child_item.discounted_net_amount = child_item.discounted_amount
 		if flt(child_item.price_list_rate):
 			if flt(child_item.rate) > flt(child_item.price_list_rate):
 				#  if rate is greater than price_list_rate, set margin
