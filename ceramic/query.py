@@ -45,9 +45,10 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 			where batch.item = %(item_code)s
 			and batch.name like %(txt)s
 			and batch.docstatus < 2
+			and (sle.batch_no like %(txt)s or {searchfields})
 			{0}
 			{match_conditions} AND
 			sle.company = '{company}'
 			group by sle.batch_no having sum(sle.actual_qty) > 0
 			order by batch.expiry_date, batch.name desc
-			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), company=filters.get('company')), args)
+			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), company=filters.get('company'), searchfields=searchfields), args)

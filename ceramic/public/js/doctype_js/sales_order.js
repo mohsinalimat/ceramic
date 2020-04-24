@@ -391,7 +391,15 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		return current_tax_amount;
 	},
 })
-$.extend(cur_frm.cscript, new erpnext.selling.SalesOrderController({frm: cur_frm}));
+$.extend(cur_frm.cscript, new erpnext.selling.SalesOrderController({ frm: cur_frm }));
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("item_code", "items", function (doc) {
+		return {
+			query: "erpnext.controllers.queries.item_query",
+			filters: { 'is_sales_item': 1, 'authority': doc.authority }
+		}
+	});
+}
 
 frappe.ui.form.on('Sales Order', {
 	onload: function(frm){
@@ -423,9 +431,15 @@ frappe.ui.form.on("Sales Order Item", {
 	discounted_rate: (frm, cdt, cdn) =>{
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);
+		frappe.model.set_value(cdt, cdn, 'discounted_net_amount', d.discounted_rate * d.real_qty);
 	},
 	real_qty: (frm, cdt, cdn) =>{
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);
+		frappe.model.set_value(cdt, cdn, 'discounted_net_amount', d.discounted_rate * d.real_qty);
+	},
+	qty: (frm, cdt, cdn) =>{
+		let d = locals[cdt][cdn];
+		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
 	}
 });

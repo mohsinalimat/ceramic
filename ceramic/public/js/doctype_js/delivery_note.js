@@ -40,26 +40,6 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 							}
 						})
 					}, __("Get items from"));
-					this.frm.add_custom_button(__('Pick List'),
-					function() {
-						erpnext.utils.map_current_doc({
-							method: "ceramic.ceramic.doc_events.pick_list.make_delivery_note",
-							source_doctype: "Pick List",
-							target: me.frm,
-							setters: {
-								customer: me.frm.doc.customer || undefined,
-								company: me.frm.doc.company
-							},
-							get_query_filters: {
-								docstatus: 1,
-								// status: ["not in", ["Delivered"]],
-								// per_delivered: ["<", 99.99],
-								company: me.frm.doc.company,
-								// project: me.frm.doc.project || undefined,
-							},
-							date_field: 'posting_date'
-						})
-					}, __("Get items from"));
 			}
 		}
 
@@ -167,7 +147,14 @@ this.frm.cscript.onload = function (frm) {
 		}
 	});
 }
-
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("item_code", "items", function (doc) {
+		return {
+			query: "erpnext.controllers.queries.item_query",
+			filters: { 'is_sales_item': 1, 'authority': doc.authority }
+		}
+	});
+}
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
 		frm.trigger('add_get_items_button')

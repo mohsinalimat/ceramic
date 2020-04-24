@@ -125,7 +125,10 @@ def create_invoice(source_name, target_doc=None):
 			target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
 		
 		if source.taxes_and_charges:
-			target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+			target_taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+			if frappe.db.exists("Sales Taxes and Charges Template", target_taxes_and_charges):
+				target.taxes_and_charges = target_taxes_and_charges
+			
 		target.taxes = source.taxes
 		if source.taxes:
 			for index, value in enumerate(source.taxes):
