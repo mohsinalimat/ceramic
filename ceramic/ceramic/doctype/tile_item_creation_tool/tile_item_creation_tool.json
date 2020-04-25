@@ -9,13 +9,13 @@
  "field_order": [
   "item_name",
   "item_design",
-  "item_group",
   "is_item_series",
+  "item_series",
   "maintain_stock",
   "image",
   "column_break_6",
   "uom",
-  "item_series",
+  "item_group",
   "amended_from",
   "cover_image",
   "item_detail_section",
@@ -61,12 +61,12 @@
    "fieldtype": "Data",
    "in_global_search": 1,
    "label": "Item Name",
+   "no_copy": 1,
    "read_only": 1,
    "unique": 1
   },
   {
    "depends_on": "eval:!doc.is_item_series",
-   "fetch_from": "item_group.item_series",
    "fieldname": "item_series",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -97,6 +97,7 @@
    "default": "1",
    "fieldname": "maintain_stock",
    "fieldtype": "Check",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "Maintain Stock",
    "reqd": 1
@@ -159,6 +160,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "depends_on": "eval: !doc.is_item_series",
    "fieldname": "tile_quality",
    "fieldtype": "Table",
    "label": "Tile Quality",
@@ -256,6 +258,7 @@
    "options": "Tile Anti Slip Properties"
   },
   {
+   "allow_on_submit": 1,
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "cover_image",
    "fieldtype": "Attach Image",
@@ -337,6 +340,7 @@
    "label": "Set Meta Tags"
   },
   {
+   "allow_on_submit": 1,
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "image",
    "fieldtype": "Attach Image",
@@ -382,7 +386,7 @@
  ],
  "image_field": "image",
  "is_submittable": 1,
- "modified": "2020-04-20 12:49:53.080781",
+ "modified": "2020-04-25 15:37:20.768690",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",

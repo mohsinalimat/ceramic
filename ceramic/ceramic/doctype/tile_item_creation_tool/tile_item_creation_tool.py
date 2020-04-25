@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from frappe.model.rename_doc import rename_doc
 
 class TileItemCreationTool(Document):
 
@@ -13,6 +14,9 @@ class TileItemCreationTool(Document):
 	
 	def on_update_after_submit(self):
 		for tile in self.tile_quality:
+			tile_item =  frappe.get_doc("Item", {'item_code': tile.item_code})
+			tile_item.db_set('cover_image',self.cover_image)
+			tile_item.db_set('image',self.image)
 			if self.item_defaults:
 				item = frappe.get_doc("Item", {'item_name': tile.item_name})
 				item.item_code = item.name
@@ -63,12 +67,14 @@ class TileItemCreationTool(Document):
 					item = frappe.new_doc("Item")
 				else:
 					item = frappe.get_doc("Item", {'item_name': self.item_name + category})
+				
 				item.item_code = self.item_design + tile_grade + tile_surface_code + tile_type_code + tile_size_code
 				item.item_name = self.item_name + category
 				item.item_design = self.item_design
 				item.item_series = self.item_series
 				item.item_creation_tool = self.name
 				item.item_group = self.item_group
+				item.is_stock_item = 1
 				item.stock_uom = self.uom
 
 				item.is_tile = 1
@@ -121,8 +127,8 @@ class TileItemCreationTool(Document):
 		else:
 			item = frappe.new_doc("Item")
 			item.is_item_series = 1
-			item.item_code = self.item_name
-			item.item_name = self.item_name
+			item.item_code = self.item_design
+			item.item_name = self.item_design
 			item.item_creation_tool = self.name
 			item.item_group = self.item_group
 			item.stock_uom = self.uom
@@ -170,3 +176,24 @@ class TileItemCreationTool(Document):
 @frappe.whitelist()
 def get_tile_quality():
 	return [item.name for item in frappe.get_all('Tile Quality')]
+
+@frappe.whitelist()
+def change_item_design(doc, new_value):
+	item_doc = frappe.get_doc('Tile Item Creation Tool',doc)
+	if item_doc.tile_quality:
+		for row in item_doc.tile_quality:
+			if row.item_code:
+				item = frappe.get_doc("Item",row.item_code)
+				new_name = row.item_code.replace(item_doc.item_design,new_value)
+				frappe.rename_doc("Item",row.item_code,new_name,ignore_permissions=True)
+				item = frappe.get_doc("Item",new_name)
+				item.item_name = item.item_name.replace(item_doc.item_design,new_value)
+				item.item_design = new_value
+				item.save()
+		
+		new_current_name = item_doc.name.replace(item_doc.item_design,new_value)
+		frappe.rename_doc("Tile Item Creation Tool",item_doc.name,new_current_name,ignore_permissions=True)
+		current_doc = frappe.get_doc("Tile Item Creation Tool",new_current_name)
+		current_doc.db_set('item_design',new_value)
+		current_doc.db_set('item_name',item_doc.item_name.replace(item_doc.item_design,new_value))
+		return current_doc.name,"Item Design Changed"

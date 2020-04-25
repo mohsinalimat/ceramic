@@ -39,13 +39,53 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 			});
 		}
 
-		if (!frm.doc.is_item_series) {
-			
+		if (frm.doc.docstatus == 1 && frm.doc.item_series) {
+			frm.add_custom_button(__("Change Design"), function () {
+				var dialog = new frappe.ui.Dialog({
+					title: __("Change Item Design"),
+					fields: [
+						{
+							"fieldtype": "Data", "label": __("Old Item Design"), "fieldname": "old_item_design",
+							"reqd": 1, "default": frm.doc.item_design, 'read_only': 1
+						},
+						{
+							"fieldtype": "Data", "label": __("New Item Design"), "fieldname": "new_item_design",
+							"reqd": 1
+						},
+						
+					]
+				});
+				
+				dialog.show();
+				
+				dialog.set_primary_action(__("Done"), function () {
+					var values = dialog.get_values();
+					frappe.call({
+						method: "ceramic.ceramic.doctype.tile_item_creation_tool.tile_item_creation_tool.change_item_design",
+						args: {
+							'doc': frm.doc.name,
+							'new_value': values.new_item_design
+						},
+						callback: function (r) {
+							if (r.message) {
+								frappe.set_route("Form", frm.doc.doctype, r.message[0]);
+							}
+						}
+					})
+					dialog.hide();
+				});
+			})
+		
 		}
 	},
 	before_save: function(frm){
-		if (frm.doc.__islocal){
-			frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.tile_surface_item + '-' + frm.doc.tile_type_item + '-' + frm.doc.tile_size_item
+		if (frm.doc.__islocal) {
+			if (frm.doc.is_item_series) {
+				frm.doc.item_name = frm.doc.item_design
+			}
+			else {	
+				frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.tile_surface_item + '-' + frm.doc.tile_type_item + '-' + frm.doc.tile_size_item
+			}
 		}
 		if (frm.doc.is_item_series) {
 			frm.doc.item_series = ''
