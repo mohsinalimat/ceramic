@@ -113,6 +113,27 @@ this.frm.cscript.onload = function (frm) {
 		}
 	});
 }
+cur_frm.fields_dict.items.grid.get_field("warehouse").get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company,
+		}
+	}
+};
+cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company
+		}
+	}
+};
+cur_frm.fields_dict.set_warehouse.get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company
+		}
+	}
+};
 frappe.ui.form.on('Sales Invoice', {
 	refresh: function(frm){
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){

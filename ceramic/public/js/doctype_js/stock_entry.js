@@ -1,3 +1,33 @@
+cur_frm.fields_dict.from_warehouse.get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company
+		}
+	}
+};
+cur_frm.fields_dict.to_warehouse.get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company
+		}
+	}
+};
+cur_frm.fields_dict.items.grid.get_field("s_warehouse").get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company,
+		}
+	}
+};
+cur_frm.fields_dict.items.grid.get_field("t_warehouse").get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company,
+		}
+	}
+};
+
+
 this.frm.cscript.onload = function (frm) { 
 	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
 		let d = locals[cdt][cdn];
