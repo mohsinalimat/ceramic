@@ -138,7 +138,7 @@ frappe.ui.form.on('Stock Entry', {
 								method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
 								args: {
 									'item_code': item_row.item_code,
-									'price_list': frm.doc.price_list
+									'item_group': item_row.item_group
 								},
 								callback: function (r) {
 									if (r.message) {
@@ -179,7 +179,7 @@ frappe.ui.form.on('Stock Entry', {
 							method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
 							args: {
 								'item_code': item_row.item_code,
-								'price_list': frm.doc.price_list
+								'item_group': item_row.item_group
 							},
 							callback: function (r) {
 								if (r.message) {

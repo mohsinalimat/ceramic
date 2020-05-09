@@ -80,11 +80,19 @@ def update_work_order(self):
 				# if self.purpose == "Manufacture":
 				# 	pro_doc.run_method("update_planned_qty")
 
+# @frappe.whitelist()
+# def get_product_price(item_code,price_list):
+# 	rate = frappe.db.get_value("Item Price",{'price_list':price_list,'buying':1,'item_code':item_code},'price_list_rate')
+	
+# 	if not rate:
+# 		frappe.throw(_("Price not found for item <b>{}</b> in Price list <b>{}/b>").format(item_code,price_list))
+# 	else:
+# 		return rate
+
 @frappe.whitelist()
-def get_product_price(item_code,price_list):
-	rate = frappe.db.get_value("Item Price",{'price_list':price_list,'buying':1,'item_code':item_code},'price_list_rate')
+def get_product_price(item_group,item_code):
+	rate = frappe.db.get_value("Item Group",item_group,'production_price')
 	if not rate:
-		frappe.throw(_("Price not found for item <b>{}</b> in Price list <b>{}/b>").format(item_code,price_list))
+		frappe.throw(_("Price not found for item <b>{}</b> in item group <b>{}/b>").format(item_code,item_group))
 	else:
 		return rate
-

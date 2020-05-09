@@ -35,7 +35,7 @@ def execute(filters=None):
 					lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
 					if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
 						data.append([
-							item_map[item]["item_name"],
+							item,
 							lot_no,
 							flt(qty_dict.bal_qty, float_precision),
 							picked_qty,
@@ -52,7 +52,7 @@ def execute(filters=None):
 def get_columns(filters):
 	"""return columns based on filters"""
 
-	columns = [_("Item Name") + "::350"] + \
+	columns = [_("Item Code") + ":Link/Item:200"] + \
 		[_("Lot No") + "::100"] + \
 		[_("Balance Qty") + ":Float:80"] + \
 		[_("Picked Qty") + ":Float:80"] + \
@@ -60,7 +60,7 @@ def get_columns(filters):
 		[_("Opening Qty") + ":Float:90"] + \
 		[_("In Qty") + ":Float:80"] + \
 		[_("Out Qty") + ":Float:80"] + \
-		[_("Warehouse") + ":Link/Warehouse:150"]
+		[_("Warehouse") + ":Link/Item:150"]
 
 	return columns
 

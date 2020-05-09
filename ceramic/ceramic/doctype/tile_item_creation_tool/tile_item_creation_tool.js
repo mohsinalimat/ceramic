@@ -18,7 +18,13 @@ cur_frm.fields_dict.item_series.get_query = function(doc) {
 		}
 	}
 };
-
+cur_frm.fields_dict.item_group.get_query = function (doc) {
+	return {
+		filters: {
+			'is_group': 0,
+		}
+	}
+};
 frappe.ui.form.on('Tile Item Creation Tool', {
 	refresh: function(frm){
 		if (frm.doc.__islocal){

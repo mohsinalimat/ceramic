@@ -244,7 +244,8 @@ doc_events = {
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
 		"before_validate": "ceramic.ceramic.doc_events.purchase_order.before_validate",
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
+		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
+		"validate": "ceramic.controllers.item_validation.validate_item_authority",
 	},
 	"Purchase Receipt":{
 		"before_naming": "ceramic.api.before_naming",

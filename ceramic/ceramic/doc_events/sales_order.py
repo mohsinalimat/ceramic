@@ -39,6 +39,14 @@ def on_submit(self, method):
 	checking_rate(self)
 	checking_real_qty(self)
 	update_picked_percent(self)
+	check_rate_qty(self)
+
+def check_rate_qty(self):
+	for item in self.items:
+		if not item.rate or item.rate <= 0:
+			frappe.throw(f"Row: {item.idx} Rate cannot be 0 or less")
+		if not item.qty or item.qty <= 0:
+			frappe.throw(f"Row: {item.idx} Quantity can not be 0 or less")
 def before_validate_after_submit(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)
@@ -55,6 +63,7 @@ def before_update_after_submit(self, method):
 	update_idx(self)
 	check_qty_rate(self)
 	update_discounted_net_total(self)
+	check_rate_qty(self)
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)

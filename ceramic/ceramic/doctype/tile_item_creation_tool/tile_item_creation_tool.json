@@ -375,12 +375,14 @@
    "allow_on_submit": 1,
    "fieldname": "default_production_price",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Default Production Price"
   },
   {
    "default": "Production",
    "fieldname": "price_list",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Price List",
    "options": "Price List"
   },
@@ -395,7 +397,7 @@
  ],
  "image_field": "image",
  "is_submittable": 1,
- "modified": "2020-05-02 17:56:21.232355",
+ "modified": "2020-05-09 13:14:12.022552",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",

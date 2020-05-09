@@ -28,12 +28,6 @@ frappe.query_reports["Stock Qty Balance"] = {
 			"options": "Item Group"
 		},
 		{
-			"fieldname":"brand",
-			"label": __("Brand"),
-			"fieldtype": "Link",
-			"options": "Brand"
-		},
-		{
 			"fieldname": "item_code",
 			"label": __("Item"),
 			"fieldtype": "Link",
@@ -46,44 +40,13 @@ frappe.query_reports["Stock Qty Balance"] = {
 			}
 		},
 		{
-			"fieldname": "warehouse",
-			"label": __("Warehouse"),
+			"fieldname": "company",
+			"label": __("Company"),
 			"fieldtype": "Link",
+			"options": "Company",
 			"width": "80",
-			"options": "Warehouse",
-			get_query: () => {
-				var warehouse_type = frappe.query_report.get_filter_value('warehouse_type');
-				if(warehouse_type){
-					return {
-						filters: {
-							'warehouse_type': warehouse_type
-						}
-					};
-				}
-			}
-		},
-		{
-			"fieldname": "warehouse_type",
-			"label": __("Warehouse Type"),
-			"fieldtype": "Link",
-			"width": "80",
-			"options": "Warehouse Type"
-		},
-		{
-			"fieldname":"include_uom",
-			"label": __("Include UOM"),
-			"fieldtype": "Link",
-			"options": "UOM"
-		},
-		{
-			"fieldname": "show_variant_attributes",
-			"label": __("Show Variant Attributes"),
-			"fieldtype": "Check"
-		},
-		{
-			"fieldname": 'show_stock_ageing_data',
-			"label": __('Show Stock Ageing Data'),
-			"fieldtype": 'Check'
+			"default": frappe.defaults.get_user_default("Company"),
+			"reqd": 1
 		},
 	]
 };

@@ -15,8 +15,6 @@ from six import iteritems
 def execute(filters=None):
 	if not filters: filters = {}
 
-	validate_filters(filters)
-
 	from_date = filters.get('from_date')
 	to_date = filters.get('to_date')
 
@@ -25,17 +23,13 @@ def execute(filters=None):
 	items = get_items(filters)
 	sle = get_stock_ledger_entries(filters, items)
 
-	if filters.get('show_stock_ageing_data'):
-		filters['show_warehouse_wise_stock'] = True
-		item_wise_fifo_queue = get_fifo_queue(filters, sle)
-
 	# if no stock ledger entry found return
 	if not sle:
 		return columns, []
 
 	iwb_map = get_item_warehouse_map(filters, sle)
 	item_map = get_item_details(items, sle, filters)
-	item_reorder_detail_map = get_item_reorder_details(item_map.keys())
+	# item_reorder_detail_map = get_item_reorder_details(item_map.keys())
 
 	data = []
 	conversion_factors = {}
@@ -45,21 +39,18 @@ def execute(filters=None):
 	if filters.get("to_date"):
 		conditions += " and pl.posting_date <= %s" % frappe.db.escape(filters.get("to_date"))
 
-	for (company, item, warehouse) in sorted(iwb_map):
+	for (company, item) in sorted(iwb_map):
 		if item_map.get(item):
-			qty_dict = iwb_map[(company, item, warehouse)]
+			qty_dict = iwb_map[(company, item)]
 			item_reorder_level = 0
 			item_reorder_qty = 0
-			if item + warehouse in item_reorder_detail_map:
-				item_reorder_level = item_reorder_detail_map[item + warehouse]["warehouse_reorder_level"]
-				item_reorder_qty = item_reorder_detail_map[item + warehouse]["warehouse_reorder_qty"]
 			picked_qty = frappe.db.sql(f"""
-				SELECT (pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
-				WHERE pl.docstatus = 1 AND pli.item_code = '{item}' AND pli.warehouse = '{warehouse}' AND company = '{company}' {conditions}
-			""")
+				SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
+				WHERE pl.docstatus = 1 AND pli.item_code = '{item}' AND company = '{company}' {conditions}
+			""")[0][0] or 0.0
 			report_data = {
 				'item_code': item,
-				'warehouse': warehouse,
+				'punch_no': frappe.db.get_value("Item", item, 'punch_no') or '',
 				'picked_qty': picked_qty,
 				'company': company,
 				'reorder_level': item_reorder_level,
@@ -67,27 +58,12 @@ def execute(filters=None):
 			}
 			report_data.update(item_map[item])
 			report_data.update(qty_dict)
+			
 
 			if include_uom:
 				conversion_factors.setdefault(item, item_map[item].conversion_factor)
-
-			if filters.get('show_stock_ageing_data'):
-				fifo_queue = item_wise_fifo_queue[(item, warehouse)].get('fifo_queue')
-
-				stock_ageing_data = {
-					'average_age': 0,
-					'earliest_age': 0,
-					'latest_age': 0
-				}
-				if fifo_queue:
-					fifo_queue = sorted(filter(_func, fifo_queue), key=_func)
-					if not fifo_queue: continue
-
-					stock_ageing_data['average_age'] = get_average_age(fifo_queue, to_date)
-					stock_ageing_data['earliest_age'] = date_diff(to_date, fifo_queue[0][1])
-					stock_ageing_data['latest_age'] = date_diff(to_date, fifo_queue[-1][1])
-
-				report_data.update(stock_ageing_data)
+			
+			report_data['remaining_qty'] = report_data['bal_qty'] - report_data['picked_qty']
 
 			data.append(report_data)
 
@@ -98,9 +74,9 @@ def get_columns(filters):
 	"""return columns"""
 
 	columns = [
-		{"label": _("Item Name"), "fieldname": "item_name", "width": 150},
-		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 100},
-		{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 100},
+		{"label": _("Item Code"), "fieldname": "item_code","fieldtype": "Link", "options": "Item", "width": 200},
+		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 200},
+		{"label": _("Punch No"), "fieldname": "punch_no", "fieldtype": "Data", "width": 100},
 		{"label": _("Balance Qty"), "fieldname": "bal_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Picked Qty"), "fieldname": "picked_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Remaining Qty"), "fieldname": "remaining_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
@@ -110,14 +86,6 @@ def get_columns(filters):
 		{"label": _("Stock UOM"), "fieldname": "stock_uom", "fieldtype": "Link", "options": "UOM", "width": 90},
 		{"label": _("Company"), "fieldname": "company", "fieldtype": "Link", "options": "Company", "width": 100}
 	]
-
-	if filters.get('show_stock_ageing_data'):
-		columns += [{'label': _('Average Age'), 'fieldname': 'average_age', 'width': 100},
-		{'label': _('Earliest Age'), 'fieldname': 'earliest_age', 'width': 100},
-		{'label': _('Latest Age'), 'fieldname': 'latest_age', 'width': 100}]
-
-	if filters.get('show_variant_attributes'):
-		columns += [{'label': att_name, 'fieldname': att_name, 'width': 100} for att_name in get_variants_attributes()]
 
 	return columns
 
@@ -131,17 +99,8 @@ def get_conditions(filters):
 	else:
 		frappe.throw(_("'To Date' is required"))
 
-	if filters.get("warehouse"):
-		warehouse_details = frappe.db.get_value("Warehouse",
-			filters.get("warehouse"), ["lft", "rgt"], as_dict=1)
-		if warehouse_details:
-			conditions += " and exists (select name from `tabWarehouse` wh \
-				where wh.lft >= %s and wh.rgt <= %s and sle.warehouse = wh.name)"%(warehouse_details.lft,
-				warehouse_details.rgt)
-
-	if filters.get("warehouse_type") and not filters.get("warehouse"):
-		conditions += " and exists (select name from `tabWarehouse` wh \
-			where wh.warehouse_type = '%s' and sle.warehouse = wh.name)"%(filters.get("warehouse_type"))
+	if filters.get('company'):
+		conditions += " and sle.company = %s" % frappe.db.escape(filters.get("company"))
 
 	return conditions
 
@@ -155,13 +114,14 @@ def get_stock_ledger_entries(filters, items):
 
 	return frappe.db.sql("""
 		select
-			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
+			sle.item_code, sle.posting_date, sum(sle.actual_qty) as actual_qty,
 			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference,
 			sle.item_code as name, sle.voucher_no
 		from
 			`tabStock Ledger Entry` sle force index (posting_sort_index)
 		where sle.docstatus < 2 %s %s
-		order by sle.posting_date, sle.posting_time, sle.creation, sle.actual_qty""" % #nosec
+		group by sle.item_code
+		""" % #nosec
 		(item_conditions_sql, conditions), as_dict=1)
 
 def get_item_warehouse_map(filters, sle):
@@ -170,7 +130,7 @@ def get_item_warehouse_map(filters, sle):
 	to_date = getdate(filters.get("to_date"))
 
 	for d in sle:
-		key = (d.company, d.item_code, d.warehouse)
+		key = (d.company, d.item_code)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
 				"opening_qty": 0.0, "opening_val": 0.0,
@@ -180,7 +140,7 @@ def get_item_warehouse_map(filters, sle):
 				"val_rate": 0.0
 			})
 
-		qty_dict = iwb_map[(d.company, d.item_code, d.warehouse)]
+		qty_dict = iwb_map[(d.company, d.item_code)]
 
 		if d.voucher_type == "Stock Reconciliation":
 			qty_diff = flt(d.qty_after_transaction) - qty_dict.bal_qty
@@ -210,8 +170,8 @@ def get_item_warehouse_map(filters, sle):
 	return iwb_map
 
 def filter_items_with_no_transactions(iwb_map):
-	for (company, item, warehouse) in sorted(iwb_map):
-		qty_dict = iwb_map[(company, item, warehouse)]
+	for (company, item) in sorted(iwb_map):
+		qty_dict = iwb_map[(company, item)]
 
 		no_transactions = True
 		float_precision = cint(frappe.db.get_default("float_precision")) or 3
@@ -222,7 +182,7 @@ def filter_items_with_no_transactions(iwb_map):
 				no_transactions = False
 
 		if no_transactions:
-			iwb_map.pop((company, item, warehouse))
+			iwb_map.pop((company, item))
 
 	return iwb_map
 
@@ -269,29 +229,7 @@ def get_item_details(items, sle, filters):
 	for item in res:
 		item_details.setdefault(item.name, item)
 
-	if filters.get('show_variant_attributes', 0) == 1:
-		variant_values = get_variant_values_for(list(item_details))
-		item_details = {k: v.update(variant_values.get(k, {})) for k, v in iteritems(item_details)}
-
 	return item_details
-
-def get_item_reorder_details(items):
-	item_reorder_details = frappe._dict()
-
-	if items:
-		item_reorder_details = frappe.db.sql("""
-			select parent, warehouse, warehouse_reorder_qty, warehouse_reorder_level
-			from `tabItem Reorder`
-			where parent in ({0})
-		""".format(', '.join([frappe.db.escape(i, percent=False) for i in items])), as_dict=1)
-
-	return dict((d.parent + d.warehouse, d) for d in item_reorder_details)
-
-def validate_filters(filters):
-	if not (filters.get("item_code") or filters.get("warehouse")):
-		sle_count = flt(frappe.db.sql("""select count(name) from `tabStock Ledger Entry`""")[0][0])
-		if sle_count > 500000:
-			frappe.throw(_("Please set filter based on Item or Warehouse due to a large amount of entries."))
 
 def get_variants_attributes():
 	'''Return all item variant attributes.'''
