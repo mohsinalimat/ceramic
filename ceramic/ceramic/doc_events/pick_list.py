@@ -4,6 +4,7 @@ from frappe.utils import today
 from frappe.model.mapper import get_mapped_doc, map_child_doc, map_doc, map_fields
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note as create_delivery_note_from_sales_order
 from erpnext.stock.doctype.pick_list.pick_list import get_items_with_location_and_quantity
+from frappe.utils import flt
 
 def before_vaidate(self, method):
 	remove_items_without_batch_no(self)
@@ -17,12 +18,46 @@ def validate(self, method):
 def before_submit(self, method):
 	update_available_qty(self)
 	update_remaining_qty(self)
-	self.picked_sales_order = []
+	self.picked_sales_orders = []
+	self.available_qty = []
 
 def on_submit(self, method):
 	check_item_qty(self)
+	update_item_so_qty(self)
 	update_sales_order(self, "submit")
 	update_status_sales_order(self)
+
+from ceramic.update_item import update_child_qty_rate
+import json
+def update_item_so_qty(self):
+	for item in self.locations:
+		doc = frappe.get_doc("Sales Order Item", item.sales_order_item)
+		parent_doc = frappe.get_doc("Sales Order", item.sales_order)
+		data = []
+
+		for row in parent_doc.items:
+			if row.name != item.sales_order_item:
+				data.append({
+					'docname': row.name,
+					'name': row.name,
+					'item_code': row.item_code,
+					'qty': row.qty,
+					'rate': row.rate,
+					'discounted_rate': row.discounted_rate,
+					'real_qty': row.real_qty
+				})
+			else:
+				data.append({
+					'docname': row.name,
+					'name': row.name,
+					'item_code': row.item_code,
+					'qty': item.so_qty,
+					'rate': row.rate,
+					'discounted_rate': row.discounted_rate,
+					'real_qty': item.so_real_qty
+				})
+
+		update_child_qty_rate("Sales Order", json.dumps(data), doc.parent)
 
 def on_cancel(self, method):
 	update_sales_order(self, "cancel")
@@ -82,8 +117,8 @@ def update_remaining_qty(self):
 		qty = 0
 		for item in self.locations:
 			if sales_order_item == item.sales_order_item:
-				qty += item.qty
-				item.remaining_qty = item.so_qty - item.picked_qty - qty
+				qty += flt(item.qty)
+				item.remaining_qty = flt(item.so_qty) - flt(item.picked_qty) - flt(qty)
 
 				if item.remaining_qty < 0:
 					frappe.throw(_(f"ROW: {item.idx} : Remaining Qty Cannot be less than 0."))
@@ -91,22 +126,24 @@ def update_remaining_qty(self):
 def update_sales_order(self, method):
 	if method == "submit":
 		for item in self.locations:
-			tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
-			picked_qty = tile.picked_qty + item.qty
-			if picked_qty > tile.qty:
-				frappe.throw("Can not pick item {} in row {} more than {}".format(item.item_code, item.idx, item.qty - item.picked_qty))
+			if frappe.db.exists("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order}):
+				tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
+				picked_qty = tile.picked_qty + item.qty
+				if picked_qty > tile.qty:
+					frappe.throw("Can not pick item {} in row {} more than {}".format(item.item_code, item.idx, item.qty - item.picked_qty))
 
-			tile.db_set('picked_qty', picked_qty)
+				tile.db_set('picked_qty', picked_qty)
 	
 	if method == "cancel":
 		for item in self.locations:
-			tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
-			picked_qty = tile.picked_qty - item.qty
+			if frappe.db.exists("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order}):
+				tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
+				picked_qty = tile.picked_qty - item.qty
 
-			if tile.picked_qty < 0:
-				frappe.throw("Row {}: All Item Already Canclled".format(item.idx))
+				if tile.picked_qty < 0:
+					frappe.throw("Row {}: All Item Already Canclled".format(item.idx))
 
-			tile.db_set('picked_qty', picked_qty)
+				tile.db_set('picked_qty', picked_qty)
 	
 def update_status_sales_order(self):
 	sales_order_list = list(set([item.sales_order for item in self.locations if item.sales_order]))
@@ -358,3 +395,64 @@ def unpick_item(pick_list, pick_list_item):
 	doc.delete()
 
 	update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+
+@frappe.whitelist()
+def get_items(filters):
+	from six import string_types
+	import json
+
+	if isinstance(filters, string_types):
+		filters = json.loads(filters)
+		
+	warehouse_condition = ''
+	batch_locations = frappe.db.sql("""
+		SELECT
+			sle.`item_code`,
+			sle.`warehouse`,
+			sle.`batch_no`,
+			batch.lot_no,
+			SUM(sle.`actual_qty`) AS `actual_qty`
+		FROM
+			`tabStock Ledger Entry` sle, `tabBatch` batch
+		WHERE
+			sle.batch_no = batch.name
+			and sle.`item_code`=%(item_code)s
+			and sle.`company` = '{company}'
+			and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
+			{warehouse_condition}
+		GROUP BY
+			`warehouse`,
+			`batch_no`,
+			`item_code`
+		HAVING `actual_qty` > 0
+		ORDER BY IFNULL(batch.`expiry_date`, '2200-01-01'), batch.`creation`
+	""".format(warehouse_condition=warehouse_condition, company=filters['company']), { #nosec
+		'item_code': filters['item_code'],
+		'today': today(),
+	}, as_dict=1)
+
+	item_name = frappe.db.get_value('Item', filters['item_code'], 'item_name')
+	
+	data = []
+	for item in batch_locations:
+		item['item_name'] = item_name
+		
+		pick_list_available = frappe.db.sql(f"""
+			SELECT SUM(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli
+			JOIN `tabPick List` AS pl ON pl.name = pli.parent
+			WHERE `item_code` = '{filters['item_code']}'
+			AND pli.warehouse = '{item['warehouse']}'
+			AND batch_no = '{item['batch_no']}'
+			AND pl.docstatus = 1
+		""")
+		
+		item['picked_qty'] = pick_list_available[0][0] or 0.0
+		item['available_qty'] = item['actual_qty'] - (pick_list_available[0][0] or 0.0)
+		item['to_pick_qty'] = str(item['available_qty'])
+		if item['available_qty'] <= 0.0:
+			item = None
+
+		if item:
+			data.append(item)
+	# frappe.msgprint(str(data))
+	return data

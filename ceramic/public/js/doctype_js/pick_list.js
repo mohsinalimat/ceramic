@@ -1,4 +1,7 @@
 frappe.ui.form.on('Pick List', {
+	before_validate: (frm) => {
+		frm.trigger('check_qty')
+	},
 	setup: (frm) => {
 		frm.clear_custom_buttons()
 		frm.custom_make_buttons = {
@@ -292,8 +295,18 @@ frappe.ui.form.on('Pick List Item', {
 			});
 		}
 		frm.events.check_qty(frm, cdt, cdn);
+	},
+	update_item: function(frm, cdt, cdn){
+		let d = locals[cdt][cdn];
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty});
 	}
 });
+
+const select_items = (args) => {
+	frappe.require("assets/ceramic/js/utils/item_selector.js", function() {
+		new ItemSelector(args)
+	})
+}
 
 frappe.ui.form.on('Picked Sales Orders', {
 	'unpick_item': (frm, cdt, cdn) => {

@@ -15,6 +15,25 @@ def before_validate(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
+	check_qty_rate(self)
+
+def validate(self, method):
+	update_discounted_net_total(self)
+
+def update_discounted_net_total(self):
+	self.discounted_total = sum(x.discounted_amount for x in self.items)
+	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
+	self.discounted_rounded_total = round(self.discounted_grand_total)
+	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
+
+def check_qty_rate(self):
+	for item in self.items:
+		if not item.discounted_rate:
+			frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+		if not item.real_qty:
+			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+
 
 def on_submit(self, method):
 	checking_rate(self)
@@ -25,12 +44,17 @@ def before_validate_after_submit(self, method):
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
-	
+	check_qty_rate(self)
+
+def validate_after_submit(self, method):
+	update_discounted_net_total(self)
 def before_update_after_submit(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
+	check_qty_rate(self)
+	update_discounted_net_total(self)
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)
@@ -47,12 +71,6 @@ def setting_rate_qty(self):
 	for item in self.items:
 		if not item.rate:
 			item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company)['rate']
-
-		if item.discounted_rate > item.rate:
-			item.discounted_rate = item.rate
-
-		if item.real_qty > item.qty:
-			item.real_qty = item.qty
 
 def calculate_order_priority(self):
 	for item in self.items:
@@ -72,18 +90,19 @@ def update_discounted_amount(self):
 		item.discounted_net_amount = item.discounted_amount
 
 def checking_rate(self):
-	flag = False
-	for row in self.items:
-		if not row.rate:
-			flag = True
-			frappe.msgprint(_(f"Row {row.idx}: Rate cannot be 0."))
+	pass
+	# flag = False
+	# for row in self.items:
+	# 	if not row.rate:
+	# 		flag = True
+	# 		frappe.msgprint(_(f"Row {row.idx}: Rate cannot be 0."))
 
-		if not row.discounted_rate and row.real_qty:
-			flag = True
-			frappe.msgprint(_(f"Row {row.idx}: Discounted Rate cannot be 0."))
+	# 	if not row.discounted_rate and row.real_qty:
+	# 		flag = True
+	# 		frappe.msgprint(_(f"Row {row.idx}: Discounted Rate cannot be 0."))
 
-	if flag:
-		frappe.throw(_("Did not Approved Sales Order"))
+	# if flag:
+	# 	frappe.throw(_("Did not Approved Sales Order"))
 
 def checking_real_qty(self):
 	alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
@@ -106,8 +125,18 @@ def remove_pick_list(self):
 				doc.cancel()
 				doc.delete()
 
+				for dn in frappe.get_all("Delivery Note Item", {'against_pick_list': doc.name}):
+					dn_doc = frappe.get_doc("Delivery Note Item", dn.name)
+					frappe.throw(dn_doc.name)
+
+					dn_doc.db_set('against_pick_list', None)
+					dn_doc.db_set('pl_detail', None)
+
 				parent_doc.append(doc.parent)
 				item.db_set('picked_qty', 0)
+
+	for pl in frappe.get_all("Pick List", {'sales_order': self.name}):
+		frappe.db.set_value("Pick List", pl.name, 'sales_order', None)
 
 	for item in set(parent_doc):
 		update_delivered_percent(frappe.get_doc("Pick List", item))
@@ -168,6 +197,7 @@ def make_pick_list(source_name, target_doc=None):
 	def update_item_quantity(source, target, source_parent):
 		target.qty = flt(source.qty) - flt(source.picked_qty)
 		target.so_qty = flt(source.qty)
+		target.so_real_qty = flt(source.real_qty)
 		target.stock_qty = (flt(source.qty) - flt(source.picked_qty)) * flt(source.conversion_factor)
 		target.picked_qty = source.picked_qty
 		target.remaining_qty = target.so_qty - target.qty - target.picked_qty
@@ -219,31 +249,44 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 
 	def update_item(source, target, source_parent):
 		for i in source.items:
-			real_delivered_qty = i.real_qty - i.delivered_real_qty
-			for j in frappe.get_all("Pick List Item", filters={"sales_order": source.name, "sales_order_item": i.name, "docstatus": 1}):
-				pick_doc = frappe.get_doc("Pick List Item", j.name)
-				
-				if real_delivered_qty <= 0:
-					real_delivered_qty = 0
-				
-				if pick_doc.qty - pick_doc.delivered_qty:
-					target.append('items',{
-						'item_code': pick_doc.item_code,
-						'qty': pick_doc.qty - pick_doc.delivered_qty,
-						'real_qty': min(real_delivered_qty, pick_doc.qty - pick_doc.delivered_qty),
-						'rate': i.rate,
-						'discounted_rate': i.discounted_rate,
-						'against_sales_order': source.name,
-						'so_detail': i.name,
-						'against_pick_list': pick_doc.parent,
-						'pl_detail': pick_doc.name,
-						'warehouse': pick_doc.warehouse,
-						'batch_no': pick_doc.batch_no,
-						'lot_no': pick_doc.lot_no,
-						'item_series': i.item_series
-					})
+			if frappe.db.get_value("Item", i.item_code, 'is_stock_item'):
+				real_delivered_qty = i.real_qty - i.delivered_real_qty
+				for j in frappe.get_all("Pick List Item", filters={"sales_order": source.name, "sales_order_item": i.name, "docstatus": 1}):
+					pick_doc = frappe.get_doc("Pick List Item", j.name)
+					
+					if real_delivered_qty <= 0:
+						real_delivered_qty = 0
+					
+					if pick_doc.qty - pick_doc.delivered_qty:
+						target.append('items',{
+							'item_code': pick_doc.item_code,
+							'qty': pick_doc.qty - pick_doc.delivered_qty,
+							'real_qty': real_delivered_qty,
+							'rate': i.rate,
+							'discounted_rate': i.discounted_rate,
+							'against_sales_order': source.name,
+							'so_detail': i.name,
+							'against_pick_list': pick_doc.parent,
+							'pl_detail': pick_doc.name,
+							'warehouse': pick_doc.warehouse,
+							'batch_no': pick_doc.batch_no,
+							'lot_no': pick_doc.lot_no,
+							'item_series': i.item_series
+						})
 
-					real_delivered_qty = real_delivered_qty - min(real_delivered_qty, pick_doc.qty - pick_doc.delivered_qty)
+						real_delivered_qty = 0
+			else:
+				target.append('items',{
+					'item_code': i.item_code,
+					'qty': i.qty,
+					'real_qty': i.qty,
+					'rate': i.rate,
+					'discounted_rate': i.discounted_rate,
+					'against_sales_order': source.name,
+					'so_detail': i.name,
+					'warehouse': i.warehouse,
+					'item_series': i.item_series
+				})
 
 	mapper = {
 		"Sales Order": {

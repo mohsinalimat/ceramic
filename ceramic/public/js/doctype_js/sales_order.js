@@ -163,8 +163,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 							this.frm.add_custom_button(__('Close'), () => this.close_sales_order(), __("Status"))
 						}
 					}
-
-					this.frm.add_custom_button(__('Pick List'), () => this.create_pick_list(), __('Create'));
+					if (this.frm.doc.per_picked !== 100){
+						this.frm.add_custom_button(__('Pick List'), () => this.create_pick_list(), __('Create'));
+					}
 
 					// delivery note
 					if(flt(doc.per_delivered, 6) < 100 && ["Sales", "Shopping Cart"].indexOf(doc.order_type)!==-1 && allow_delivery) {
@@ -396,7 +397,12 @@ this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("item_code", "items", function (doc) {
 		return {
 			query: "erpnext.controllers.queries.item_query",
-			filters: { 'is_sales_item': 1, 'authority': doc.authority }
+			filters: [
+
+				['is_sales_item', '=', 1],
+				['authority','in',['', doc.authority]]
+			]
+			
 		}
 	});
 }

@@ -1,0 +1,28 @@
+{
+ "add_total_row": 1,
+ "creation": "2020-05-09 10:44:09.783070",
+ "disable_prepared_report": 1,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Millennium",
+ "modified": "2020-05-09 10:54:04.218013",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Stock Qty Balance",
+ "owner": "Administrator",
+ "prepared_report": 1,
+ "ref_doctype": "Stock Ledger Entry",
+ "report_name": "Stock Qty Balance",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Accounts Manager"
+  }
+ ]
+}

@@ -8,12 +8,19 @@ def before_validate(self, method):
 	for item in self.items:
 		item.discounted_amount = item.discounted_rate * item.real_qty
 		item.discounted_net_amount = item.discounted_amount
-	
-		# if item.discounted_rate > item.rate:
-		# 	item.discounted_rate = item.rate
-		
-		# if item.real_qty > item.qty:
-		# 	item.real_qty = item.qty
+
+		if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
+			frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
+
+def validate(self, method):
+	update_discounted_net_total(self)
+
+def update_discounted_net_total(self):
+	self.discounted_total = sum(x.discounted_amount for x in self.items)
+	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
+	self.discounted_rounded_total = round(self.discounted_grand_total)
+	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
 
 @frappe.whitelist()
 def on_submit(self, test):
@@ -207,6 +214,8 @@ def create_invoice(source_name, target_doc=None):
 				"warehouse",
 				"batch_no",
 				"lot_no",
+				"discounted_rate",
+				"real_qty"
 			],
 			"postprocess": update_item,
 			"condition": lambda doc: abs(doc.real_qty) > 0,

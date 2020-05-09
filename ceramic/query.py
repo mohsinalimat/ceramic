@@ -43,7 +43,6 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 		return frappe.db.sql("""select batch.name, batch.lot_no, batch.packing_type, batch.expiry_date, sle.batch_no, batch.lot_no, round(sum(sle.actual_qty),2), sle.stock_uom from `tabBatch` batch
 			JOIN `tabStock Ledger Entry` sle on sle.batch_no = batch.name
 			where batch.item = %(item_code)s
-			and batch.name like %(txt)s
 			and batch.docstatus < 2
 			and (sle.batch_no like %(txt)s or {searchfields})
 			{0}

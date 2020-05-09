@@ -145,6 +145,18 @@ def get_columns():
 			"width": 80
 		},
 		{
+			"fieldname": "base_rate",
+			"label": _("Rate"),
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"fieldname": "base_amount",
+			"label": _("Amount"),
+			"fieldtype": "Float",
+			"width": 100
+		},
+		{
 			"fieldname": "picked_total",
 			"label": _("Picked Total"),
 			"fieldtype": "Float",

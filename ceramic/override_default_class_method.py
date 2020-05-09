@@ -300,7 +300,7 @@ def get_transactions(self, arg=None):
 			options = get_naming_series_options(d)
 			prefixes = prefixes + "\n" + options
 	prefixes.replace("\n\n", "\n")
-	prefixes = prefixes.split("\n")
+	prefixes = sorted(list(set(prefixes.split("\n"))))
 
 	custom_prefixes = frappe.get_all('DocType', fields=["autoname"],
 		filters={"name": ('not in', doctypes), "autoname":('like', '%.#%'), 'module': ('not in', ['Core'])})

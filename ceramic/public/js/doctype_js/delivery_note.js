@@ -151,7 +151,11 @@ this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("item_code", "items", function (doc) {
 		return {
 			query: "erpnext.controllers.queries.item_query",
-			filters: { 'is_sales_item': 1, 'authority': doc.authority }
+			filters: [
+
+				['is_sales_item', '=', 1],
+				['authority', 'in', ['', doc.authority]]
+			]
 		}
 	});
 }

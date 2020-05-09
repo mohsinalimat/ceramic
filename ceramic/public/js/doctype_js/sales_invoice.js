@@ -109,7 +109,11 @@ this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("item_code", "items", function (doc) {
 		return {
 			query: "erpnext.controllers.queries.item_query",
-			filters: { 'is_sales_item': 1, 'authority': doc.authority }
+			filters: [
+
+				['is_sales_item', '=', 1],
+				['authority', 'in', ['', doc.authority]]
+			]
 		}
 	});
 }
@@ -137,7 +141,7 @@ cur_frm.fields_dict.set_warehouse.get_query = function (doc) {
 frappe.ui.form.on('Sales Invoice', {
 	refresh: function(frm){
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
-			frm.set_value("ref_invoice", "");
+			frm.set_value("si_ref", "");
 		}
 		if (cur_frm.doc.company){
 			frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {

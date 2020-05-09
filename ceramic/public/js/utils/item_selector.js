@@ -20,26 +20,9 @@ ItemSelector = Class.extend({
 				fieldtype:'Link',
 				fieldname: 'item_code',
 				options: 'Item',
-				read_only: 0,
+				read_only: 1,
 				reqd: 1,
-				get_query: function(){
-					let items = [...new Set((me.frm.doc.locations || []).map(function(i){return i.item_code}))]
-					return {
-						filters: {
-							"item_code": ['in', items]
-						}
-					}
-				},
-				change: function(){
-					let filters = {'item_code': this.layout.get_value('item_code')};
-					me.get_items(filters);
-					me.frm.doc.locations.map(
-						function(i){
-							if (i.item_code === filters['item_code']){
-								me.dialog.set_value('sales_order', i.sales_order);
-							}
-						});
-				}
+				default: me.item_code,
 			},
 
 			{fieldtype:'Column Break'},
@@ -50,28 +33,8 @@ ItemSelector = Class.extend({
 				fieldname: 'sales_order',
 				options: 'Sales Order',
 				reqd: 1,
-				get_query: function(){
-					let item = me.dialog.fields_dict.item_code.value
-					let sales_order = [...new Set((me.frm.doc.locations).map(function(i){if (i.item_code === item){return i.sales_order}}))]
-					return {
-						filters: {
-							"name": ['in', sales_order]
-						}
-					}
-				},
-				change: function() {
-					let item = this.layout.get_value('item_code');
-
-					let sales_order = this.layout.get_value('sales_order');
-
-					(me.frm.doc.locations).map(function(i){
-						if (i.item_code === item && i.sales_order === sales_order){
-							if (i.sales_order_item && me.dialog){
-								me.dialog.set_value('sales_order_item', i.sales_order_item || '');
-							}
-						}
-					});
-				}
+				read_only: 1,
+				default: me.sales_order
 			},
 			{
 				label: __('Sales Order Item'),
@@ -80,19 +43,7 @@ ItemSelector = Class.extend({
 				reqd: 0,
 				read_only: 1,
 				hidden: 1,
-				change: function () {
-					let item = this.layout.get_value('item_code');
-					let sales_order = this.layout.get_value('sales_order');
-					let sales_order_item = this.layout.get_value('sales_order_item');
-					let total_qty = 0;
-					(me.frm.doc.locations).map(function(i){
-						if (i.item_code === item && i.sales_order === sales_order && i.sales_order_item === sales_order_item){
-							total_qty = total_qty + i.qty
-							me.dialog.set_value('so_qty', total_qty);
-							me.dialog.set_value('picked_qty', 0);
-						}
-					});
-				}
+				default: me.sales_order_item
 			},
 			{ fieldtype: 'Section Break', label: __('Quantity') },
 			{
@@ -100,8 +51,16 @@ ItemSelector = Class.extend({
 				fieldtype:'Float',
 				fieldname: 'so_qty',
 				reqd: 0,
-				default: '0',
-				read_only: 1,
+				default: me.so_qty,
+				read_only: 0,
+			},
+			{
+				label: __('Sales Order Real Qty'),
+				fieldtype:'Float',
+				fieldname: 'so_real_qty',
+				reqd: 0,
+				default: me.so_real_qty,
+				read_only: 0,
 			},
 			{fieldtype:'Column Break'},
 			{
@@ -124,14 +83,14 @@ ItemSelector = Class.extend({
 		me.dialog.set_primary_action(__("Add"), function(){
 			me.values = me.dialog.get_values();
 
-			let picked_qty = me.values.picked_qty
+			let picked_qty = me.values.picked_qty + me.picked_qty
 			let so_qty = me.values.so_qty
 
-			if (so_qty === picked_qty){
+			if (so_qty >= picked_qty){
 				me.set_item_locations_in_frm();
 				me.dialog.hide();
 			} else {
-				frappe.msgprint("Picked Qty and Sales Order Qty Are not equal")
+				frappe.msgprint("Picked Qty should be less than " + (so_qty - me.picked_qty))
 			}
 		});
 
@@ -147,6 +106,8 @@ ItemSelector = Class.extend({
 		// $($package_wrapper).find('.grid-add-row').hide();
 
 		me.dialog.show();
+		let filters = {'item_code': me.item_code};
+		me.get_items(filters);
 
 		this.bind_events();
 	},
@@ -160,8 +121,9 @@ ItemSelector = Class.extend({
 			return;
 		}
 
-		filters['company'] = me.frm.doc.company;
+		filters['company'] = me.company;
 
+		console.log(me.company)
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.get_items",
 			freeze: true,
@@ -224,7 +186,7 @@ ItemSelector = Class.extend({
 						'in_list_view': 1,
 					},
 					{
-						'label': 'Avalilable to Pick',
+						'label': 'To Pick',
 						'fieldtype': 'Float',
 						'fieldname': 'to_pick_qty',
 						'in_list_view': 1,
@@ -243,10 +205,17 @@ ItemSelector = Class.extend({
 					// 	// }
 					// },
 					{
+						'label': 'Avalilable Qty',
+						'fieldtype': 'Float',
+						'fieldname': 'available_qty',
+						'read_only': 1,
+						'in_list_view': 1,
+					},
+					{
 						'label': 'Actual Qty',
 						'fieldtype': 'Float',
 						'fieldname': 'actual_qty',
-						// 'read_only': 1,
+						'read_only': 1,
 						'in_list_view': 1,
 					},
 					{
@@ -254,16 +223,9 @@ ItemSelector = Class.extend({
 						'fieldtype': 'Float',
 						'fieldname': 'picked_qty',
 						'read_only': 1,
-						'in_list_view': 1,
-					},
-					{
-						'label': 'Avalilable Qty',
-						'fieldtype': 'Float',
-						'fieldname': 'available_qty',
-						'read_only': 1,
-						'hidden': 1,
 						'in_list_view': 0,
-					}
+					},
+					
 				],
 				in_place_edit: false,
 				// data: this.data,
@@ -340,9 +302,14 @@ ItemSelector = Class.extend({
 			var locations = me.frm.add_child('locations');
 			// console.log(locations.doctype)
 			frappe.model.set_value(locations.doctype, locations.name, 'item_code', d.item_code);
+			frappe.model.set_value(locations.doctype, locations.name, 'customer', me.customer);
+			frappe.model.set_value(locations.doctype, locations.name, 'so_qty', me.values.so_qty);
+			frappe.model.set_value(locations.doctype, locations.name, 'so_real_qty', me.values.so_real_qty);
+			frappe.model.set_value(locations.doctype, locations.name, 'delivery_date', me.delivery_date);
+			frappe.model.set_value(locations.doctype, locations.name, 'date', me.date);
 			frappe.model.set_value(locations.doctype, locations.name, 'warehouse', d.warehouse);
 			frappe.model.set_value(locations.doctype, locations.name, 'qty', d.to_pick_qty);
-			frappe.model.set_value(locations.doctype, locations.name, 'picked_qty', d.to_pick_qty);
+			frappe.model.set_value(locations.doctype, locations.name, 'picked_qty', me.picked_qty || 0);
 			frappe.model.set_value(locations.doctype, locations.name, 'available_qty', d.available_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'actual_qty', d.actual_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order', sales_order);

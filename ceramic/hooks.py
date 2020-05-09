@@ -2,31 +2,34 @@
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
-# from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes
 
-# from erpnext.stock.stock_ledger import update_entries_after
-# from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
-# from erpnext.stock.doctype.pick_list.pick_list import PickList
-# from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+from erpnext.stock.stock_ledger import update_entries_after
+from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from erpnext.stock.doctype.pick_list.pick_list import PickList
+from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 
-# import erpnext
-# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+import erpnext
+from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
-# # naming series overrides
-# from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
-# from ceramic.override_default_class_method import get_transactions
-# NamingSeries.get_transactions = get_transactions
+# naming series overrides
+from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
+from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
+from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict
+from ceramic.override_default_class_method import get_transactions
+NamingSeries.get_transactions = get_transactions
+OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
 
 # # override default class method
-# update_entries_after.raise_exceptions = raise_exceptions
-# StockEntry.set_actual_qty = set_actual_qty
-# PickList.set_item_locations = set_item_locations
-# calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
-# calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
-# calculate_taxes_and_totals.calculate_taxes = calculate_taxes
+update_entries_after.raise_exceptions = raise_exceptions
+StockEntry.set_actual_qty = set_actual_qty
+PickList.set_item_locations = set_item_locations
+calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
+calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
+calculate_taxes_and_totals.calculate_taxes = calculate_taxes
 
 app_name = "ceramic"
 app_title = "Ceramic"
@@ -206,7 +209,8 @@ doc_events = {
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
 		"on_update_after_submit": "ceramic.ceramic.doc_events.sales_order.on_update_after_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_order.on_cancel",
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
+		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.sales_order.validate"],
+		"validate_after_submit": "ceramic.ceramic.doc_events.sales_order.validate_after_submit",
 	},
 	"Pick List": {
 		"before_naming": "ceramic.api.before_naming",
@@ -221,15 +225,21 @@ doc_events = {
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
+		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.delivery_note.validate"]
 	},
 	"Sales Invoice": {
-		"before_naming": "ceramic.api.before_naming",
+		"before_naming": [
+			"ceramic.ceramic.doc_events.sales_invoice.before_naming",
+			"ceramic.api.before_naming"
+		],
 		"before_validate": "ceramic.ceramic.doc_events.sales_invoice.before_validate",
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
+		"validate": [
+			"ceramic.ceramic.doc_events.sales_invoice.validate",
+			"ceramic.controllers.item_validation.validate_item_authority",
+		]
 	},
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
@@ -242,10 +252,14 @@ doc_events = {
 		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
 	"Purchase Invoice": {
-		"before_naming": "ceramic.api.before_naming",
+		"before_naming": [
+			"ceramic.ceramic.doc_events.purchase_invoice.before_naming",
+			"ceramic.api.before_naming",
+		],
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
+		"before_validate": "ceramic.ceramic.doc_events.purchase_invoice.before_validate",
 		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
 	"BOM": {
@@ -272,10 +286,10 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.stock_entry.before_cancel",
 		# 'on_cancel': "ceramic.ceramic.doc_events.stock_entry.on_cancel",
 		'before_save': "ceramic.ceramic.doc_events.stock_entry.before_save",
-		'validate': {
+		'validate': [
 			"ceramic.ceramic.doc_events.stock_entry.validate",
 			"ceramic.controllers.item_validation.validate_item_authority"
-		},
+		],
 		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
 		# 'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
 	},

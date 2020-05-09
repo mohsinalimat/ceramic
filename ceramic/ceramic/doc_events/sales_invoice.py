@@ -4,8 +4,18 @@ from frappe.model.mapper import get_mapped_doc
 
 def before_validate(self, method):
 	for item in self.items:
-		item.discounted_amount = item.discounted_rate * item.real_qty
+		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
 		item.discounted_net_amount = item.discounted_amount
+	
+	if self.authority == "Unauthorized":
+		for item in self.items:
+			item.full_rate = 0
+			item.full_qty = 0
+
+def before_naming(self, method):
+	if self.is_opening == "Yes":
+		if not self.get('name'):
+			self.naming_series = 'O' + self.naming_series
 
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
@@ -40,7 +50,7 @@ def create_main_sales_invoice(self):
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-			target.ref_invoice = self.name
+			target.si_ref = self.name
 			target.authority = "Unauthorized"
 
 			if source.debit_to:
@@ -61,7 +71,7 @@ def create_main_sales_invoice(self):
 					if source.taxes[index].account_head:
 						target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
 			if self.amended_from:
-				name = frappe.db.get_value("Sales Invoice", {"ref_invoice": source.amended_from}, "name")
+				name = frappe.db.get_value("Sales Invoice", {"si_ref": source.amended_from}, "name")
 				target.amended_from = name
 
 			target.set_missing_values()
@@ -74,6 +84,8 @@ def create_main_sales_invoice(self):
 
 			doc = frappe.get_doc("Company", target_company)
 
+			target_doc.real_qty = source_doc.qty
+
 			if source_doc.income_account:
 				target_doc.income_account = source_doc.income_account.replace(source_company_abbr, target_company_abbr)
 			if source_doc.expense_account:
@@ -85,7 +97,8 @@ def create_main_sales_invoice(self):
 			"Sales Invoice": {
 				"doctype": "Sales Invoice",
 				"field_map": {
-					"ref_invoice": "name",
+					"si_ref": "name",
+					"is_opening": "is_opening"
 				},
 				"field_no_map":{
 					"authority",
@@ -105,7 +118,8 @@ def create_main_sales_invoice(self):
 					"delivery_childname": "dn_detail",
 					"so_childname": "so_detail",
 					"so_docname": "sales_order",
-					"real_batch_no": "batch_no"
+					"real_batch_no": "batch_no",
+					"is_opening": "is_opening"
 				},
 				"field_no_map": {
 					"full_rate",
@@ -136,17 +150,31 @@ def create_main_sales_invoice(self):
 		si.flags.ignore_permissions = True
 		
 		si.save(ignore_permissions = True)
-		si.real_difference_amount = si.rounded_total - self.rounded_total
+		si.pay_amount_left = si.rounded_total - self.rounded_total
+		if si.pay_amount_left < 0:
+			si.pay_amount_left = 0.0
 		si.save(ignore_permissions = True)
-		self.db_set('ref_invoice', si.name)
+		self.db_set('si_ref', si.name)
 		si.submit()
 	
+	if authority == "Unauthorized" and not self.si_ref:
+		self.db_set('pay_amount_left', self.rounded_total)
+
+def validate(self, method):
+	update_discounted_net_total(self)
+
+def update_discounted_net_total(self):
+	self.discounted_total = sum(x.discounted_amount for x in self.items)
+	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
+	self.discounted_rounded_total = round(self.discounted_grand_total)
+	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
 
 
 # Cancel Invoice on Cancel
 def cancel_main_sales_invoice(self):
-	if self.ref_invoice:
-		si = frappe.get_doc("Sales Invoice", {'ref_invoice':self.name})
+	if self.si_ref:
+		si = frappe.get_doc("Sales Invoice", {'si_ref':self.name})
 	else:
 		si = None
 	
@@ -165,10 +193,10 @@ def cancel_main_sales_invoice(self):
 			change_delivery_authority(i.delivery_docname)
 
 def delete_sales_invoice(self):
-	ref_name = self.ref_invoice
+	ref_name = self.si_ref
 	try:
-		frappe.db.set_value("Sales Invoice", self.name, 'ref_invoice', '')    
-		frappe.db.set_value("Sales Invoice", ref_name, 'ref_invoice', '') 
+		frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
+		frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
 		frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
 	except Exception as e:
 		frappe.db.rollback()
