@@ -110,6 +110,8 @@ def create_main_sales_invoice(self):
 				"field_map": {
 					"item_design": "item_code",
 					"item_code": "item_design",
+					"posting_date": "posting_date",
+					"posting_time": "posting_time",
 					"full_rate": "rate",
 					"full_qty": "qty",
 					"rate": "discounted_rate",

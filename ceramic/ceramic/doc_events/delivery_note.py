@@ -14,6 +14,7 @@ def before_validate(self, method):
 
 def validate(self, method):
 	update_discounted_net_total(self)
+	calculate_totals(self)
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
@@ -21,6 +22,11 @@ def update_discounted_net_total(self):
 	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
 	self.discounted_rounded_total = round(self.discounted_grand_total)
 	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
+
+
+def calculate_totals(self):
+		self.total_qty = sum([row.qty for row in self.items])
+		self.total_real_qty = sum([row.real_qty for row in self.items])
 
 @frappe.whitelist()
 def on_submit(self, test):

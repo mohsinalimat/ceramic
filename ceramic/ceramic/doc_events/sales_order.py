@@ -18,6 +18,7 @@ def before_validate(self, method):
 	check_qty_rate(self)
 
 def validate(self, method):
+	calculate_totals(self)
 	update_discounted_net_total(self)
 
 def update_discounted_net_total(self):
@@ -34,6 +35,9 @@ def check_qty_rate(self):
 		if not item.real_qty:
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
+def calculate_totals(self):
+		self.total_qty = sum([row.qty for row in self.items])
+		self.total_real_qty = sum([row.real_qty for row in self.items])
 
 def on_submit(self, method):
 	checking_rate(self)

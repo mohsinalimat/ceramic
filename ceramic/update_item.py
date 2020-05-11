@@ -18,9 +18,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if not d.get("docname"):
 			new_child_flag = True
 			if parent_doctype == "Sales Order":
-				child_item  = set_sales_order_defaults(parent_doctype, parent_doctype_name, child_docname, d.get("item_code"))
+				child_item  = set_sales_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 			if parent_doctype == "Purchase Order":
-				child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d.get("item_code"))
+				child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 		else:
 			child_item = frappe.get_doc(parent_doctype + ' Item', d.get("docname"))
 			if flt(child_item.get("rate")) == flt(d.get("rate")) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
