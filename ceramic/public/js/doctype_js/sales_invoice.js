@@ -131,6 +131,13 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.fields_dict.customer.get_query = function (doc) {
+	return {
+		filters: {
+			"disabled": 0
+		}
+	}
+};
 cur_frm.fields_dict.set_warehouse.get_query = function (doc) {
 	return {
 		filters: {
@@ -175,5 +182,6 @@ frappe.ui.form.on('Sales Invoice', {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
-	}
+	},
+	
 });

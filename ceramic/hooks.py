@@ -2,12 +2,13 @@
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check
 
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 
 import erpnext
 from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
@@ -30,6 +31,8 @@ PickList.set_item_locations = set_item_locations
 calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
 calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
 calculate_taxes_and_totals.calculate_taxes = calculate_taxes
+StockLedgerEntry.actual_amt_check = actual_amt_check
+
 
 app_name = "ceramic"
 app_title = "Ceramic"
@@ -224,7 +227,7 @@ doc_events = {
 		"before_validate": "ceramic.ceramic.doc_events.delivery_note.before_validate",
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
-		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
+		"before_submit": "ceramic.ceramic.doc_events.delivery_note.before_submit",
 		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.delivery_note.validate"]
 	},
 	"Sales Invoice": {

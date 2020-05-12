@@ -83,7 +83,10 @@ def check_company(self):
 def setting_rate_qty(self):
 	for item in self.items:
 		if not item.rate:
-			item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company)['rate']
+			item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['rate']
+		
+		if not item.discounted_rate:
+			item.discounted_rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['discounted_rate']
 
 def calculate_order_priority(self):
 	for item in self.items:
@@ -169,7 +172,7 @@ def update_idx(self):
 		item.idx = idx + 1
 
 @frappe.whitelist()
-def get_rate_discounted_rate(item_code, customer, company):
+def get_rate_discounted_rate(item_code, customer, company, so_number = None):
 
 	item_group, tile_quality = frappe.get_value("Item", item_code, ['item_group', 'tile_quality'])
 	parent_item_group = frappe.get_value("Item Group", item_group, 'parent_item_group')
@@ -184,24 +187,45 @@ def get_rate_discounted_rate(item_code, customer, company):
 		where_clause = f"soi.item_group = '{item_group}' AND "
 	else:
 		where_clause = f"soi.parent_item_group = '{parent_item_group}' AND"
+	data = None
+	if so_number:
+		data = frappe.db.sql(f"""
+			SELECT 
+				soi.`rate` as `rate`, soi.`discounted_rate` as `discounted_rate`
+			FROM 
+				`tabSales Order Item` as soi JOIN
+				`tabSales Order` as so ON soi.parent = so.name
+			WHERE
+				{where_clause}
+				soi.`tile_quality` = '{tile_quality}' AND
+				so.`customer` = '{customer}' AND
+				so.`company` = '{company}' AND
+				so.`docstatus` != 2 AND
+				so.`name` = '{so_number}'
+			ORDER BY
+				soi.`creation` DESC
+			LIMIT 
+				1
+		""", as_dict = True)
 
-	data = frappe.db.sql(f"""
-		SELECT 
-			soi.`rate` as `rate`, soi.`discounted_rate` as `discounted_rate`
-		FROM 
-			`tabSales Order Item` as soi JOIN
-			`tabSales Order` as so ON soi.parent = so.name
-		WHERE
-			{where_clause}
-			soi.`tile_quality` = '{tile_quality}' AND
-			so.`customer` = '{customer}' AND
-			so.`company` = '{company}' AND
-			so.`docstatus` != 0
-		ORDER BY
-			so.`transaction_date` DESC
-		LIMIT 
-			1
-	""", as_dict = True)
+	if not data:
+		data = frappe.db.sql(f"""
+			SELECT 
+				soi.`rate` as `rate`, soi.`discounted_rate` as `discounted_rate`
+			FROM 
+				`tabSales Order Item` as soi JOIN
+				`tabSales Order` as so ON soi.parent = so.name
+			WHERE
+				{where_clause}
+				soi.`tile_quality` = '{tile_quality}' AND
+				so.`customer` = '{customer}' AND
+				so.`company` = '{company}' AND
+				so.`docstatus` != 2
+			ORDER BY
+				soi.`creation` DESC
+			LIMIT 
+				1
+		""", as_dict = True)
 
 	return data[0] if data else {'rate': 0, 'discounted_rate': 0}
 

@@ -200,14 +200,19 @@ def determine_exclusive_rate(self):
 			if self.doc.authority == "Unauthorized":
 				# item.discounted_amount = item.discounted_rate * item.real_qty
 				amount_diff = item.amount - item.discounted_amount
-				item.discounted_net_amount = flt((item.amount - amount_diff) / (1 + cumulated_tax_fraction))
+				if tax.tax_exclusive == 1:
+					item.discounted_net_amount = flt(item.amount - amount_diff)
+					item.net_amount = item.amount - ((flt(item.amount - amount_diff)) * cumulated_tax_fraction)
+				else:
+					item.discounted_net_amount = flt((item.amount - amount_diff) / (1 + cumulated_tax_fraction))
+					item.net_amount = item.amount - (item.discounted_amount - item.discounted_net_amount)
 				
 				try:
 					item.discounted_net_rate = flt(item.discounted_net_amount / item.real_qty)
 				except:
 					item.discounted_net_rate = 0
 								
-				item.net_amount = item.amount - (item.discounted_amount - item.discounted_net_amount)
+				
 				item.net_rate = flt(item.net_amount / item.qty, item.precision("net_rate"))
 			# Finbyz Changes end here.
 			else:
@@ -354,3 +359,25 @@ def get_naming_series_options(doctype):
 				options_list.append(name)
 		
 	return "\n".join(options_list)
+
+#check for item quantity available in stock
+def actual_amt_check(self):
+	if self.batch_no and not self.get("allow_negative_stock"):
+		batch_bal_after_transaction = flt(frappe.db.sql("""select sum(actual_qty)
+			from `tabStock Ledger Entry`
+			where warehouse=%s and item_code=%s and batch_no=%s""",
+			(self.warehouse, self.item_code, self.batch_no))[0][0])
+		
+		picked_qty = flt(frappe.db.sql("""select sum(qty - delivered_qty)
+			from `tabPick List Item` as pli
+			JOIN `tabPick List` as pl on pl.name = pli.parent
+			where pli.warehouse=%s and pli.item_code=%s and pli.batch_no=%s and pl.docstatus = 1""",
+			(self.warehouse, self.item_code, self.batch_no))[0][0])
+
+		if batch_bal_after_transaction < 0:
+			frappe.throw(_("Stock balance in Batch {0} will become negative {1} for Item {2} at Warehouse {3}")
+				.format(self.batch_no, batch_bal_after_transaction, self.item_code, self.warehouse))
+
+		if batch_bal_after_transaction - picked_qty < 0:
+			frappe.throw(_("Stock balance (Picked Qty) in Batch {0} will become negative {1} for Item {2} at Warehouse {3}")
+				.format(self.batch_no, (batch_bal_after_transaction - picked_qty), self.item_code, self.warehouse))

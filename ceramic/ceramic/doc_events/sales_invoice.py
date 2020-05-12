@@ -86,6 +86,7 @@ def create_main_sales_invoice(self):
 
 			target_doc.real_qty = source_doc.qty
 
+
 			if source_doc.income_account:
 				target_doc.income_account = source_doc.income_account.replace(source_company_abbr, target_company_abbr)
 			if source_doc.expense_account:
@@ -98,7 +99,10 @@ def create_main_sales_invoice(self):
 				"doctype": "Sales Invoice",
 				"field_map": {
 					"si_ref": "name",
-					"is_opening": "is_opening"
+					"is_opening": "is_opening",
+					"posting_date": "posting_date",
+					"posting_time": "posting_time",
+					"set_posting_time": "set_posting_time",
 				},
 				"field_no_map":{
 					"authority",
@@ -110,8 +114,6 @@ def create_main_sales_invoice(self):
 				"field_map": {
 					"item_design": "item_code",
 					"item_code": "item_design",
-					"posting_date": "posting_date",
-					"posting_time": "posting_time",
 					"full_rate": "rate",
 					"full_qty": "qty",
 					"rate": "discounted_rate",

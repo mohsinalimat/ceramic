@@ -29,7 +29,7 @@ def calculate_totals(self):
 		self.total_real_qty = sum([row.real_qty for row in self.items])
 
 @frappe.whitelist()
-def on_submit(self, test):
+def before_submit(self, test):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
@@ -72,8 +72,6 @@ def on_cancel(self, method):
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = pick_list_item.delivered_qty - item.qty
-			if delivered_qty < 0:
-				frappe.throw("You can not deliver more tha picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
 	
 		if item.against_sales_order:

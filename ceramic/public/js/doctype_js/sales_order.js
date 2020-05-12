@@ -1,4 +1,11 @@
-erpnext.utils.update_child_items = function(opts) {
+cur_frm.fields_dict.customer.get_query = function (doc) {
+	return {
+		filters: {
+			"disabled": 0
+		}
+	}
+};
+erpnext.utils.update_child_items = function (opts) {
 	const frm = opts.frm;
 	const cannot_add_row = (typeof opts.cannot_add_row === 'undefined') ? true : opts.cannot_add_row;
 	const child_docname = (typeof opts.cannot_add_row === 'undefined') ? "items" : opts.child_docname;
@@ -31,28 +38,29 @@ erpnext.utils.update_child_items = function(opts) {
 					read_only: 0,
 					disabled: 0,
 					label: __('Item Code'),
-					change: function(){
-						let trans_items = cur_dialog.fields_dict.trans_items;
-						let me2 = this;
-						if (this.doc.item_code){
-							frappe.call({
-								method: "ceramic.ceramic.doc_events.sales_order.get_rate_discounted_rate",
-								args: {
-									"item_code": this.doc.item_code,
-									"customer": frm.doc.customer,
-									"company": frm.doc.company
-								},
-								callback: function(r){
-									if (r.message){
-										me2.doc.rate = r.message.rate || '0';
-										me2.doc.discounted_rate = r.message.discounted_rate || '0';
+					// change: function(){
+					// 	let trans_items = cur_dialog.fields_dict.trans_items;
+					// 	let me2 = this;
+					// 	if (this.doc.item_code){
+					// 		frappe.call({
+					// 			method: "ceramic.ceramic.doc_events.sales_order.get_rate_discounted_rate",
+					// 			args: {
+					// 				"item_code": this.doc.item_code,
+					// 				"customer": frm.doc.customer,
+					// 				"company": frm.doc.company,
+					// 				"so_number": frm.doc.name || null
+					// 			},
+					// 			callback: function(r){
+					// 				if (r.message){
+					// 					me2.doc.rate = r.message.rate || '0';
+					// 					me2.doc.discounted_rate = r.message.discounted_rate || '0';
 
-										trans_items.grid.refresh();
-									}
-								}
-							});
-						}
-					}
+					// 					trans_items.grid.refresh();
+					// 				}
+					// 			}
+					// 		});
+					// 	}
+					// }
 				}, {
 					fieldtype:'Float',
 					fieldname:"qty",
@@ -73,6 +81,7 @@ erpnext.utils.update_child_items = function(opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					permlevel: 2,
 					label: __('Rate')
 				}, {
 					fieldtype:'Currency',
@@ -80,6 +89,7 @@ erpnext.utils.update_child_items = function(opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					permlevel: 1,
 					label: __('Discounted Rate')
 				}]
 			},
@@ -274,7 +284,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 			args: {
 				"item_code": d.item_code,
 				"customer": doc.customer,
-				"company": doc.company
+				"company": doc.company,
+				"so_number": doc.name || null
 			},
 			callback: function(r){
 				if (r.message){
@@ -417,6 +428,9 @@ frappe.ui.form.on('Sales Order', {
 	onload: function(frm){
 		frm.trigger('naming_series');
 	},
+	before_save: function (frm) {
+		frm.trigger('calculate_total');
+	},
 	naming_series: function(frm) {
 		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from){
 			frappe.call({
@@ -437,6 +451,18 @@ frappe.ui.form.on('Sales Order', {
 	},
 	transaction_date: function(frm){
 		frm.trigger('naming_series');
+	},
+	calculate_total: function (frm) {
+		let total_qty = 0.0
+		let total_real_qty = 0.0
+
+		frm.doc.items.forEach(function (d) {
+			total_qty += flt(d.qty);
+			total_real_qty += flt(d.real_qty);
+		});
+
+		frm.set_value("total_qty", total_qty);
+		frm.set_value("total_real_qty", total_real_qty);
 	}
 })
 frappe.ui.form.on("Sales Order Item", {
@@ -453,5 +479,9 @@ frappe.ui.form.on("Sales Order Item", {
 	qty: (frm, cdt, cdn) =>{
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
+		frm.events.calculate_total(frm)
+	},
+	real_qty: function (frm, cdt, cdn) {
+		frm.events.calculate_total(frm)
 	}
 });

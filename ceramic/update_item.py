@@ -23,7 +23,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 				child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 		else:
 			child_item = frappe.get_doc(parent_doctype + ' Item', d.get("docname"))
-			if flt(child_item.get("rate")) == flt(d.get("rate")) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
+			if child_item.item_code == d.get("item_code") and flt(child_item.get("rate")) == flt(d.get("rate")) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
 				continue
 
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.delivered_qty):
@@ -51,7 +51,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		child_item.real_qty = flt(d.get("real_qty"))
 		precision = child_item.precision("rate") or 2
 		
-		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.picked_qty):
+		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) or d.get("item_code") != child_item.item_code):
 			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}):
 				pl = frappe.get_doc("Pick List Item", picked_item.name)
 
@@ -67,6 +67,8 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		else:
 			child_item.rate = flt(d.get("rate"))
 			child_item.discounted_rate = flt(d.get("discounted_rate"))
+		child_item.item_code = d.get('item_code')
+		
 		
 		child_item.discounted_amount = child_item.real_qty * child_item.discounted_rate
 		child_item.discounted_net_amount = child_item.discounted_amount

@@ -166,12 +166,22 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.fields_dict.customer.get_query = function (doc) {
+	return {
+		filters: {
+			"disabled": 0
+		}
+	}
+};
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
 		frm.trigger('add_get_items_button')
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
+	},
+	before_save: function (frm) {
+		frm.trigger('calculate_total');
 	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
@@ -199,5 +209,26 @@ frappe.ui.form.on('Delivery Note', {
 			customer: frm.doc.customer,
 			company: frm.doc.company,
 		};
+	},
+	calculate_total: function (frm) {
+		let total_qty = 0.0
+		let total_real_qty = 0.0
+
+		frm.doc.items.forEach(function (d) {
+			total_qty += flt(d.qty);
+			total_real_qty += flt(d.real_qty);
+		});
+
+		frm.set_value("total_qty", total_qty);
+		frm.set_value("total_real_qty", total_real_qty);
+	}
+});
+frappe.ui.form.on("Delivery Note Item", {
+	qty: (frm, cdt, cdn) => {
+		let d = locals[cdt][cdn];
+		frm.events.calculate_total(frm)
+	},
+	real_qty: function (frm, cdt, cdn) {
+		frm.events.calculate_total(frm)
 	}
 });
