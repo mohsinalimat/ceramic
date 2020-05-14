@@ -53,6 +53,21 @@ ItemSelector = Class.extend({
 				reqd: 0,
 				default: me.so_qty,
 				read_only: 0,
+				change: function(){
+					let previously_picked = this.layout.get_value('previously_picked') || 0;
+					let picked_qty = this.layout.get_value('picked_qty') || 0;
+					let so_qty = this.layout.get_value('so_qty') || 0;
+					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty));
+				}
+			},
+			{
+				label: __('Previously Picked'),
+				fieldtype:'Float',
+				fieldname: 'previously_picked',
+				reqd: 0,
+				default: me.picked_qty,
+				read_only: 1,
+				// hidden: 1,
 			},
 			{
 				label: __('Sales Order Real Qty'),
@@ -68,6 +83,20 @@ ItemSelector = Class.extend({
 				fieldtype:'Float',
 				fieldname: 'picked_qty',
 				default: '0',
+				reqd: 0,
+				read_only: 1,
+				change: function(){
+					let previously_picked = this.layout.get_value('previously_picked') || 0;
+					let picked_qty = this.layout.get_value('picked_qty') || 0;
+					let so_qty = this.layout.get_value('so_qty') || 0;
+					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty));
+				}
+			},
+			{
+				label: __('Remaining to Pick Qty'),
+				fieldtype:'Float',
+				fieldname: 'remaining_to_pick',
+				default: me.remaining_to_pick,
 				reqd: 0,
 				read_only: 1,
 			}

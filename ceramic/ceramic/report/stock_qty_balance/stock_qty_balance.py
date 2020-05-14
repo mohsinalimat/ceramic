@@ -48,6 +48,10 @@ def execute(filters=None):
 				SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
 				WHERE pl.docstatus = 1 AND pli.item_code = '{item}' AND company = '{company}' {conditions}
 			""")[0][0] or 0.0
+			details_button = """
+					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+						type='button' item-code='{}' company='{}' from-date='{}' to-date='{}' onClick='get_lot_wise_item_details(this.getAttribute("item-code"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"))'>View</button>""".format(item, company, filters.get('from_date'), filters.get('to_date'))
+
 			report_data = {
 				'item_code': item,
 				'punch_no': frappe.db.get_value("Item", item, 'punch_no') or '',
@@ -55,6 +59,7 @@ def execute(filters=None):
 				'company': company,
 				'reorder_level': item_reorder_level,
 				'reorder_qty': item_reorder_qty,
+				"view": details_button
 			}
 			report_data.update(item_map[item])
 			report_data.update(qty_dict)
@@ -77,6 +82,7 @@ def get_columns(filters):
 		{"label": _("Item Code"), "fieldname": "item_code","fieldtype": "Link", "options": "Item", "width": 200},
 		{"label": _("Item Group"), "fieldname": "item_group", "fieldtype": "Link", "options": "Item Group", "width": 200},
 		{"label": _("Punch No"), "fieldname": "punch_no", "fieldtype": "Data", "width": 100},
+		{"label": _("Lot Wise Details"), "fieldname": "view", "fieldtype": "Data", "width": 100},
 		{"label": _("Balance Qty"), "fieldname": "bal_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Picked Qty"), "fieldname": "picked_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},
 		{"label": _("Remaining Qty"), "fieldname": "remaining_qty", "fieldtype": "Float", "width": 100, "convertible": "qty"},

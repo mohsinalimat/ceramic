@@ -5,8 +5,22 @@ cur_frm.fields_dict.customer.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.set_query("shipping_address_name", function () {
+	return {
+		query: "frappe.contacts.doctype.address.address.address_query",
+		filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
+	};
+});
+
+cur_frm.set_query("customer_address", function () {
+	return {
+		query: "frappe.contacts.doctype.address.address.address_query",
+		filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
+	};
+});
 erpnext.utils.update_child_items = function (opts) {
 	const frm = opts.frm;
+	// console.log(opts)
 	const cannot_add_row = (typeof opts.cannot_add_row === 'undefined') ? true : opts.cannot_add_row;
 	const child_docname = (typeof opts.cannot_add_row === 'undefined') ? "items" : opts.child_docname;
 	this.data = [];
@@ -139,7 +153,13 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		// FinByz Changes Over
 		let allow_delivery = false;
 
+		
+
 		if (doc.docstatus==1) {
+
+			if (this.frm.doc.per_delivered == 0){
+				this.frm.add_custom_button(__('Unpick All'), () => this.remove_pick_list(this.frm.doc))
+			}
 
 			if(this.frm.has_perm("submit")) {
 				if(doc.status === 'On Hold') {
@@ -275,6 +295,18 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		}
 
 		this.order_type(doc);
+	},
+
+	remove_pick_list: function(doc, dt, dn){
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
+			args: {
+				'sales_order': doc.name
+			},
+			callback: function(r){
+				frappe.msgprint(r.message);
+			}
+		})
 	},
 
 	price_list_rate: function(doc, cdt, cdn){
@@ -427,6 +459,39 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 frappe.ui.form.on('Sales Order', {
 	onload: function(frm){
 		frm.trigger('naming_series');
+		if (frm.doc.docstatus == 1) {
+			frm.add_custom_button(__("Change Customer"), function () {
+				let me = this;
+				let dialog = new frappe.ui.Dialog({
+					'title': 'Change Customer',
+					'fields': [
+						{ fieldtype: "Link", fieldname: "old_customer", label: __('Old Customer'), options: "Customer" , default: frm.doc.customer,read_only:1},
+						{ fieldtype: "Link", fieldname: "new_customer", label: __('New Customer'), options: "Customer" },
+					],
+				});
+				dialog.show();
+				dialog.set_primary_action(__('Change'), function () {
+					var values = dialog.get_values();
+					frappe.call({
+						method: "ceramic.ceramic.doc_events.sales_order.change_customer",
+						args: {
+							customer: values.new_customer,
+							doc: frm.doc.name
+						},
+						callback: (r) => {
+							if (r.message) {
+								//frappe.msgprint('Customer changed successfully');
+								dialog.hide();
+								frm.reload_doc();
+							}
+						}
+					})
+				});
+				dialog.get_close_btn().on('click', () => {
+					dialog.hide();
+				});
+			});
+		}
 	},
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
@@ -449,23 +514,41 @@ frappe.ui.form.on('Sales Order', {
 	company: function(frm){
 		frm.trigger('naming_series');
 	},
+	delivery_date: function (frm) {
+		$.each(frm.doc.items || [], function (i, d) {
+			d.delivery_date = frm.doc.delivery_date;
+		});
+		refresh_field("items");
+	},
 	transaction_date: function(frm){
 		frm.trigger('naming_series');
 	},
 	calculate_total: function (frm) {
 		let total_qty = 0.0
 		let total_real_qty = 0.0
+		let total_picked_qty = 0.0
+		let total_picked_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
 			total_real_qty += flt(d.real_qty);
+			total_picked_qty += flt(d.picked_qty);
+			d.picked_weight = flt(d.weight_per_unit * d.picked_qty)
+			total_picked_weight += flt(d.picked_weight);
 		});
 
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_real_qty", total_real_qty);
+		frm.set_value("total_picked_qty", total_picked_qty);
+		frm.set_value("total_picked_weight", total_picked_weight);
 	}
 })
 frappe.ui.form.on("Sales Order Item", {
+	items_add: function (frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		row.delivery_date = frm.doc.delivery_date;
+		frm.refresh_field("items");
+	},
 	discounted_rate: (frm, cdt, cdn) =>{
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);
@@ -483,5 +566,20 @@ frappe.ui.form.on("Sales Order Item", {
 	},
 	real_qty: function (frm, cdt, cdn) {
 		frm.events.calculate_total(frm)
+	},
+	unpick_item: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn]
+
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
+			args: {
+				'sales_order': frm.doc.name,
+				'sales_order_item': d.name,
+			},
+			callback: function(r){
+				frm.events.get_item_qty(frm);
+				frm.events.get_picked_items(frm);
+			}
+		})
 	}
 });

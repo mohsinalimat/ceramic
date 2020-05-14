@@ -12,14 +12,33 @@ def before_validate(self, method):
 		if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
 			frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 
+	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
+	so_doc.db_set("customer",self.customer)
+	so_doc.db_set("title",self.customer)
+	so_doc.db_set("customer_name",self.customer_name)
+
 def validate(self, method):
+	validate_item_from_so(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)
+
+def validate_item_from_so(self):
+	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
+	for row in self.items:
+		for d in so_doc.items:
+			if row.so_detail == d.name and d.item_code != row.item_code:
+				frappe.throw(_(f"Row: {row.idx} : Not allowed to change item {frappe.bold(row.item_code)}."))
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
 	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
-	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
+	testing_only_tax = 0
+	
+	for tax in self.taxes:
+		if tax.testing_only:
+			testing_only_tax += tax.tax_amount
+	
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
 	self.discounted_rounded_total = round(self.discounted_grand_total)
 	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
 
@@ -115,7 +134,7 @@ def create_invoice(source_name, target_doc=None):
 			target.company = alternate_company
 
 		if len(target.get("items")) == 0:
-			frappe.throw(_("All these items have already been invoiced"))
+			frappe.throw(_(f"You can not create invoice in company {target.company}"))
 
 		target.run_method("calculate_taxes_and_totals")
 
@@ -140,12 +159,14 @@ def create_invoice(source_name, target_doc=None):
 			if frappe.db.exists("Sales Taxes and Charges Template", target_taxes_and_charges):
 				target.taxes_and_charges = target_taxes_and_charges
 			
-		target.taxes = source.taxes
-		if source.taxes:
-			for index, value in enumerate(source.taxes):
-				target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
-				if source.taxes[index].cost_center:
-					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
+		# target.taxes = source.taxes
+		# if source.taxes:
+		# 	for index, value in enumerate(source.taxes):
+		# 		if not source.taxes[index].testing_only:
+		# 			if source.taxes[index].tax_exclusive:
+		# 				source.taxes[index].included_in_print_rate = 0
+		# 			if source.taxes[index].cost_center:
+		# 				target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 
 		target.run_method("set_missing_values")
 		target.run_method("set_po_nos")
@@ -169,6 +190,22 @@ def create_invoice(source_name, target_doc=None):
 		to_make_invoice_qty_map[item_row.name] = pending_qty
 
 		return pending_qty
+	
+	def update_taxes(source_doc, target_doc, source_parent):
+		target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+		# item_code = frappe.db.get_value("Item", source_doc.item_code, "item_series")
+		doc = frappe.get_doc("Company", target_company)
+		target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
+		source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
+		
+		target_doc.account_head = source_doc.account_head.replace(source_company_abbr, target_company_abbr)
+
+		if source_doc.tax_exclusive:
+			target_doc.included_in_print_rate = 0
+		
+		if source_doc.cost_center:
+			target_doc.cost_center = source_doc.cost_center.replace(source_company_abbr, target_company_abbr)
+
 	
 	def update_item(source_doc, target_doc, source_parent):
 		target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
@@ -210,6 +247,8 @@ def create_invoice(source_name, target_doc=None):
 				"qty": "full_qty",
 				"rate":"full_rate",
 				"batch_no": "real_batch_no",
+				"stock_uom": "stock_uom",
+				"conversation_factor": "conversation_factor"
 			},
 			"field_no_map": [
 				"income_account",
@@ -222,13 +261,15 @@ def create_invoice(source_name, target_doc=None):
 				"real_qty"
 			],
 			"postprocess": update_item,
-			"condition": lambda doc: abs(doc.real_qty) > 0,
+			"condition": lambda doc: abs(doc.real_qty) > 0 and abs(doc.discounted_rate) != 0,
 			"filter": lambda d: get_pending_qty(d) <= 0 if not doc.get("is_return") else get_pending_qty(d) > 0
 		},
-		# "Sales Taxes and Charges": {
-		# 	"doctype": "Sales Taxes and Charges",
-		# 	"add_if_empty": True
-		# },
+		"Sales Taxes and Charges": {
+			"doctype": "Sales Taxes and Charges",
+			"add_if_empty": True,
+			"condition": lambda doc: abs(doc.testing_only) == 0,
+			"postprocess": update_taxes,
+		},
 		"Sales Team": {
 			"doctype": "Sales Team",
 			"field_map": {
@@ -236,7 +277,11 @@ def create_invoice(source_name, target_doc=None):
 			},
 			"add_if_empty": True
 		}
-	}, target_doc, set_missing_values)
+	}, target_doc, set_missing_values, ignore_permission = True)
+
+	if len(doc.items) == 0:
+		alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
+		frappe.throw(f"All item has already been invoiced in company {alternate_company}")
 
 	return doc
 

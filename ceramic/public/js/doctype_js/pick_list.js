@@ -167,6 +167,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty || 0);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
+							frappe.model.set_value(d.doctype, d.name, 'so_real_qty', item.qty);
 						}
 					});
 					frm.refresh_field('locations');
@@ -298,7 +299,7 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty)});
 	}
 });
 
@@ -315,6 +316,8 @@ frappe.ui.form.on('Picked Sales Orders', {
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 			args: {
+				'sales_order': d.sales_order,
+				'sales_order_item': d.sales_order_item,
 				'pick_list': d.pick_list,
 				'pick_list_item': d.pick_list_item
 			},

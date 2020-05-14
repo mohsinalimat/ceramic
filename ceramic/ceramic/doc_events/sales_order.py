@@ -11,11 +11,13 @@ import datetime
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
+	if self._action == "update_after_submit":
+		self.flags.ignore_validate_update_after_submit
 	check_company(self)
 	setting_rate_qty(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
-	check_qty_rate(self)
+	# check_qty_rate(self)
 
 def validate(self, method):
 	calculate_totals(self)
@@ -24,7 +26,13 @@ def validate(self, method):
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
 	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
-	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges
+	testing_only_tax = 0
+	
+	for tax in self.taxes:
+		if tax.testing_only:
+			testing_only_tax += tax.tax_amount
+	
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
 	self.discounted_rounded_total = round(self.discounted_grand_total)
 	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
 
@@ -36,13 +44,19 @@ def check_qty_rate(self):
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 def calculate_totals(self):
-		self.total_qty = sum([row.qty for row in self.items])
-		self.total_real_qty = sum([row.real_qty for row in self.items])
+	for d in self.items:
+		d.picked_weight = flt(d.picked_qty * d.weight_per_unit)
+
+	self.total_qty = sum([row.qty for row in self.items])
+	self.total_real_qty = sum([row.real_qty for row in self.items])
+	self.total_picked_qty = sum([row.picked_qty for row in self.items])
+	self.total_picked_weight = sum([row.picked_weight for row in self.items])
 
 def on_submit(self, method):
 	checking_rate(self)
 	checking_real_qty(self)
 	update_picked_percent(self)
+	check_qty_rate(self)
 	check_rate_qty(self)
 
 def check_rate_qty(self):
@@ -51,6 +65,7 @@ def check_rate_qty(self):
 			frappe.throw(f"Row: {item.idx} Rate cannot be 0 or less")
 		if not item.qty or item.qty <= 0:
 			frappe.throw(f"Row: {item.idx} Quantity can not be 0 or less")
+			
 def before_validate_after_submit(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)
@@ -60,6 +75,7 @@ def before_validate_after_submit(self, method):
 
 def validate_after_submit(self, method):
 	update_discounted_net_total(self)
+
 def before_update_after_submit(self, method):
 	setting_rate_qty(self)
 	calculate_order_priority(self)
@@ -85,8 +101,8 @@ def setting_rate_qty(self):
 		if not item.rate:
 			item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['rate']
 		
-		if not item.discounted_rate:
-			item.discounted_rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['discounted_rate']
+		# if not item.discounted_rate:
+		# 	item.discounted_rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['discounted_rate']
 
 def calculate_order_priority(self):
 	for item in self.items:
@@ -365,3 +381,12 @@ def calculate_order_item_priority():
 		frappe.db.set_value("Sales Order Item", soi.name, 'order_item_priority', order_item_priority)
 
 	frappe.db.commit()
+
+@frappe.whitelist()
+def change_customer(customer,doc):
+	so = frappe.get_doc("Sales Order",doc)
+	so.db_set('customer',customer)
+	so.db_set('title',customer)
+	so.db_set('customer_name',frappe.db.get_value("Customer",customer,'customer_name'))
+	so.db_set('order_priority',frappe.db.get_value("Customer",customer,'customer_priority'))
+	return "Customer changed successfully"

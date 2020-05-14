@@ -10,9 +10,30 @@ def before_save(self, method):
 			row.expense_account = f"Temporary Opening - {abbr}"
 
 def validate(self,method):
-	pass
+	calculate_totals(self)
 		
-
+def calculate_totals(self):
+	premium_qty = 0.0
+	golden_qty = 0.0
+	classic_qty = 0.0
+	economy_qty = 0.0
+	total_qty = 0.0
+	
+	for d in self.items:
+		total_qty += d.qty
+		if d.tile_quality == "Premium":
+			premium_qty += d.qty
+		if d.tile_quality == "Golden":
+			golden_qty += d.qty
+		if d.tile_quality == "Classic":
+			classic_qty += d.qty
+		if d.tile_quality == "Economy":
+			economy_qty += d.qty
+	self.total_qty = total_qty
+	self.premium_qty = premium_qty
+	self.golden_qty = golden_qty
+	self.classic_qty = classic_qty
+	self.economy_qty = economy_qty
 
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
@@ -90,7 +111,9 @@ def update_work_order(self):
 # 		return rate
 
 @frappe.whitelist()
-def get_product_price(item_group,item_code):
+def get_product_price(item_code, item_group = None):
+	if not item_group:
+		item_group = frappe.db.get_value("Item",item_code,'item_group')
 	rate = frappe.db.get_value("Item Group",item_group,'production_price')
 	if not rate:
 		frappe.throw(_("Price not found for item <b>{}</b> in item group <b>{}/b>").format(item_code,item_group))

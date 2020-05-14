@@ -15,7 +15,19 @@ cur_frm.fields_dict.items.grid.get_field("item_code").get_query = function(doc,c
 	}
 		
 };
+cur_frm.set_query("shipping_address_name", function () {
+	return {
+		query: "frappe.contacts.doctype.address.address.address_query",
+		filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
+	};
+});
 
+cur_frm.set_query("customer_address", function () {
+	return {
+		query: "frappe.contacts.doctype.address.address.address_query",
+		filters: { link_doctype: "Customer", link_name: cur_frm.doc.customer }
+	};
+});
 erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.extend({
 	refresh: function(doc, dt, dn) {
 		var me = this;
@@ -221,7 +233,18 @@ frappe.ui.form.on('Delivery Note', {
 
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_real_qty", total_real_qty);
-	}
+		frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
+	},
+	final_weight: function (frm) {
+		if (frm.doc.initial_weight) {	
+			frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
+		}
+	},
+	initial_weight: function (frm) {
+		if (frm.doc.final_weight) {
+			frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
+		}
+	},
 });
 frappe.ui.form.on("Delivery Note Item", {
 	qty: (frm, cdt, cdn) => {

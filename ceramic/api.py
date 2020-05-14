@@ -373,3 +373,97 @@ def sales_order_query(doctype, txt, searchfield, start, page_len, filters):
 			'item_code': filters.get('item_code'),
 			'customer': filters.get('customer')
 		})
+
+from erpnext.accounts.doctype.gl_entry.gl_entry import update_against_account
+def invoice_date_patch():
+	# for doc in frappe.get_all("Sales Invoice", {'authority': 'Authorized', 'docstatus': 1}, ['name','posting_date', 'due_date', 'customer', 'si_ref']):
+	# 	doc2 = frappe.get_doc("Sales Invoice", doc.si_ref)
+		
+	# 	doc2.posting_date = doc.posting_date
+	# 	doc2.due_date = doc.due_date
+	# 	doc2.save()
+
+	# 	print(doc2.customer)
+	
+	for doc in frappe.get_all("Sales Invoice", ['name', 'posting_date', 'customer']):
+		frappe.db.sql("""update `tabGL Entry` set posting_date=%s
+			where voucher_type='Sales Invoice' and voucher_no=%s""",
+			(doc.posting_date, doc.name))
+
+		print(doc.posting_date)
+
+	frappe.db.commit()
+
+@frappe.whitelist()
+def get_lot_wise_data(item_code, company, from_date, to_date):
+	float_precision = 2
+	from_date = datetime.datetime.strptime(from_date, '%Y-%m-%d').date()
+	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
+	def get_conditions(item_code, company, from_date, to_date):
+		conditions = ""
+		conditions += f" and posting_date <= '{to_date}'"
+		conditions += f" and company = '{company}'"
+		conditions += f" and item_code = '{item_code}'"
+
+		return conditions
+
+	def get_stock_ledger_entries(item_code, company, from_date, to_date):
+		conditions = get_conditions(item_code, company, from_date, to_date)
+		return frappe.db.sql(f"""
+			select item_code, batch_no, warehouse, posting_date, sum(actual_qty) as actual_qty
+			from `tabStock Ledger Entry`
+			where docstatus < 2 and ifnull(batch_no, '') != '' {conditions}
+			group by voucher_no, batch_no, item_code, warehouse
+			order by item_code, warehouse""", as_dict=1)
+		
+
+	def get_item_warehouse_batch_map(item_code, company, from_date, to_date):
+		sle = get_stock_ledger_entries(item_code, company, from_date, to_date)
+		iwb_map = {}
+
+		for d in sle:
+			iwb_map.setdefault(d.item_code, {}).setdefault(d.warehouse, {})\
+				.setdefault(d.batch_no, frappe._dict({
+					"opening_qty": 0.0, "in_qty": 0.0, "out_qty": 0.0, "bal_qty": 0.0
+				}))
+			qty_dict = iwb_map[d.item_code][d.warehouse][d.batch_no]
+			if d.posting_date < from_date:
+				qty_dict.opening_qty = flt(qty_dict.opening_qty, float_precision) \
+					+ flt(d.actual_qty, float_precision)
+			elif d.posting_date >= from_date and d.posting_date <= to_date:
+				if flt(d.actual_qty) > 0:
+					qty_dict.in_qty = flt(qty_dict.in_qty, float_precision) + flt(d.actual_qty, float_precision)
+				else:
+					qty_dict.out_qty = flt(qty_dict.out_qty, float_precision) \
+						+ abs(flt(d.actual_qty, float_precision))
+
+			qty_dict.bal_qty = flt(qty_dict.bal_qty, float_precision) + flt(d.actual_qty, float_precision)
+		return iwb_map
+
+	iwb_map =  get_item_warehouse_batch_map(item_code, company, from_date, to_date)
+	data = []
+	conditions = get_conditions(item_code, company, from_date, to_date)
+	for item in sorted(iwb_map):
+		if item_code == item:
+			for wh in sorted(iwb_map[item]):
+				for batch in sorted(iwb_map[item][wh]):
+					qty_dict = iwb_map[item][wh][batch]
+					picked_qty = frappe.db.sql(f"""
+					SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+					WHERE pli.item_code = '{item}' AND pli.warehouse='{wh}' AND pli.batch_no='{batch}' and pl.docstatus = 1 {conditions}
+					""")[0][0] or 0.0
+					lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
+					if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
+						data.append({
+							'item_code': item,
+							'item_name': frappe.db.get_value("Item", item, 'item_name'),
+							'lot_no': lot_no,
+							'bal_qty': flt(qty_dict.bal_qty, float_precision),
+							'picked_qty': picked_qty,
+							'remaining_qty': flt(qty_dict.bal_qty, float_precision) - picked_qty,
+							'opening_qty': flt(qty_dict.opening_qty, float_precision),
+							'in_qty': flt(qty_dict.in_qty, float_precision),
+							'out_qty': flt(qty_dict.out_qty, float_precision), 
+							'warehouse': wh,
+						})
+	return data

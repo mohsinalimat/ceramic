@@ -49,7 +49,8 @@ app_license = "GPL 3.0"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/ceramic/css/ceramic.css"
 app_include_js = [
-	"/assets/ceramic/js/restrict_access.js"
+	"/assets/ceramic/js/restrict_access.js",
+	"/assets/ceramic/js/report_action.js"
 ]
 
 # include js, css files in header of web template
@@ -242,7 +243,8 @@ doc_events = {
 		"validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.validate",
 			"ceramic.controllers.item_validation.validate_item_authority",
-		]
+		],
+		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_invoice.before_update_after_submit"
 	},
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
