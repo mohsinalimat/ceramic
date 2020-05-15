@@ -6,6 +6,7 @@ import datetime
 from frappe.utils import getdate
 from erpnext.accounts.utils import get_fiscal_year
 from frappe.desk.notifications import get_filters_for
+from frappe.utils import get_url_to_form
 
 check_sub_string = lambda string, sub_string: not string.find(sub_string) == -1
 
@@ -468,15 +469,39 @@ def get_lot_wise_data(item_code, company, from_date, to_date):
 						})
 	return data
 
-
-def get_picked_item(item_code, batch_no, company, from_date, to_date):
+@frappe.whitelist()
+def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty, lot_no):
 	float_precision = 2
 	from_date = datetime.datetime.strptime(from_date, '%Y-%m-%d').date()
 	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
 
-	picked_item = frappe.db.get_value(f"""
-		SELECT pli.picked_qty, pli.delivered_qty, (pli.picked_qty - pli.delivered_qty) as remaining_qty pli.customer, pli.item_code, pli.item_name, pli.sales_order, pli.delivery_date from `tabPick List Item` as pli JOIN `tabPick List` as pl on pl.parent = pli.name
-		WHERE pl.docstatus = 1 AND pli.batch = '{batch}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}' AND pli.picked_qty != pli.delivered_qty
-	""")
-
+	picked_item = frappe.db.sql(f"""
+		SELECT pli.customer, pli.sales_order, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - pli.delivered_qty) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}'
+		HAVING remaining_qty > 0
+	""", as_dict = 1)
+	# frappe.throw(f"""
+	# 	SELECT pli.customer, pli.sales_order, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - pli.delivered_qty) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+	# 	WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}'
+	# 	HAVING remaining_qty > 0
+	# """)
+	for item in picked_item:
+		url = get_url_to_form("Sales Order", item.sales_order)
+		sales_order = "<a href='{url}'>{name}</a>".format(url=url, name=item.sales_order)
+		item.sales_order = sales_order
+		item.bal_qty = bal_qty
+		item.total_picked_qty = total_picked_qty
+		item.total_remaining_qty = total_remaining_qty
+		item.lot_no = lot_no
+	
+	if not picked_item:
+		picked_item = [{
+			'bal_qty': bal_qty,
+			'total_picked_qty': total_picked_qty,
+			'total_remaining_qty': total_remaining_qty,
+			'lot_no': lot_no,
+			'item_name': frappe.db.get_value("Item", item_code, 'item_name')
+		}]
+	
+	
 	return picked_item

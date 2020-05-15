@@ -25,23 +25,24 @@ def execute(filters=None):
 		if not filters.get("item") or filters.get("item") == item:
 			for batch in sorted(iwb_map[item]):
 				qty_dict = iwb_map[item][batch]
+				lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
 				picked_qty = frappe.db.sql(f"""
 				SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 				WHERE pli.item_code = '{item}' AND pli.batch_no='{batch}' and pl.docstatus = 1 {conditions} AND pl.company = '{filters.get('company')}'
 				""")[0][0] or 0.0
 				detail_button = """
 					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
-						type='button' item-code='{}' batch-no='{}' company='{}' from-date='{}' to-date='{}' onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no") this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'))
-
-				lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
+						type='button' item-code='{}' batch-no='{}' company='{}' from-date='{}' to-date='{}' bal-qty='{}', total-picked-qty = '{}' total-remaining-qty='{}' lot-no='{}'
+						onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"), this.getAttribute("bal-qty"), this.getAttribute("total-picked-qty"), this.getAttribute("total-remaining-qty"), this.getAttribute("lot-no"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'), flt(qty_dict.bal_qty, float_precision), picked_qty, flt(qty_dict.bal_qty, float_precision) - picked_qty, lot_no)
+				# frappe.throw(str(detail_button))
 				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
 					data.append([
 						item,
 						lot_no,
 						flt(qty_dict.bal_qty, float_precision),
 						picked_qty,
-						detail_button,
 						flt(qty_dict.bal_qty, float_precision) - picked_qty,
+						detail_button,
 						flt(qty_dict.opening_qty, float_precision),
 						flt(qty_dict.in_qty, float_precision),
 						flt(qty_dict.out_qty, float_precision), 
@@ -59,7 +60,7 @@ def get_columns(filters):
 		[_("Balance Qty") + ":Float:80"] + \
 		[_("Picked Qty") + ":Float:80"] + \
 		[_("Remaining Qty") + ":Float:80"] + \
-		[_("Picked Details") + "::80"] + \
+		[_("Picked Details") + ":Data:80"] + \
 		[_("Opening Qty") + ":Float:90"] + \
 		[_("In Qty") + ":Float:80"] + \
 		[_("Out Qty") + ":Float:80"] + \
