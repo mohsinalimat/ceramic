@@ -467,3 +467,16 @@ def get_lot_wise_data(item_code, company, from_date, to_date):
 							'warehouse': wh,
 						})
 	return data
+
+
+def get_picked_item(item_code, batch_no, company, from_date, to_date):
+	float_precision = 2
+	from_date = datetime.datetime.strptime(from_date, '%Y-%m-%d').date()
+	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
+
+	picked_item = frappe.db.get_value(f"""
+		SELECT pli.picked_qty, pli.delivered_qty, (pli.picked_qty - pli.delivered_qty) as remaining_qty pli.customer, pli.item_code, pli.item_name, pli.sales_order, pli.delivery_date from `tabPick List Item` as pli JOIN `tabPick List` as pl on pl.parent = pli.name
+		WHERE pl.docstatus = 1 AND pli.batch = '{batch}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}' AND pli.picked_qty != pli.delivered_qty
+	""")
+
+	return picked_item

@@ -57,6 +57,21 @@ this.frm.cscript.onload = function (frm) {
 			]
 		}
 	});
+	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if (!d.item_code) {
+			frappe.throw(__("Please enter Item Code to get batch no"));
+		}
+		else {
+			return {
+				query: "ceramic.controllers.queries.get_batch_no",
+				filters: {
+					'item_code': d.item_code,
+					'warehouse': d.warehouse
+				}
+			}
+		}
+	});
 }
 frappe.ui.form.on('Stock Entry', {
 	validate: function (frm) {

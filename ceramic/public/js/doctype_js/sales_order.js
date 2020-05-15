@@ -457,7 +457,7 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 	}
 };
 frappe.ui.form.on('Sales Order', {
-	onload: function(frm){
+	onload: function (frm) {
 		frm.trigger('naming_series');
 		if (frm.doc.docstatus == 1) {
 			frm.add_custom_button(__("Change Customer"), function () {
@@ -465,7 +465,7 @@ frappe.ui.form.on('Sales Order', {
 				let dialog = new frappe.ui.Dialog({
 					'title': 'Change Customer',
 					'fields': [
-						{ fieldtype: "Link", fieldname: "old_customer", label: __('Old Customer'), options: "Customer" , default: frm.doc.customer,read_only:1},
+						{ fieldtype: "Link", fieldname: "old_customer", label: __('Old Customer'), options: "Customer", default: frm.doc.customer, read_only: 1 },
 						{ fieldtype: "Link", fieldname: "new_customer", label: __('New Customer'), options: "Customer" },
 					],
 				});
@@ -496,8 +496,8 @@ frappe.ui.form.on('Sales Order', {
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},
-	naming_series: function(frm) {
-		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from){
+	naming_series: function (frm) {
+		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
 			frappe.call({
 				method: "ceramic.api.check_counter_series",
 				args: {
@@ -505,13 +505,13 @@ frappe.ui.form.on('Sales Order', {
 					'company_series': frm.doc.company_series,
 					'date': frm.doc.transaction_date,
 				},
-				callback: function(e) {
+				callback: function (e) {
 					frm.set_value("series_value", e.message);
 				}
 			});
 		}
 	},
-	company: function(frm){
+	company: function (frm) {
 		frm.trigger('naming_series');
 	},
 	delivery_date: function (frm) {
@@ -520,7 +520,7 @@ frappe.ui.form.on('Sales Order', {
 		});
 		refresh_field("items");
 	},
-	transaction_date: function(frm){
+	transaction_date: function (frm) {
 		frm.trigger('naming_series');
 	},
 	calculate_total: function (frm) {
@@ -542,7 +542,7 @@ frappe.ui.form.on('Sales Order', {
 		frm.set_value("total_picked_qty", total_picked_qty);
 		frm.set_value("total_picked_weight", total_picked_weight);
 	}
-})
+});
 frappe.ui.form.on("Sales Order Item", {
 	items_add: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
