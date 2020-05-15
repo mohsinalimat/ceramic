@@ -1,26 +1,16 @@
-if (cur_frm.doc.party_type == "Customer") {
-	
-	cur_frm.fields_dict.customer.get_query = function (doc) {
-		return {
-			filters: {
-				"disabled": 0
-			}
-		}
-	};
-}
-// this.frm.cscript.onload = function (frm) {
-// 	if (frm.doc.party_type == "Customer" || frm.doc.party_type == "Supplier") {
-		
-// 		frm.fields_dict.party.get_query = function (doc) {
-// 			return {
-// 				filters: {
-// 					"disabled": 0
-// 				}
-// 			}
-// 		};
-// 	}
 
-// }
+this.frm.cscript.onload = function (frm) {	
+	this.frm.set_query("party", function (doc) {
+		if (doc.party_type == "Customer" || doc.party_type == "Supplier") {
+			return {
+				filters: {
+					"disabled": 0
+				}
+			}
+		};
+	});
+}
+
 frappe.ui.form.on('Payment Entry', {
 	refresh: function(frm){
 		if (frm.doc.__islocal){

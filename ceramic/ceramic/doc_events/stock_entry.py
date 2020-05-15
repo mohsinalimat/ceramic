@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from ceramic.query import set_batches
 
 def before_save(self, method):	
 	abbr = frappe.db.get_value('Company',self.company,'abbr')
@@ -11,6 +12,8 @@ def before_save(self, method):
 
 def validate(self,method):
 	calculate_totals(self)
+	if self._action == 'submit':
+		set_batches(self, 't_warehouse')
 		
 def calculate_totals(self):
 	premium_qty = 0.0
@@ -49,6 +52,10 @@ def before_submit(self,method):
 
 def before_cancel(self,method):
 	StockEntry.update_work_order = update_work_order  
+	StockEntry.delete_auto_created_batches = delete_auto_created_batches
+	
+def delete_auto_created_batches(self):
+	pass
 
 def validate_finished_goods(self):
 	"""validation: finished good quantity should be same as manufacturing quantity"""
