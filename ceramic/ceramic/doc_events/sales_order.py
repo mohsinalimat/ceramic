@@ -11,6 +11,8 @@ import datetime
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
+	if not self.order_priority:
+		self.order_priority = frappe.db.get_value("Customer", self.customer, 'customer_priority')
 	if self._action == "update_after_submit":
 		self.flags.ignore_validate_update_after_submit
 	check_company(self)
@@ -140,7 +142,7 @@ def checking_real_qty(self):
 	alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
 	for item in self.items:
 		if not item.real_qty:
-			frappe.msgprint(_(f"Row {row.idx}:You will not able to make invoice in company {alternate_company}."))
+			frappe.msgprint(_(f"Row {item.idx}:You will not able to make invoice in company {alternate_company}."))
 
 def remove_pick_list(self):
 	from ceramic.ceramic.doc_events.pick_list import update_delivered_percent

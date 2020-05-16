@@ -5,7 +5,15 @@ from erpnext.stock.doctype.delivery_note.delivery_note import get_returned_qty_m
 from frappe.contacts.doctype.address.address import get_company_address
 
 def before_validate(self, method):
+	self.flags.ignore_permissions = True
+	
 	for item in self.items:
+		if not item.rate and item.delivery_childname:
+			item.rate = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'discounted_rate')
+		
+		if not item.qty and item.delivery_childname:
+			item.qty = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'real_qty')
+		
 		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
 		item.discounted_net_amount = item.discounted_amount
 	
