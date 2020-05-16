@@ -75,9 +75,15 @@ def get_conditions(filters):
 		frappe.throw(_("'From Date' is required"))
 
 	if filters.get("to_date"):
-		conditions += " and posting_date <= '%s'" % filters["to_date"]
+		conditions += " and sle.posting_date <= '%s'" % filters["to_date"]
 	else:
 		frappe.throw(_("'To Date' is required"))
+	
+	if filters.get("item_group"):
+		conditions += " and i.item_group = '%s'" % filters["item_group"]
+	
+	if filters.get("item_code"):
+		conditions += " and sle.item_code = '%s'" % filters["item_code"]
 	
 	conditions += f" and company = '{filters.get('company')}'"
 
@@ -88,9 +94,9 @@ def get_conditions(filters):
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	return frappe.db.sql("""
-		select item_code, batch_no, posting_date, sum(actual_qty) as actual_qty
-		from `tabStock Ledger Entry`
-		where docstatus < 2 and ifnull(batch_no, '') != '' %s
+		select sle.item_code, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
+		from `tabStock Ledger Entry` as sle JOIN `tabItem` as i on i.item_code = sle.item_code
+		where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
 		group by voucher_no, batch_no, item_code
 		order by item_code""" %
 		conditions, as_dict=1)

@@ -67,7 +67,6 @@ frappe.ui.form.on('Payment Entry', {
 			if (d.reference_doctype == "Sales Invoice") {
 				frappe.db.get_value(d.reference_doctype, d.reference_name, 'sales_partner', function (r) {
 					if (r.sales_partner) {
-						console.log(r.sales_partner)
 						d.sales_person = r.sales_partner
 						frappe.model.set_value(d.doctype, d.name, 'sales_person', r.sales_partner)
 					}

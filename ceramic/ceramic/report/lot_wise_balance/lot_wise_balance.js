@@ -8,7 +8,7 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"label": __("From Date"),
 			"fieldtype": "Date",
 			"width": "80",
-			"default": frappe.sys_defaults.year_start_date,
+			"default": frappe.datetime.get_today(),
 		},
 		{
 			"fieldname":"to_date",
@@ -32,6 +32,37 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"width": "80",
 			"default": frappe.defaults.get_user_default("Company"),
 			"reqd": 1
-		}
+		},
+		{
+			"fieldname":"item_group",
+			"label": __("Item Group"),
+			"fieldtype": "Link",
+			"options": "Item Group",
+		},
+		{
+			"fieldname":"item_code",
+			"label": __("Item Code"),
+			"fieldtype": "Link",
+			"options": "Item",
+			get_query: function() {
+				var item_group = frappe.query_report.get_filter_value('item_group')
+				if (item_group){
+					return {
+						doctype: "Item",
+						filters: {
+							"item_group": item_group,
+							"is_item_series": 0
+						}
+					}
+				} else {
+					return {
+						doctype: "Item",
+						filters: {
+							"is_item_series": 0
+						}
+					}
+				}
+			}
+		},
 	]
 }

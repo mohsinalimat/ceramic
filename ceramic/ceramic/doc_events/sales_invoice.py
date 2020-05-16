@@ -6,7 +6,14 @@ from frappe.contacts.doctype.address.address import get_company_address
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
+	
 	for item in self.items:
+		if not item.rate and item.delivery_childname:
+			item.rate = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'discounted_rate')
+		
+		if not item.qty and item.delivery_childname:
+			item.qty = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'real_qty')
+		
 		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
 		item.discounted_net_amount = item.discounted_amount
 	
@@ -248,7 +255,7 @@ def create_main_sales_invoice(self):
 	if self.items[0].delivery_docname:
 		delivery_doc = frappe.get_doc("Delivery Note", self.items[0].delivery_docname)
 		
-	if authority == "Authorized":
+	if authority == "Authorized" and not self.dont_replicate:
 		if self.items[0].delivery_docname:
 			if delivery_doc.discounted_grand_total == self.grand_total:
 				si = make_si_from_dn(delivery_doc.name)

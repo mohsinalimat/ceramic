@@ -281,6 +281,7 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
 	"Payment Entry": {
+		"validate": "ceramic.ceramic.doc_events.payment_entry.validate",
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",

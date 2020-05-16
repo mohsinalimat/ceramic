@@ -2,6 +2,16 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 
+def validate(self,method):
+	get_sales_person(self)
+	for item in self.references:
+		if self.payment_type == "Pay":
+			if item.reference_doctype == 'Purchase Invoice':
+				item.ref_invoice = frappe.db.get_value("Purchase Invoice", item.reference_name, 'pi_ref')
+		
+		if self.payment_type == "Receive":
+			if item.reference_doctype == 'Sales Invoice':
+				item.ref_invoice = frappe.db.get_value("Sales Invoice", item.reference_name, 'si_ref')
 
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
@@ -80,6 +90,7 @@ def create_payment_entry(self):
 				"field_map": {},
 				"field_no_map": {},
 				"postprocess": payment_ref,
+				"condition": lambda doc: doc.ref_invoice
 			}
 		}
 
@@ -174,4 +185,8 @@ def delete_payment_entry(self):
 	else:
 		frappe.db.commit()
 
+def get_sales_person(self):
+	for row in self.references:
+		if row.reference_doctype == "Sales Invoice":
+			row.sales_person = frappe.db.get_value(row.reference_doctype,row.reference_name,'sales_partner')
 	
