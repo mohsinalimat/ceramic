@@ -19,6 +19,10 @@ frappe.ui.form.on('Payment Entry', {
 					frm.set_value('company_series', r.company_series);
 				});
 			}
+			console.log("123")
+			if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0 && frm.doc.authority == "Authorized"){
+				frm.set_value('pe_ref', null);
+			}
 			frm.trigger('company');
 		}
 	},

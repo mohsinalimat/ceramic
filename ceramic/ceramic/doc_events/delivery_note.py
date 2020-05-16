@@ -277,7 +277,7 @@ def create_invoice(source_name, target_doc=None):
 			},
 			"add_if_empty": True
 		}
-	}, target_doc, set_missing_values, ignore_permission = True)
+	}, target_doc, set_missing_values, ignore_permissions = True)
 
 	if len(doc.items) == 0:
 		alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
