@@ -23,6 +23,7 @@ def before_validate(self, method):
 
 def validate(self, method):
 	calculate_totals(self)
+	get_sales_team_detail(self)
 	update_discounted_net_total(self)
 
 def update_discounted_net_total(self):
@@ -392,3 +393,20 @@ def change_customer(customer,doc):
 	so.db_set('customer_name',frappe.db.get_value("Customer",customer,'customer_name'))
 	so.db_set('order_priority',frappe.db.get_value("Customer",customer,'customer_priority'))
 	return "Customer changed successfully"
+
+@frappe.whitelist()
+def get_sales_team_detail(self):
+	customer_doc = frappe.get_doc("Customer",self.customer)
+	self.sales_team = []
+	for d in customer_doc.sales_team:
+		self.append('sales_team',{
+			'sales_person': d.sales_person,
+			'contact_no': d.contact_no,
+			'allocated_percentage': d.allocated_percentage,
+			'allocated_amount': d.allocated_amount,
+			'commission_rate': d.commission_rate,
+			'incentives': d.incentives,
+			'company': d.company,
+			'regional_sales_manager': d.regional_sales_manager,
+			'sales_manager': d.sales_manager
+		})

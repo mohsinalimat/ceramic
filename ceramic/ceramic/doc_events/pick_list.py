@@ -397,12 +397,13 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
 		picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-		frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', picked_qty - doc.qty)
+		frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', ((picked_qty or 0)- (doc.qty or 0)))
 		
 		doc.cancel()
 		doc.delete()
 
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+		return "Pick List to this Sales Order Have Been Deleted."
 	elif sales_order and sales_order_item:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item}, ['name'])
 		
@@ -420,6 +421,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			doc.delete()
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		frappe.db.set_value("Sales Order Item", sales_order_item, 'picked_qty', 0)
+		return "Pick List to this Sales Order Have Been Deleted."
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order}, ['name'])
 		

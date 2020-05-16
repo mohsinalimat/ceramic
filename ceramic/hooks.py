@@ -2,36 +2,36 @@
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
-# from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check
 
-# from erpnext.stock.stock_ledger import update_entries_after
-# from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
-# from erpnext.stock.doctype.pick_list.pick_list import PickList
-# from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
-# from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
+from erpnext.stock.stock_ledger import update_entries_after
+from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+from erpnext.stock.doctype.pick_list.pick_list import PickList
+from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 
-# import erpnext
-# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+import erpnext
+from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
-# # naming series overrides
-# from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
-# from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
-# from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict
-# from ceramic.override_default_class_method import get_transactions
-# NamingSeries.get_transactions = get_transactions
-# OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
+# naming series overrides
+from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
+from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
+from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict
+from ceramic.override_default_class_method import get_transactions
+NamingSeries.get_transactions = get_transactions
+OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
 
-# # # override default class method
-# update_entries_after.raise_exceptions = raise_exceptions
-# StockEntry.set_actual_qty = set_actual_qty
-# PickList.set_item_locations = set_item_locations
-# calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
-# calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
-# calculate_taxes_and_totals.calculate_taxes = calculate_taxes
-# StockLedgerEntry.actual_amt_check = actual_amt_check
+# # override default class method
+update_entries_after.raise_exceptions = raise_exceptions
+StockEntry.set_actual_qty = set_actual_qty
+PickList.set_item_locations = set_item_locations
+calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
+calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
+calculate_taxes_and_totals.calculate_taxes = calculate_taxes
+StockLedgerEntry.actual_amt_check = actual_amt_check
 
 
 app_name = "ceramic"
@@ -281,6 +281,7 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
 	"Payment Entry": {
+		"validate": "ceramic.ceramic.doc_events.payment_entry.validate",
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",

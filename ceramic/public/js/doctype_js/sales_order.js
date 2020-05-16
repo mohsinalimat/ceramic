@@ -158,7 +158,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		if (doc.docstatus==1) {
 
 			if (this.frm.doc.per_delivered == 0){
-				this.frm.add_custom_button(__('Unpick All'), () => this.remove_pick_list(this.frm.doc))
+				this.frm.add_custom_button(__('Unpick All'), () => this.unpick_all(this.frm.doc))
 			}
 
 			if(this.frm.has_perm("submit")) {
@@ -297,7 +297,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		this.order_type(doc);
 	},
 
-	remove_pick_list: function(doc, dt, dn){
+	unpick_all: function(doc, dt, dn){
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 			args: {
@@ -493,6 +493,21 @@ frappe.ui.form.on('Sales Order', {
 			});
 		}
 	},
+	// customer: function (frm) {
+	// 	frappe.call({
+	// 		method: "ceramic.ceramic.doc_events.sales_order.get_sales_team_detail",
+	// 		args: {
+	// 			customer: frm.doc.customer,
+	// 			doc: frm.doc.name
+	// 		},
+	// 		callback: (r) => {
+	// 			if (r.message) {
+	// 				console.log(r.message)
+				
+	// 			}
+	// 		}
+	// 	});
+	// },
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},

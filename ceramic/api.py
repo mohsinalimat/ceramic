@@ -476,19 +476,15 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
 
 	picked_item = frappe.db.sql(f"""
-		SELECT pli.customer, pli.sales_order, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - pli.delivered_qty) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+		SELECT pli.customer, pli.sales_order, pli.sales_order_item, pl.name as pick_list, pli.name as pick_list_item, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - pli.delivered_qty) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}'
 		HAVING remaining_qty > 0
 	""", as_dict = 1)
-	# frappe.throw(f"""
-	# 	SELECT pli.customer, pli.sales_order, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - pli.delivered_qty) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
-	# 	WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}'
-	# 	HAVING remaining_qty > 0
-	# """)
+	
 	for item in picked_item:
 		url = get_url_to_form("Sales Order", item.sales_order)
-		sales_order = "<a href='{url}'>{name}</a>".format(url=url, name=item.sales_order)
-		item.sales_order = sales_order
+		sales_order_link = "<a href='{url}'>{name}</a>".format(url=url, name=item.sales_order)
+		item.sales_order_link = sales_order_link
 		item.bal_qty = bal_qty
 		item.total_picked_qty = total_picked_qty
 		item.total_remaining_qty = total_remaining_qty

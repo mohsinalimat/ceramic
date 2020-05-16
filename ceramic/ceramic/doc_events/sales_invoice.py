@@ -255,7 +255,7 @@ def create_main_sales_invoice(self):
 	if self.items[0].delivery_docname:
 		delivery_doc = frappe.get_doc("Delivery Note", self.items[0].delivery_docname)
 		
-	if authority == "Authorized":
+	if authority == "Authorized" and not self.dont_replicate:
 		if self.items[0].delivery_docname:
 			if delivery_doc.discounted_grand_total == self.grand_total:
 				si = make_si_from_dn(delivery_doc.name)
