@@ -496,6 +496,19 @@ frappe.ui.form.on('Sales Order', {
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},
+	unpick_all: function (frm){
+		console.log(1)
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
+			args: {
+				'sales_order': frm.doc.name
+			},
+			callback: function(r){
+				console.log(r.message)
+				frappe.msgprint(r.message);
+			}
+		})
+	},
 	naming_series: function (frm) {
 		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
 			frappe.call({
