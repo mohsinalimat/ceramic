@@ -29,6 +29,17 @@ cur_frm.fields_dict.items.grid.get_field("t_warehouse").get_query = function (do
 
 
 this.frm.cscript.onload = function (frm) { 
+	
+}
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("item_code", "items", function (doc) {
+		return {
+			query: "erpnext.controllers.queries.item_query",
+			filters: [
+				['authority', 'in', ['', doc.authority]]
+			]
+		}
+	});
 	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
 		let d = locals[cdt][cdn];
 		if (!d.item_code) {
@@ -47,31 +58,21 @@ this.frm.cscript.onload = function (frm) {
 			}
 		}
 	});
-}
-this.frm.cscript.onload = function (frm) {
-	this.frm.set_query("item_code", "items", function (doc) {
-		return {
-			query: "erpnext.controllers.queries.item_query",
-			filters: [
-				['authority', 'in', ['', doc.authority]]
-			]
-		}
-	});
-	this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
-		let d = locals[cdt][cdn];
-		if (!d.item_code) {
-			frappe.throw(__("Please enter Item Code to get batch no"));
-		}
-		else {
-			return {
-				query: "ceramic.controllers.queries.get_batch_no",
-				filters: {
-					'item_code': d.item_code,
-					'warehouse': d.warehouse
-				}
-			}
-		}
-	});
+	// this.frm.set_query("batch_no", "items", function (doc, cdt, cdn) {
+	// 	let d = locals[cdt][cdn];
+	// 	if (!d.item_code) {
+	// 		frappe.throw(__("Please enter Item Code to get batch no"));
+	// 	}
+	// 	else {
+	// 		return {
+	// 			query: "ceramic.controllers.queries.get_batch_no",
+	// 			filters: {
+	// 				'item_code': d.item_code,
+	// 				'warehouse': d.warehouse
+	// 			}
+	// 		}
+	// 	}
+	// });
 }
 frappe.ui.form.on('Stock Entry', {
 	validate: function (frm) {
@@ -293,5 +294,22 @@ frappe.ui.form.on('Stock Entry Detail', {
 	},
 	qty: function (frm, cdt, cdn) {
 		frm.events.calculate_totals(frm)
-	}
+	},
+	lot_no: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		frappe.call({
+			method: "ceramic.query.get_batch",
+			args: {
+				'args': {
+					'item_code': d.item_code,
+					'lot_no': d.lot_no
+				},
+			},
+			callback: function (r) {
+				if (r.message) {
+					frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message)
+				}
+			}
+		});
+	},
 });

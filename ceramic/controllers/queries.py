@@ -12,8 +12,8 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get("posting_date"):
 		cond = "and (batch.expiry_date is null or batch.expiry_date >= %(posting_date)s)"
 		
-	# if filters.get("customer"):
-	# 	cond = "and (batch.customer = %(customer)s or ifnull(batch.customer, '') = '') "
+	if filters.get("customer"):
+		cond = "and (batch.customer = %(customer)s or ifnull(batch.customer, '') = '') "
 
 	batch_nos = None
 	args = {
