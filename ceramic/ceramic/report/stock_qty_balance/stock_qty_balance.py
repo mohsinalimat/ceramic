@@ -45,7 +45,7 @@ def execute(filters=None):
 			item_reorder_level = 0
 			item_reorder_qty = 0
 			picked_qty = frappe.db.sql(f"""
-				SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
+				SELECT sum(pli.qty - (pli.wastage_qty + pli.delivered_qty)) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
 				WHERE pl.docstatus = 1 AND pli.item_code = '{item}' AND company = '{company}' {conditions}
 			""")[0][0] or 0.0
 			details_button = """

@@ -27,7 +27,7 @@ def execute(filters=None):
 				qty_dict = iwb_map[item][batch]
 				lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
 				picked_qty = frappe.db.sql(f"""
-				SELECT sum(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+				SELECT sum(pli.qty - (pli.wastage + pli.delivered_qty)) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 				WHERE pli.item_code = '{item}' AND pli.batch_no='{batch}' and pl.docstatus = 1 {conditions} AND pl.company = '{filters.get('company')}'
 				""")[0][0] or 0.0
 				detail_button = """
