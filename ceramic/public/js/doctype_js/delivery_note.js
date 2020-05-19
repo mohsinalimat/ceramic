@@ -225,14 +225,18 @@ frappe.ui.form.on('Delivery Note', {
 	calculate_total: function (frm) {
 		let total_qty = 0.0
 		let total_real_qty = 0.0
+		let total_net_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
 			total_real_qty += flt(d.real_qty);
+			d.total_weight = flt(d.weight_per_unit * d.qty)
+			total_net_weight += flt(d.weight_per_unit * d.qty)
 		});
 
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_real_qty", total_real_qty);
+		frm.set_value("total_net_weight", total_net_weight);
 		frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
 	},
 	final_weight: function (frm) {

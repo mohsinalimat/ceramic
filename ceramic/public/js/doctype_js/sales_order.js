@@ -51,6 +51,7 @@ erpnext.utils.update_child_items = function (opts) {
 					in_list_view: 1,
 					read_only: 0,
 					disabled: 0,
+					columns: 3,
 					label: __('Item Code'),
 					// change: function(){
 					// 	let trans_items = cur_dialog.fields_dict.trans_items;
@@ -81,6 +82,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					columns: 1,
 					label: __('Qty')
 				}, {
 					fieldtype:'Float',
@@ -88,6 +90,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					columns: 1,
 					label: __('Real Qty')
 				}, {
 					fieldtype:'Currency',
@@ -95,6 +98,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					// columns: 1,
 					permlevel: 2,
 					label: __('Rate')
 				}, {
@@ -103,6 +107,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					// columns: 1,
 					permlevel: 1,
 					label: __('Discounted Rate')
 				}]
@@ -493,21 +498,31 @@ frappe.ui.form.on('Sales Order', {
 			});
 		}
 	},
-	// customer: function (frm) {
-	// 	frappe.call({
-	// 		method: "ceramic.ceramic.doc_events.sales_order.get_sales_team_detail",
-	// 		args: {
-	// 			customer: frm.doc.customer,
-	// 			doc: frm.doc.name
-	// 		},
-	// 		callback: (r) => {
-	// 			if (r.message) {
-	// 				console.log(r.message)
-				
-	// 			}
-	// 		}
-	// 	});
-	// },
+	customer: function (frm) {
+
+		setTimeout(function () {
+			frm.doc.sales_team = []
+			console.log(frm.doc.sales_team)
+			frappe.model.with_doc("Customer", frm.doc.customer, function () {
+				var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
+				$.each(cus_doc.sales_team, function (index, row) {
+					let st = frm.add_child("sales_team");
+					st.sales_person = row.sales_person
+					st.contact_no = row.contact_no
+					st.allocated_percentage = row.allocated_percentage
+					st.allocated_amount = row.allocated_amount
+					st.commission_rate = row.commission_rate
+					st.incentives = row.incentives
+					st.company = row.company
+					st.regional_sales_manager = row.regional_sales_manager
+					st.sales_manager = row.sales_manager
+				})
+
+				frm.refresh_field("sales_team");
+			});
+		}, 2000);
+	},
+
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},
@@ -543,6 +558,7 @@ frappe.ui.form.on('Sales Order', {
 		let total_real_qty = 0.0
 		let total_picked_qty = 0.0
 		let total_picked_weight = 0.0
+		let total_net_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
@@ -550,12 +566,15 @@ frappe.ui.form.on('Sales Order', {
 			total_picked_qty += flt(d.picked_qty);
 			d.picked_weight = flt(d.weight_per_unit * d.picked_qty)
 			total_picked_weight += flt(d.picked_weight);
+			d.total_weight = flt(d.weight_per_unit * d.qty)
+			total_net_weight = flt(d.weight_per_unit * d.qty)
 		});
 
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_real_qty", total_real_qty);
 		frm.set_value("total_picked_qty", total_picked_qty);
 		frm.set_value("total_picked_weight", total_picked_weight);
+		frm.set_value("total_net_weight", total_net_weight);
 	}
 });
 frappe.ui.form.on("Sales Order Item", {

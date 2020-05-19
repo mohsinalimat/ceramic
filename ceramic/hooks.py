@@ -16,13 +16,15 @@ from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
 erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
 erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
+
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
-from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict
+from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices
 from ceramic.override_default_class_method import get_transactions
 NamingSeries.get_transactions = get_transactions
 OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
+OpeningInvoiceCreationTool.make_invoices = make_invoices
 
 # # override default class method
 update_entries_after.raise_exceptions = raise_exceptions

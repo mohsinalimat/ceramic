@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
+from frappe.utils import flt
 
 def before_validate(self, method):
 	for item in self.items:
@@ -44,24 +45,27 @@ def update_discounted_net_total(self):
 
 
 def calculate_totals(self):
-		self.total_qty = sum([row.qty for row in self.items])
-		self.total_real_qty = sum([row.real_qty for row in self.items])
+	for d in self.items:
+		d.total_weight = flt(d.weight_per_unit * d.qty)
+	self.total_qty = sum([row.qty for row in self.items])
+	self.total_real_qty = sum([row.real_qty for row in self.items])
+	self.total_net_weight = sum([row.total_weight for row in self.items])
 
 @frappe.whitelist()
-def before_submit(self, test):
+def before_submit(self, method):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			if delivered_qty > pick_list_item.qty:
 				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
-			pick_list_item.db_set("delivered_qty", delivered_qty)
+			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			delivered_real_qty = item.real_qty + sales_order_item.delivered_real_qty
 
-			sales_order_item.db_set("delivered_real_qty", delivered_real_qty)
+			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 		
 		if item.pl_detail:
 			pick_list_batch_no = frappe.db.get_value("Pick List Item", item.pl_detail, 'batch_no')
@@ -82,7 +86,7 @@ def update_status_pick_list(self):
 			delivered_qty += item.delivered_qty
 			picked_qty += item.qty
 
-			pl.db_set('per_delivered', (delivered_qty / picked_qty) * 100)
+			frappe.db.set_value("Pick List", pick, 'per_delivered', flt((delivered_qty / picked_qty) * 100))
 
 	change_delivery_authority(self.name)
 
@@ -91,13 +95,14 @@ def on_cancel(self, method):
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = pick_list_item.delivered_qty - item.qty
-			pick_list_item.db_set("delivered_qty", delivered_qty)
+			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 	
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			delivered_real_qty = sales_order_item.delivered_real_qty - item.real_qty
 
-			sales_order_item.db_set("delivered_real_qty", delivered_real_qty)
+			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
+			
 	update_status_pick_list(self)
 
 def before_save(self, method):
@@ -110,8 +115,6 @@ def change_delivery_authority(name):
 		frappe.db.set_value("Delivery Note",name, "authority", "Unauthorized")
 	else:
 		frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
-	
-	frappe.db.commit()
 
 @frappe.whitelist()
 def create_invoice(source_name, target_doc=None):
@@ -286,8 +289,7 @@ def create_invoice(source_name, target_doc=None):
 	return doc
 
 @frappe.whitelist()
-def on_update_after_submit(self, test):
-	frappe.msgprint("Hello Anuj")
+def on_update_after_submit(self, method):
 	change_authority(self)
 
 def change_authority(self):
@@ -295,9 +297,6 @@ def change_authority(self):
 		self.db_set("authority", "Unauthorized")
 	else:
 		self.db_set("authority", "Authorized")
-	
-	frappe.db.commit()
-
 
 def get_returned_qty_map(delivery_note):
 	"""returns a map: {so_detail: returned_qty}"""

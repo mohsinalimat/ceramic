@@ -135,7 +135,15 @@ def update_sales_order(self, method):
 				tile.db_set('picked_qty', picked_qty)
 			if item.sales_order:
 				so = frappe.get_doc("Sales Order",item.sales_order)
+				total_picked_qty = 0.0
+				total_picked_weight = 0.0
+				for row in so.items:
+					row.db_set('picked_weight',flt(row.weight_per_unit * row.picked_qty))
+					total_picked_qty = row.picked_qty
+					total_picked_weight += row.picked_weight
+				
 				so.db_set('total_picked_qty', sum([d.picked_qty for d in so.items]))
+				so.db_set('total_picked_weight', total_picked_weight)
 	
 	if method == "cancel":
 		for item in self.locations:
@@ -150,7 +158,15 @@ def update_sales_order(self, method):
 
 			if item.sales_order:
 				so = frappe.get_doc("Sales Order",item.sales_order)
+				total_picked_qty = 0.0
+				total_picked_weight = 0.0
+				for row in so.items:
+					row.db_set('picked_weight',flt(row.weight_per_unit * row.picked_qty))
+					total_picked_qty = row.picked_qty
+					total_picked_weight += row.picked_weight
+				
 				so.db_set('total_picked_qty', sum([d.picked_qty for d in so.items]))
+				so.db_set('total_picked_weight', total_picked_weight)
 	
 def update_status_sales_order(self):
 	sales_order_list = list(set([item.sales_order for item in self.locations if item.sales_order]))
