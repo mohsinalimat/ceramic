@@ -368,7 +368,7 @@ def actual_amt_check(self):
 			where warehouse=%s and item_code=%s and batch_no=%s""",
 			(self.warehouse, self.item_code, self.batch_no))[0][0])
 		
-		picked_qty = flt(frappe.db.sql("""select sum(qty - delivered_qty)
+		picked_qty = flt(frappe.db.sql("""select sum(qty - (delivered_qty + wastage_qty))
 			from `tabPick List Item` as pli
 			JOIN `tabPick List` as pl on pl.name = pli.parent
 			where pli.warehouse=%s and pli.item_code=%s and pli.batch_no=%s and pl.docstatus = 1""",

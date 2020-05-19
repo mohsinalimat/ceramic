@@ -4,6 +4,13 @@ from frappe.desk.reportview import get_match_cond
 from six import string_types
 import json
 
+# from frappe.utils import (add_days, getdate, formatdate, date_diff,
+# 	add_years, get_timestamp, nowdate, flt, cstr, add_months, get_last_day)
+# from frappe.contacts.doctype.address.address import (get_address_display,
+# 	get_default_address, get_company_address)
+# from frappe.contacts.doctype.contact.contact import get_contact_details, get_default_contact
+# from erpnext import get_company_currency
+# from erpnext.accounts.party import get_regional_address_details,set_account_and_due_date,set_address_details,set_contact_details,set_other_values,set_price_list,get_address_tax_category,set_taxes,get_pyt_term_template
 
 def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
@@ -113,52 +120,62 @@ def get_batch(args):
 	return batch_no
 			
 
-# def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
-# 	cond = ""
+# @frappe.whitelist()
+# def get_party_details(party=None, account=None, party_type="Customer", company=None, posting_date=None,
+# 	bill_date=None, price_list=None, currency=None, doctype=None, ignore_permissions=False, fetch_payment_terms_template=True,
+# 	party_address=None, company_address=None, shipping_address=None, pos_profile=None):
 
-# 	meta = frappe.get_meta("Batch")
-# 	searchfield = meta.get_search_fields()
+# 	if not party:
+# 		return {}
+# 	if not frappe.db.exists(party_type, party):
+# 		frappe.throw(_("{0}: {1} does not exists").format(party_type, party))
+# 	return _get_party_details(party, account, party_type,
+# 		company, posting_date, bill_date, price_list, currency, doctype, ignore_permissions,
+# 		fetch_payment_terms_template, party_address, company_address, shipping_address, pos_profile)
 
-# 	searchfields = " or ".join(["batch." + field + " like %(txt)s" for field in searchfield])
+# def _get_party_details(party=None, account=None, party_type="Customer", company=None, posting_date=None,
+# 	bill_date=None, price_list=None, currency=None, doctype=None, ignore_permissions=False,
+# 	fetch_payment_terms_template=True, party_address=None, company_address=None,shipping_address=None, pos_profile=None):
 
-# 	if filters.get("posting_date"):
-# 		cond = "and (batch.expiry_date is null or batch.expiry_date >= %(posting_date)s)"
+# 	party_details = frappe._dict(set_account_and_due_date(party, account, party_type, company, posting_date, bill_date, doctype))
+# 	party = party_details[party_type.lower()]
 
-# 	batch_nos = None
-# 	args = {
-# 		'item_code': filters.get("item_code"),
-# 		'warehouse': filters.get("warehouse"),
-# 		'posting_date': filters.get('posting_date'),
-# 		'customer':  filters.get('customer'),
-# 		'txt': "%{0}%".format(txt),
-# 		"start": start,
-# 		"page_len": page_len
-# 	}
+# 	if not ignore_permissions and not frappe.has_permission(party_type, "read", party):
+# 		frappe.throw(_("Not permitted for {0}").format(party), frappe.PermissionError)
 
-# 	if args.get('warehouse'):
-# 		batch_nos = frappe.db.sql("""select sle.batch_no, batch.lot_no, batch.packing_type, round(sum(sle.actual_qty),2), sle.stock_uom
-# 				from `tabStock Ledger Entry` sle
-# 				    INNER JOIN `tabBatch` batch on sle.batch_no = batch.name
-# 				where
-# 					sle.item_code = %(item_code)s
-# 					and sle.warehouse = %(warehouse)s
-# 					and batch.docstatus < 2
-# 					and (sle.batch_no like %(txt)s or {searchfields})
-# 					{0}
-# 					{match_conditions}
-# 				group by batch_no having sum(sle.actual_qty) > 0
-# 				order by batch.expiry_date, sle.batch_no desc
-# 				limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), searchfields=searchfields), args)
-# 		return batch_nos
-# 	else:
-		# return frappe.db.sql("""select batch.name, batch.lot_no, batch.packing_type, batch.expiry_date, sle.batch_no, batch.lot_no, round(sum(sle.actual_qty),2), sle.stock_uom from `tabBatch` batch
-		# 	JOIN `tabStock Ledger Entry` sle on sle.batch_no = batch.name
-		# 	where batch.item = %(item_code)s
-		# 	and batch.docstatus < 2
-		# 	and (sle.batch_no like %(txt)s or {searchfields})
-		# 	{0}
-		# 	{match_conditions} AND
-		# 	sle.company = '{company}'
-		# 	group by sle.batch_no having sum(sle.actual_qty) > 0
-		# 	order by batch.expiry_date, batch.name desc
-		# 	limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), company=filters.get('company'), searchfields=searchfields), args)
+# 	party = frappe.get_doc(party_type, party)
+# 	currency = party.default_currency if party.get("default_currency") else get_company_currency(company)
+
+# 	party_address, shipping_address = set_address_details(party_details, party, party_type, doctype, company, party_address, company_address, shipping_address)
+# 	set_contact_details(party_details, party, party_type)
+# 	set_other_values(party_details, party, party_type)
+# 	set_price_list(party_details, party, party_type, price_list, pos_profile)
+
+# 	party_details["tax_category"] = get_address_tax_category(party.get("tax_category"),
+# 		party_address, shipping_address if party_type != "Supplier" else party_address)
+
+# 	if not party_details.get("taxes_and_charges"):
+# 		party_details["taxes_and_charges"] = set_taxes(party.name, party_type, posting_date, company,
+# 			customer_group=party_details.customer_group, supplier_group=party_details.supplier_group, tax_category=party_details.tax_category,
+# 			billing_address=party_address, shipping_address=shipping_address)
+
+# 	if fetch_payment_terms_template:
+# 		party_details["payment_terms_template"] = get_pyt_term_template(party.name, party_type, company)
+
+# 	if not party_details.get("currency"):
+# 		party_details["currency"] = currency
+
+# 	# sales team
+# 	if party_type=="Customer":
+# 		party_details["sales_team"] = [{
+# 			"sales_person": d.sales_person,
+# 			"allocated_percentage": d.allocated_percentage or None,
+# 			'regional_sales_manager': d.regional_sales_manager,
+# 			'sales_manager': d.sales_manager
+# 		} for d in party.get("sales_team")]
+
+# 	# supplier tax withholding category
+# 	if party_type == "Supplier" and party:
+# 		party_details["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
+
+# 	return party_details

@@ -84,7 +84,7 @@ def get_party_details(party=None, party_type=None, ignore_permissions=True):
 	return _get_party_details(party, party_type, ignore_permissions)
 
 def _get_party_details(party=None, party_type=None, ignore_permissions=True):
-
+	frappe.msgprint('call')
 	out = frappe._dict({
 		party_type.lower(): party
 	})
@@ -99,6 +99,16 @@ def _get_party_details(party=None, party_type=None, ignore_permissions=True):
 	# set_address_details(out, party, party_type)
 	# set_contact_details(out, party, party_type)
 	# set_other_values(out, party, party_type)
+
+	# sales team
+	if party_type=="Customer":
+		out["sales_team"] = [{
+			"sales_person": d.sales_person,
+			"allocated_percentage": d.allocated_percentage or None,
+			'regional_sales_manager': d.regional_sales_manager,
+			'sales_manager': d.sales_manager
+		} for d in party.get("sales_team")]
+
 	set_organization_details(out, party, party_type)
 	return out
 		

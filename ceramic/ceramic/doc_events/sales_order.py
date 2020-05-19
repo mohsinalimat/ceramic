@@ -23,7 +23,6 @@ def before_validate(self, method):
 
 def validate(self, method):
 	calculate_totals(self)
-	get_sales_team_detail(self)
 	update_discounted_net_total(self)
 
 def update_discounted_net_total(self):
@@ -86,7 +85,7 @@ def before_update_after_submit(self, method):
 	update_idx(self)
 	check_qty_rate(self)
 	update_discounted_net_total(self)
-	check_rate_qty(self)
+	# check_rate_qty(self)
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)
@@ -327,7 +326,8 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 							'warehouse': pick_doc.warehouse,
 							'batch_no': pick_doc.batch_no,
 							'lot_no': pick_doc.lot_no,
-							'item_series': i.item_series
+							'item_series': i.item_series,
+							'picked_qty': pick_doc.qty - pick_doc.delivered_qty
 						})
 
 						real_delivered_qty = 0
@@ -394,7 +394,6 @@ def change_customer(customer,doc):
 	so.db_set('order_priority',frappe.db.get_value("Customer",customer,'customer_priority'))
 	return "Customer changed successfully"
 
-@frappe.whitelist()
 def get_sales_team_detail(self):
 	customer_doc = frappe.get_doc("Customer",self.customer)
 	self.sales_team = []
@@ -410,3 +409,23 @@ def get_sales_team_detail(self):
 			'regional_sales_manager': d.regional_sales_manager,
 			'sales_manager': d.sales_manager
 		})
+
+@frappe.whitelist()
+def get_sales_team_detail_(doc,customer):
+	doc = frappe.get_doc("Sales Order",doc)
+	#frappe.msgprint('call')
+	customer_doc = frappe.get_doc("Customer",customer)
+	doc.sales_team = []
+	for d in customer_doc.sales_team:
+		doc.append('sales_team',{
+			'sales_person': d.sales_person,
+			'contact_no': d.contact_no,
+			'allocated_percentage': d.allocated_percentage,
+			'allocated_amount': d.allocated_amount,
+			'commission_rate': d.commission_rate,
+			'incentives': d.incentives,
+			'company': d.company,
+			'regional_sales_manager': d.regional_sales_manager,
+			'sales_manager': d.sales_manager
+		})
+	

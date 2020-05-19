@@ -493,21 +493,50 @@ frappe.ui.form.on('Sales Order', {
 			});
 		}
 	},
-	// customer: function (frm) {
+	// "customer": function (frm) {
 	// 	frappe.call({
-	// 		method: "ceramic.ceramic.doc_events.sales_order.get_sales_team_detail",
+	// 		method: "ceramic.query.get_party_details",
 	// 		args: {
-	// 			customer: frm.doc.customer,
-	// 			doc: frm.doc.name
+	// 			party: frm.doc.customer,
+	// 			party_type: 'Customer'
 	// 		},
-	// 		callback: (r) => {
+	// 		callback: function (r) {
 	// 			if (r.message) {
-	// 				console.log(r.message)
-				
+	// 				frm.set_value('contact_person', r.message.contact_person);
+	// 				frm.set_value('contact_email', r.message.contact_email);
+	// 				frm.set_value('customer_address', r.message.customer_address);
+	// 				frm.set_value('address_display', r.message.address_display);
+	// 				frm.set_value('shipping_address', r.message.shipping_address);
+	// 				frm.set_value('shipping_address_name', r.message.shipping_address_name);
+
 	// 			}
 	// 		}
-	// 	});
+	// 	})
 	// },
+	customer: function (frm) {
+		
+		setTimeout(function () { 
+			frm.doc.sales_team = []
+			console.log(frm.doc.sales_team)
+			frappe.model.with_doc("Customer", frm.doc.customer, function () {
+				var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
+				$.each(cus_doc.sales_team, function (index, row) {
+					let st = frm.add_child("sales_team");
+					st.sales_person = row.sales_person
+					st.contact_no = row.contact_no
+					st.allocated_percentage = row.allocated_percentage
+					st.allocated_amount = row.allocated_amount
+					st.commission_rate = row.commission_rate
+					st.incentives = row.incentives
+					st.company = row.company
+					st.regional_sales_manager = row.regional_sales_manager
+					st.sales_manager = row.sales_manager
+				})
+
+				frm.refresh_field("sales_team");
+			});
+		}, 1000);
+	},
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},
@@ -556,6 +585,14 @@ frappe.ui.form.on('Sales Order', {
 		frm.set_value("total_real_qty", total_real_qty);
 		frm.set_value("total_picked_qty", total_picked_qty);
 		frm.set_value("total_picked_weight", total_picked_weight);
+	},
+	update_items: function(frm){
+		erpnext.utils.update_child_items({
+			frm: frm,
+			child_docname: "items",
+			child_doctype: "Sales Order Detail",
+			cannot_add_row: false,
+		})
 	}
 });
 frappe.ui.form.on("Sales Order Item", {

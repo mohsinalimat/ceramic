@@ -25,8 +25,11 @@ def before_validate(self, method):
 	if self.authority == "Authorized":
 		for item in self.items:
 			if not item.delivery_docname:
-				item.full_rate = item.rate
-				item.full_qty = item.qty
+				if not item.full_rate:
+					item.full_rate = item.rate
+
+				if not item.full_qty:
+					item.full_qty = item.qty
 
 def before_naming(self, method):
 	if self.is_opening == "Yes":

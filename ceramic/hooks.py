@@ -19,10 +19,11 @@ erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
-from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict
+from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices
 from ceramic.override_default_class_method import get_transactions
 NamingSeries.get_transactions = get_transactions
 OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
+OpeningInvoiceCreationTool.make_invoices = make_invoices
 
 # # override default class method
 update_entries_after.raise_exceptions = raise_exceptions
@@ -32,6 +33,10 @@ calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
 calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
 calculate_taxes_and_totals.calculate_taxes = calculate_taxes
 StockLedgerEntry.actual_amt_check = actual_amt_check
+
+from erpnext.accounts.party import _get_party_details as party_detail
+from ceramic.api import _get_party_details as my_party_detail
+party_detail =my_party_detail
 
 
 app_name = "ceramic"
@@ -229,6 +234,7 @@ doc_events = {
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"before_submit": "ceramic.ceramic.doc_events.delivery_note.before_submit",
+		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
 		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.delivery_note.validate"]
 	},
 	"Sales Invoice": {

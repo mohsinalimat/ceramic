@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
+from frappe.utils import flt
 
 def before_validate(self, method):
 	for item in self.items:
@@ -44,6 +45,8 @@ def update_discounted_net_total(self):
 
 
 def calculate_totals(self):
+		for row in self.items:
+			row.wastage_qty = flt(row.picked_qty - row.qty)
 		self.total_qty = sum([row.qty for row in self.items])
 		self.total_real_qty = sum([row.real_qty for row in self.items])
 
@@ -53,9 +56,11 @@ def before_submit(self, test):
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
+			wastage_qty = item.wastage_qty + pick_list_item.wastage_qty
 			if delivered_qty > pick_list_item.qty:
 				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+			pick_list_item.db_set("wastage_qty", wastage_qty)
 
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
@@ -77,21 +82,28 @@ def update_status_pick_list(self):
 		pl = frappe.get_doc("Pick List", pick)
 		delivered_qty = 0
 		picked_qty = 0
+		wastage_qty = 0
 
 		for item in pl.locations:
 			delivered_qty += item.delivered_qty
+			wastage_qty += item.wastage_qty
 			picked_qty += item.qty
 
-			pl.db_set('per_delivered', (delivered_qty / picked_qty) * 100)
+			pl.db_set('per_delivered', ((delivered_qty + wastage_qty) / picked_qty) * 100)
 
 	change_delivery_authority(self.name)
+
+def on_submit(self,method):
+	wastage_stock_entry(self)
 
 def on_cancel(self, method):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = pick_list_item.delivered_qty - item.qty
+			wastage_qty = pick_list_item.wastage_qty - item.wastage_qty
 			pick_list_item.db_set("delivered_qty", delivered_qty)
+			pick_list_item.db_set("wastage_qty", wastage_qty)
 	
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
@@ -99,6 +111,7 @@ def on_cancel(self, method):
 
 			sales_order_item.db_set("delivered_real_qty", delivered_real_qty)
 	update_status_pick_list(self)
+	cancel_wastage_entry(self)
 
 def before_save(self, method):
 	for row in self.items:
@@ -110,8 +123,6 @@ def change_delivery_authority(name):
 		frappe.db.set_value("Delivery Note",name, "authority", "Unauthorized")
 	else:
 		frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
-	
-	frappe.db.commit()
 
 @frappe.whitelist()
 def create_invoice(source_name, target_doc=None):
@@ -295,8 +306,6 @@ def change_authority(self):
 		self.db_set("authority", "Unauthorized")
 	else:
 		self.db_set("authority", "Authorized")
-	
-	frappe.db.commit()
 
 
 def get_returned_qty_map(delivery_note):
@@ -349,3 +358,47 @@ def create_delivery_note_from_pick_list(source_name, target_doc = None):
 	}, target_doc)
 
 	return doc
+
+def wastage_stock_entry(self):
+	flag = 0
+	for row in self.items:
+		if row.wastage_qty > 0:
+			flag = 1
+			break
+	if flag == 1:
+		abbr = frappe.db.get_value('Company',self.company,'abbr')
+		se = frappe.new_doc("Stock Entry")
+		se.stock_entry_type = "Material Issue"
+		se.purpose = "Material Issue"
+		se.posting_date = self.posting_date
+		se.posting_time = self.posting_time
+		se.set_posting_time = 1
+		se.company = self.company
+		se.reference_doctype = self.doctype
+		se.reference_docname = self.name
+		se.wastage = 1
+	
+		for row in self.items:
+			if row.wastage_qty > 0:
+				se.append("items",{
+					'item_code': row.item_code,
+					'qty': row.wastage_qty,
+					'basic_rate': row.rate,
+					'batch_no': row.batch_no,
+					's_warehouse': row.warehouse
+				})
+		try:
+			se.save(ignore_permissions=True)
+			se.submit()
+		except Exception as e:
+			frappe.throw(str(e))
+
+def cancel_wastage_entry(self):
+	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+	se.flags.ignore_permissions = True
+	try:
+		se.cancel()
+	except Exception as e:
+		raise e
+	se.db_set('reference_doctype','')
+	se.db_set('reference_docname','')
