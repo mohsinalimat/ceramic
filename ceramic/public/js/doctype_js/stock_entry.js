@@ -105,6 +105,7 @@ frappe.ui.form.on('Stock Entry', {
 		frm.set_value("classic_qty", classic_qty)
 		frm.set_value("economy_qty", economy_qty)
 		frm.set_value("total_qty", total_qty)
+		frm.set_value('premium_percentage', flt(premium_qty / total_qty * 100))
 	},
 	setup: function (frm) {
 		frm.set_query("finish_item", function () {

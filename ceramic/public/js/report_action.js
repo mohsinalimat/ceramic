@@ -60,6 +60,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			<thead>
 				<th>{{ __("Customer") }}</th>
 				<th>{{ __("Sales Order") }}</th>
+				<th>{{ __("SO Date") }}</th>
 				<th>{{ __("Picked") }}</th>
 				<th>{{ __("Unpick") }}</th>
 			</thead>
@@ -68,6 +69,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 					<tr class="{{ __(row['pick_list_item']) }}">
 						<td>{{ __(row['customer']) }}</td>
 						<td>{{ __(row['sales_order_link']) }}</td>
+						<td>{{ __(row['date']) }}</td>
 						<td>{{ __(row['picked_qty']) }}</td>
 						<td><button style="margin-left:5px;border:none;color: #fff; background-color: red; padding: 3px 5px;border-radius: 5px;" type="button" sales-order="{{ __(row['sales_order']) }}" sales-order-item="{{ __(row['sales_order_item']) }}" pick-list="{{ __(row['pick_list']) }}" pick-list-item="{{ __(row['pick_list_item']) }}" onClick=remove_picked_item_lot_wise(this.getAttribute("sales-order"),this.getAttribute("sales-order-item"),this.getAttribute("pick-list"),this.getAttribute("pick-list-item"))>Unpick</button></td>
 					</tr>

@@ -122,7 +122,6 @@ def create_main_purchase_invoice(self):
 		try:
 			pi.save(ignore_permissions= True)
 			self.db_set('pi_ref', pi.name)
-			frappe.db.commit()
 			pi.submit()
 		except Exception as e:
 			frappe.db.rollback()
@@ -170,5 +169,3 @@ def delete_purchase_invoice(self):
 	except Exception as e:
 		frappe.db.rollback()
 		frappe.throw(e)
-	else:
-		frappe.db.commit()

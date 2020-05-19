@@ -23,6 +23,7 @@ def before_validate(self, method):
 
 def validate(self, method):
 	calculate_totals(self)
+	#get_sales_team_detail(self)
 	update_discounted_net_total(self)
 
 def update_discounted_net_total(self):
@@ -48,11 +49,12 @@ def check_qty_rate(self):
 def calculate_totals(self):
 	for d in self.items:
 		d.picked_weight = flt(d.picked_qty * d.weight_per_unit)
-
+		d.total_weight = flt(d.weight_per_unit * d.qty)
 	self.total_qty = sum([row.qty for row in self.items])
 	self.total_real_qty = sum([row.real_qty for row in self.items])
 	self.total_picked_qty = sum([row.picked_qty for row in self.items])
 	self.total_picked_weight = sum([row.picked_weight for row in self.items])
+	self.total_net_weight = sum([row.total_weight for row in self.items])
 
 def on_submit(self, method):
 	checking_rate(self)

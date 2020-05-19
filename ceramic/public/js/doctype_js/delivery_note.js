@@ -225,6 +225,7 @@ frappe.ui.form.on('Delivery Note', {
 	calculate_total: function (frm) {
 		let total_qty = 0.0
 		let total_real_qty = 0.0
+		let total_net_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
@@ -234,6 +235,7 @@ frappe.ui.form.on('Delivery Note', {
 
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_real_qty", total_real_qty);
+		frm.set_value("total_net_weight", total_net_weight);
 		frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
 	},
 	final_weight: function (frm) {

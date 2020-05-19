@@ -115,7 +115,6 @@ def create_payment_entry(self):
 			pe.series_value = self.series_value
 			pe.save(ignore_permissions= True)
 			self.db_set('pe_ref', pe.name)
-			frappe.db.commit()
 			pe.submit()
 		except Exception as e:
 			frappe.db.rollback()
@@ -182,8 +181,7 @@ def delete_payment_entry(self):
 	except Exception as e:
 		frappe.db.rollback()
 		frappe.throw(e)
-	else:
-		frappe.db.commit()
+	
 
 def get_sales_person(self):
 	for row in self.references:

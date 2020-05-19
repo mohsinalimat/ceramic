@@ -51,6 +51,7 @@ erpnext.utils.update_child_items = function (opts) {
 					in_list_view: 1,
 					read_only: 0,
 					disabled: 0,
+					columns: 3,
 					label: __('Item Code'),
 					// change: function(){
 					// 	let trans_items = cur_dialog.fields_dict.trans_items;
@@ -81,6 +82,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					columns: 1,
 					label: __('Qty')
 				}, {
 					fieldtype:'Float',
@@ -88,6 +90,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					columns: 1,
 					label: __('Real Qty')
 				}, {
 					fieldtype:'Currency',
@@ -95,6 +98,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					// columns: 1,
 					permlevel: 2,
 					label: __('Rate')
 				}, {
@@ -103,6 +107,7 @@ erpnext.utils.update_child_items = function (opts) {
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
+					// columns: 1,
 					permlevel: 1,
 					label: __('Discounted Rate')
 				}]
@@ -572,6 +577,7 @@ frappe.ui.form.on('Sales Order', {
 		let total_real_qty = 0.0
 		let total_picked_qty = 0.0
 		let total_picked_weight = 0.0
+		let total_net_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
@@ -579,6 +585,8 @@ frappe.ui.form.on('Sales Order', {
 			total_picked_qty += flt(d.picked_qty);
 			d.picked_weight = flt(d.weight_per_unit * d.picked_qty)
 			total_picked_weight += flt(d.picked_weight);
+			d.total_weight = flt(d.weight_per_unit * d.qty)
+			total_net_weight = flt(d.weight_per_unit * d.qty)
 		});
 
 		frm.set_value("total_qty", total_qty);

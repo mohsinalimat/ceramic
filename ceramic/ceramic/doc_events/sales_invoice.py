@@ -54,8 +54,6 @@ def change_delivery_authority(name):
 	else:
 		frappe.db.set_value("Delivery Note",name, "authority", "Authorized")
 	
-	frappe.db.commit()
-
 # Create New Invouice on Submit
 def create_main_sales_invoice(self):
 	
@@ -346,19 +344,6 @@ def cancel_main_sales_invoice(self):
 
 def delete_sales_invoice(self):
 	ref_name = self.si_ref
-	try:
-		frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
-		frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
-		frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
-	except Exception as e:
-		frappe.db.rollback()
-		frappe.throw(e)
-	else:
-		frappe.db.commit()
-
-@frappe.whitelist()
-def submit_purchase_invoice(pi_number):
-	pi = frappe.get_doc("Purchase Invoice", pi_number)
-	pi.flags.ignore_permissions = True
-	pi.submit()
-	frappe.db.commit()
+	frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
+	frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
+	frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  

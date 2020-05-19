@@ -172,6 +172,22 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.trigger('naming_series');
 		}
 	},
+	before_save: function (frm) {
+		frm.trigger('calculate_total');
+	},
+	calculate_total: function (frm) {
+		let total_qty = 0.0
+		let total_net_weight = 0.0
+
+		frm.doc.items.forEach(function (d) {
+			total_qty += flt(d.qty);
+			d.total_weight = flt(d.weight_per_unit * d.qty)
+			total_net_weight += flt(d.weight_per_unit * d.qty)
+		});
+
+		frm.set_value("total_qty", total_qty);
+		frm.set_value("total_net_weight", total_net_weight);
+	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
 			frappe.call({
@@ -197,4 +213,13 @@ frappe.ui.form.on('Sales Invoice', {
 		}
 	},
 	
+});
+frappe.ui.form.on("Sales Invoice Item", {
+	qty: (frm, cdt, cdn) => {
+		let d = locals[cdt][cdn];
+		frm.events.calculate_total(frm)
+	},
+	weight_per_unit: function (frm, cdt, cdn) {
+		frm.events.calculate_total(frm)
+	}
 });
