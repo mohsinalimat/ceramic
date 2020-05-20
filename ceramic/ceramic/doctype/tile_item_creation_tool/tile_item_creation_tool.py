@@ -59,7 +59,7 @@ class TileItemCreationTool(Document):
 		tile_type_code = '-' + frappe.db.get_value('Tile Type', self.tile_type, 'type_code')
 		tile_surface_code = '-' + frappe.db.get_value('Tile Surface', self.tile_surface, 'surface_code')
 
-		if self.item_series:
+		if self.item_series and not self.is_item_series:
 			for tile in self.tile_quality:
 				category = '-' + tile.tile_quality
 				tile_grade = '-' + frappe.db.get_value("Tile Quality", tile.tile_quality, 'tile_grade')

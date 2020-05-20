@@ -46,19 +46,66 @@ def make_invoices(self):
 		
 		if not args:
 			continue
-		if row.outstanding_amount > 0.0 and row.full_amount > 0.0:
-			doc = frappe.get_doc(args).insert()
-			if doc.doctype == 'Sales Invoice':
-				doc.sales_partner = row.sales_partner
-			
-			doc.submit()
-			names.append(doc.name)
+		if row.outstanding_amount > 0.0:
+			if row.outstanding_amount <= row.full_amount:
+				doc = frappe.get_doc(args).insert()
+				if doc.doctype == 'Sales Invoice':
+					doc.sales_partner = row.sales_partner
+			else:
+				difference = row.outstanding_amount - row.full_amount
+				# frappe.throw(str(difference))
+				args['items'][0]['full_rate'] = args['items'][0]['rate']
+				doc = frappe.get_doc(args).insert()
+				if doc.doctype == 'Sales Invoice':
+					doc.sales_partner = row.sales_partner
+				
+				doc2 = frappe.new_doc("Journal Entry")
+				doc2.voucher_type = "Credit Note" if self.invoice_type == 'Sales' else "Debit Note"
+				doc2.posting_date = row.posting_date
+				doc2.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
+				doc2.company = alternate_company
+				doc2.is_opening = 'Yes'
+				if self.invoice_type == 'Sales':
+					doc2.append('accounts', {
+						'account': frappe.get_value("Company", doc2.company, 'default_receivable_account'),
+						'party_type': 'Customer',
+						'party': row.party,
+						'debit_in_account_currency': 0,
+						'credit_in_account_currency': abs(difference),
+						'is_advance': 'Yes'
+					})
 
-		elif row.outstanding_amount > 0.0 and row.full_amount <= 0.0:
-			doc = frappe.get_doc(args).insert()
-			doc.dont_replicate = 1
-			if doc.doctype == 'Sales Invoice':
-				doc.sales_partner = row.sales_partner
+					doc2.append('accounts', {
+						'account': row.temporary_opening_account.replace(source_abbr, target_abbr),
+						'party_type': None,
+						'party': None,
+						'debit_in_account_currency': abs(difference),
+						'credit_in_account_currency': 0
+					})
+				
+				elif self.invoice_type == 'Purchase':
+					doc2.append('accounts', {
+						'account': frappe.get_value("Company", doc2.company, 'default_payable_account'),
+						'party_type': 'Supplier',
+						'party': row.party,
+						'debit_in_account_currency': abs(difference),
+						'credit_in_account_currency': 0,
+						'is_advance': 'Yes'
+					})
+
+					doc2.append('accounts', {
+						'account': row.temporary_opening_account.replace(source_abbr, target_abbr),
+						'party_type': None,
+						'party': None,
+						'debit_in_account_currency': 0,
+						'credit_in_account_currency': abs(difference)
+					})
+				
+				doc2.save()
+				doc2.submit()
+
+				
+			
 			doc.submit()
 			names.append(doc.name)
 
@@ -127,7 +174,7 @@ def make_invoices(self):
 			doc.save()
 			doc.submit()
 		
-		if row.full_amount < 0.0:
+		if row.outstanding_amount <= 0.0 and row.full_amount < 0.0:
 			doc = frappe.new_doc("Journal Entry")
 			doc.voucher_type = "Credit Note" if self.invoice_type == 'Sales' else "Debit Note"
 			doc.posting_date = row.posting_date
@@ -194,6 +241,7 @@ def get_invoice_dict(self, row=None):
 			)
 		rate = flt(row.outstanding_amount) / flt(row.qty)
 		full_rate = flt(row.full_amount) / flt(row.qty)
+		# frappe.throw(str(rate))
 
 		return frappe._dict({
 			"uom": default_uom,
@@ -235,3 +283,17 @@ def get_invoice_dict(self, row=None):
 		args["is_pos"] = 0
 
 	return args
+
+@frappe.whitelist()
+def get_temporary_opening_account(company=None):
+	if not company:
+		return
+
+	accounts = frappe.get_all("Account", filters={
+		'company': company,
+		'account_type': 'Temporary'
+	})
+	if not accounts:
+		frappe.throw(_("Please add a Temporary Opening account in Chart of Accounts"))
+
+	return accounts[0].name
