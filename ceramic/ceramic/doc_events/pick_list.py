@@ -510,7 +510,7 @@ def get_items(filters):
 		
 		item['picked_qty'] = pick_list_available[0][0] or 0.0
 		item['available_qty'] = item['actual_qty'] - (pick_list_available[0][0] or 0.0)
-		item['to_pick_qty'] = str(item['available_qty'])
+		item['to_pick_qty'] = str(min(item['available_qty'], filters['to_pick_qty']))
 		if item['available_qty'] <= 0.0:
 			item = None
 

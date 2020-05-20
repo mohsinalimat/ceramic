@@ -151,6 +151,7 @@ ItemSelector = Class.extend({
 		}
 
 		filters['company'] = me.company;
+		filters['to_pick_qty'] = me.remaining_to_pick
 
 		console.log(me.company)
 		frappe.call({

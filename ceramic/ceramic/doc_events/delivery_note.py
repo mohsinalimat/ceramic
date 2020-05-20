@@ -395,11 +395,12 @@ def wastage_stock_entry(self):
 			frappe.throw(str(e))
 
 def cancel_wastage_entry(self):
-	se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
-	se.flags.ignore_permissions = True
-	try:
-		se.cancel()
-	except Exception as e:
-		raise e
-	se.db_set('reference_doctype','')
-	se.db_set('reference_docname','')
+	if frappe.db.exists("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name}):
+		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		se.flags.ignore_permissions = True
+		try:
+			se.cancel()
+		except Exception as e:
+			raise e
+		se.db_set('reference_doctype','')
+		se.db_set('reference_docname','')
