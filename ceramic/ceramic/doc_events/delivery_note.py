@@ -103,7 +103,7 @@ def on_cancel(self, method):
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = pick_list_item.delivered_qty - item.qty
-			wastage_qty = pick_list_item.wastage_qty - item.qty
+			wastage_qty = pick_list_item.wastage_qty - item.wastage_qty
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'wastage_qty', flt(wastage_qty))
 	
@@ -398,9 +398,8 @@ def cancel_wastage_entry(self):
 	if frappe.db.exists("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name}):
 		se = frappe.get_doc("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		se.flags.ignore_permissions = True
-		try:
+		if se.docstatus == 1:
 			se.cancel()
-		except Exception as e:
-			raise e
 		se.db_set('reference_doctype','')
 		se.db_set('reference_docname','')
+		se.delete()
