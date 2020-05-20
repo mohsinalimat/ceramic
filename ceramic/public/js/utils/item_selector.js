@@ -67,7 +67,7 @@ ItemSelector = Class.extend({
 				reqd: 0,
 				default: me.picked_qty,
 				read_only: 1,
-				// hidden: 1,
+				hidden: 1,
 			},
 			{
 				label: __('Sales Order Real Qty'),
@@ -99,6 +99,9 @@ ItemSelector = Class.extend({
 				default: me.remaining_to_pick,
 				reqd: 0,
 				read_only: 1,
+				change: function(){
+					me.set_item_qty()
+				}
 			}
 		]
 
@@ -129,7 +132,6 @@ ItemSelector = Class.extend({
 			dialog(this);
 			event.preventDefault();
 			event.stopPropagation();
-			console.log("ibfi")
 			return false;
 	 });
 		// $($package_wrapper).find('.grid-add-row').hide();
@@ -153,7 +155,6 @@ ItemSelector = Class.extend({
 		filters['company'] = me.company;
 		filters['to_pick_qty'] = me.remaining_to_pick
 
-		console.log(me.company)
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.get_items",
 			freeze: true,
@@ -162,7 +163,22 @@ ItemSelector = Class.extend({
 			},
 			callback: function(r){
 				// me.dialog.set_value('item_locations', )
-				item_locations.grid.df.data = r.message;
+				// console.log(r.message)
+				item_locations.grid.df.data = []
+				r.message.forEach(value => {
+					me.frm.doc.available_qty.forEach(element => {
+						if (value.batch_no == element.batch_no){
+							value.available_qty = value.available_qty - (element.picked_in_current || 0)
+						}
+					});
+					if (me.batch_no && value.batch_no == me.batch_no){
+						value.available_qty = value.available_qty + me.qty
+					}
+					value.to_pick_qty = Math.min(value.to_pick_qty, value.available_qty)
+					item_locations.grid.df.data.push(value)
+				});
+
+				// item_locations.grid.df.data = r.message;
 				item_locations.grid.refresh();
 				// me.set_item_location_data();
 			},
@@ -271,6 +287,7 @@ ItemSelector = Class.extend({
 		let selected_item_locations = me.get_selected_item_locations();
 		let picked_qty = frappe.utils.sum((selected_item_locations || []).map(row => row.to_pick_qty));
 		me.dialog.set_value('picked_qty', picked_qty);
+		
 	},
 	set_item_location_data: function(){
 		let me = this;
@@ -311,6 +328,32 @@ ItemSelector = Class.extend({
 
 		return selected_item_locations;
 	},
+	set_item_qty: function() {
+		let me = this;
+		let selected_item_locations = [];
+		let $item_location_wrapper = this.get_item_location_wrapper();
+		let item_locations = me.dialog.get_value('item_locations');
+		let remaining_to_pick = me.dialog.get_value('remaining_to_pick');
+
+		$.each($item_location_wrapper.find('.form-grid > .grid-body > .rows > .grid-row'), function (idx, row) {
+			var pkg = $(row).find('.grid-row-check:checkbox');
+
+			let item_location = item_locations[idx];
+			
+			if($(pkg).is(':checked')){
+				selected_item_locations.push(item_location);
+				item_location.__checked = 1;
+			} else {
+				item_location.__checked = 0;
+				console.log(remaining_to_pick)
+				item_location.to_pick_qty = Math.min((remaining_to_pick || 0), (item_location.to_pick_qty || 0))
+			}
+		});
+		let item_locations2 = me.dialog.fields_dict.item_locations;
+		item_locations2.grid.refresh();
+
+		// return selected_item_locations;
+	},
 	set_item_locations_in_frm: function () {
 		let me = this;
 		let selected_item_locations = this.get_selected_item_locations();
@@ -330,7 +373,6 @@ ItemSelector = Class.extend({
 		(selected_item_locations || []).forEach(function(d){
 			d.__checked = 0;
 			var locations = me.frm.add_child('locations');
-			// console.log(locations.doctype)
 			frappe.model.set_value(locations.doctype, locations.name, 'item_code', d.item_code);
 			frappe.model.set_value(locations.doctype, locations.name, 'customer', me.customer);
 			frappe.model.set_value(locations.doctype, locations.name, 'so_qty', me.values.so_qty);
