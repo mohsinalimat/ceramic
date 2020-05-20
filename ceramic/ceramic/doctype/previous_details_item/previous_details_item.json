@@ -1,0 +1,30 @@
+{
+ "creation": "2020-05-20 15:21:12.110965",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "previous_details_item"
+ ],
+ "fields": [
+  {
+   "fieldname": "previous_details_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Previous Details Item",
+   "options": "Previous Details",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-05-20 15:21:12.110965",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Previous Details Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
