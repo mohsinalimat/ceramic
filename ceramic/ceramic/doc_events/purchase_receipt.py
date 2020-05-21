@@ -62,7 +62,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 		target_company_abbr = frappe.db.get_value("Company", target.company, "abbr")
 		source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-		target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
+		if source.set_warehouse:
+			target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
 		
 		if source.taxes_and_charges:
 			target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)

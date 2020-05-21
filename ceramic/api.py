@@ -54,7 +54,8 @@ def check_counter_series(name, company_series = None, date = None):
 
 @frappe.whitelist()
 def before_naming(self, method):
-	if not hasattr(self, 'amended_from'):
+	if not self.amended_from:
+	#if not hasattr(self, 'amended_from'):
 		
 		date = self.get("transaction_date") or self.get("posting_date") or  self.get("manufacturing_date") or getdate()
 		fiscal = get_fiscal(date)

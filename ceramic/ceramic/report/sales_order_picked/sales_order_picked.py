@@ -52,7 +52,7 @@ def get_data(filters):
 			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
 			JOIN `tabItem` as i on soi.item_code = i.name
 		WHERE
-			so.docstatus = 1 %s
+			so.docstatus = 1 NOT IN ['Closed', 'Completed'] %s
 		ORDER BY
 			so.transaction_date
 		""" % conditions, as_dict = True)

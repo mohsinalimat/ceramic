@@ -143,7 +143,8 @@ def make_invoices(self):
 					'party_type': 'Customer',
 					'party': row.party,
 					'debit_in_account_currency': 0,
-					'credit_in_account_currency': abs(row.outstanding_amount)
+					'credit_in_account_currency': abs(row.outstanding_amount),
+					'is_advance': 'Yes'
 				})
 
 				doc.append('accounts', {
@@ -160,7 +161,8 @@ def make_invoices(self):
 					'party_type': 'Supplier',
 					'party': row.party,
 					'debit_in_account_currency': abs(row.outstanding_amount),
-					'credit_in_account_currency': 0
+					'credit_in_account_currency': 0,
+					'is_advance': 'Yes'
 				})
 
 				doc.append('accounts', {
