@@ -311,8 +311,11 @@ doc_events = {
 	"Fiscal Year": {
 		'before_save': 'ceramic.ceramic.doc_events.fiscal_year.before_save'
 	},
-	("Pick List", "Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip","Batch"): {
+	("Pick List", "Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
 		"before_naming": "ceramic.api.before_naming",
+	},
+	"Batch":{
+		"before_naming": "ceramic.api.batch_before_naming",
 	}
 }
 
