@@ -1,3 +1,5 @@
+import GridRowForm from './grid_row_form';
+
 export default class GridRow {
 	constructor(opts) {
 		this.on_grid_fields_dict = {};
@@ -20,6 +22,9 @@ export default class GridRow {
 				if(me.grid.allow_on_grid_editing() && me.grid.is_editable()) {
 					// pass
 				} else {
+					if (!me.grid.is_editable()) {
+						me.docfields.map(df => df.read_only = 1);
+					}
 					me.toggle_view();
 					return false;
 				}
@@ -218,27 +223,56 @@ export default class GridRow {
 		return this.row.width() ? this.row.width() < 300 : false;
 	}
 
+	disableScrolling(){
+		var x=window.scrollX;
+		var y=window.scrollY;
+		window.onscroll=function(){window.scrollTo(x, y);};
+	}
+	
+	enableScrolling(){
+		window.onscroll=function(){};
+	}
+
 	add_open_form_button() {
 		var me = this;
 		if(this.doc && !this.grid.df.in_place_edit) {
-            // remove row
-            if(!this.open_form_button) {
-				this.open_form_button = $('<button>D</button>')
-					.appendTo($('<div class="col col-xs-1"></div>').appendTo(this.row))
-					.on('click', function() { me.toggle_view(); return false; });
-
-				if(this.is_too_small()) {
-					// narrow
-					this.open_form_button.css({'margin-right': '-2px'});
-				}
-            }
-            
+			// remove row
 			if(!this.open_form_button) {
-				this.open_form_button = $('<a class="close btn-open-row">\
+				this.open_form_button = $('<a class="duplicate btn-duplicate" style="position: relative; top: 10px; left: 5px;"><i class="fa fa-clone" aria-hidden="true"></i></a>&nbsp;\
+					<a class="close btn-open-row">\
 					<span class="octicon octicon-triangle-down"></span></a>')
-					.appendTo($('<div class="col col-xs-1"></div>').appendTo(this.row))
-					.on('click', function() { me.toggle_view(); return false; });
-
+					.appendTo($('<div class="col col-xs-1"></div>').appendTo(this.row));
+					// .on('click', function() { me.toggle_view(); return false; });
+					this.row.find('.close').on(
+						'click', function() {me.toggle_view(); return false;}
+					);
+					this.row.find('.duplicate').on(
+						'click', function(e) {
+							let x=window.scrollX;
+							let y=window.scrollY;
+							frappe.run_serially([
+								() => {
+									me.disableScrolling();
+									if(!me.grid_form) { me.toggle_view(); } 
+									me.grid_form.row.insert(true, true, true); 
+									me.toggle_view(false);
+									$('.grid-row-open').find('.data-row').show();
+									$('.grid-row-open').removeClass('grid-row-open');
+									
+								},
+								() => {
+									setTimeout(function () {
+										me.enableScrolling();
+										window.focus();
+										window.scrollTo(0, y);
+									},700);
+									
+								}
+							])
+							// window.addEventListener('scroll', me.noScroll);
+							return false;
+						}
+					);
 				if(this.is_too_small()) {
 					// narrow
 					this.open_form_button.css({'margin-right': '-2px'});

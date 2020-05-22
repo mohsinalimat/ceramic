@@ -431,3 +431,8 @@ def get_sales_team_detail_(doc,customer):
 			'sales_manager': d.sales_manager
 		})
 	
+
+@frappe.whitelist()
+def get_tax_template(tax_category, company, tax_paid=0):
+	if frappe.db.exists("Sales Taxes and Charges Template",{'tax_paid':tax_paid,'tax_category':tax_category,'company':company}):
+		return frappe.db.get_value("Sales Taxes and Charges Template",{'tax_paid':tax_paid,'tax_category':tax_category,'company':company},'name')

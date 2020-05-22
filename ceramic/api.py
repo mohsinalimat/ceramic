@@ -55,11 +55,10 @@ def check_counter_series(name, company_series = None, date = None):
 @frappe.whitelist()
 def before_naming(self, method):
 	#if not hasattr(self, 'amended_from'):
-	if not self.amended_from:
+	if not self.get('amended_from'):
 		date = self.get("transaction_date") or self.get("posting_date") or  self.get("manufacturing_date") or getdate()
 		fiscal = get_fiscal(date)
 		self.fiscal = fiscal
-
 		if self.get('series_value'):
 			if self.series_value > 0:
 				name = naming_series_name(self.naming_series, fiscal,self.company_series)
@@ -72,22 +71,6 @@ def before_naming(self, method):
 				
 				frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
 	
-def batch_before_naming(self,method):
-	date = self.get("manufacturing_date") or getdate()
-	fiscal = get_fiscal(date)
-	self.fiscal = fiscal
-
-	if self.get('series_value'):
-		if self.series_value > 0:
-			name = naming_series_name(self.naming_series, fiscal,self.company_series)
-			
-			check = frappe.db.get_value('Series', name, 'current', order_by="name")
-			if check == 0:
-				pass
-			elif not check:
-				frappe.db.sql(f"insert into tabSeries (name, current) values ('{name}', 0)")
-			
-			frappe.db.sql(f"update `tabSeries` set current = {int(self.series_value) - 1} where name = '{name}'")
 
 @frappe.whitelist()
 def get_party_details(party=None, party_type=None, ignore_permissions=True):
