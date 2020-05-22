@@ -317,6 +317,9 @@ doc_events = {
 	},
 	"Batch":{
 		"before_naming": "ceramic.api.batch_before_naming",
+	},
+	"Customer": {
+		'validate':"ceramic.ceramic.doc_events.customer.validate",
 	}
 }
 
