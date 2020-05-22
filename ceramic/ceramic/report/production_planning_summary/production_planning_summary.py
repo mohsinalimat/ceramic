@@ -112,4 +112,6 @@ def get_conditions(filters):
 	if filters.get('item_code'):
 		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
 	
+	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+	
 	return conditions

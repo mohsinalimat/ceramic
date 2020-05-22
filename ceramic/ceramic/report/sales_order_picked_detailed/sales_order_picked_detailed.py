@@ -14,8 +14,7 @@ def execute(filters=None):
 def get_conditions(filters):
 	conditions = ""
 
-	# if filters.get('pending_so'):
-	# 	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
 
 	if filters.get('company'):
 		conditions += " AND so.company = '%s'" % filters.get('company')

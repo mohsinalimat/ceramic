@@ -439,6 +439,19 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 		return current_tax_amount;
 	},
+	close_sales_order: function(){
+		this.frm.cscript.update_status("Close", "Closed")
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
+			args: {
+				'sales_order': this.frm.doc.name,
+			},
+			callback: function(r){
+				frm.events.get_item_qty(frm);
+				frm.events.get_picked_items(frm);
+			}
+		})
+	},
 })
 $.extend(cur_frm.cscript, new erpnext.selling.SalesOrderController({ frm: cur_frm }));
 this.frm.cscript.onload = function (frm) {

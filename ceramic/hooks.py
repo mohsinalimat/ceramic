@@ -57,6 +57,7 @@ app_license = "GPL 3.0"
 app_include_js = [
 	"/assets/ceramic/js/restrict_access.js",
 	"/assets/ceramic/js/report_action.js"
+	"/assets/ceramic/js/ceramic.min.js"
 ]
 
 # include js, css files in header of web template

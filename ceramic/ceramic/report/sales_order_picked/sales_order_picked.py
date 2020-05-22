@@ -14,8 +14,7 @@ def execute(filters=None):
 def get_conditions(filters):
 	conditions = ""
 
-	# if filters.get('pending_so'):
-	# 	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
 
 	if filters.get('company'):
 		conditions += " AND so.company = '%s'" % filters.get('company')
@@ -52,7 +51,7 @@ def get_data(filters):
 			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
 			JOIN `tabItem` as i on soi.item_code = i.name
 		WHERE
-			so.docstatus = 1 NOT IN ['Closed', 'Completed'] %s
+			so.docstatus = 1 %s
 		ORDER BY
 			so.transaction_date
 		""" % conditions, as_dict = True)

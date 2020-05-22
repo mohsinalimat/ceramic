@@ -75,7 +75,7 @@ def before_validate_after_submit(self, method):
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
-	check_qty_rate(self)
+	# check_qty_rate(self)
 
 def validate_after_submit(self, method):
 	update_discounted_net_total(self)
@@ -85,7 +85,7 @@ def before_update_after_submit(self, method):
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
-	check_qty_rate(self)
+	# check_qty_rate(self)
 	update_discounted_net_total(self)
 	# check_rate_qty(self)
 

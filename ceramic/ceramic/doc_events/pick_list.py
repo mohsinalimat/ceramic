@@ -202,7 +202,8 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		item_codes = [item[0] for item in item_code_list]
 	
@@ -217,7 +218,8 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
 			WHERE
 				so.docstatus = 1 AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		# where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -288,7 +290,8 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		where_clause += f" AND so.customer = '{customer}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -305,7 +308,8 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
 			WHERE
 				so.docstatus = 1 AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -330,7 +334,8 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 				soi.item_code = '{item}' AND
 				so.company = '{company}' AND
 				so.`docstatus` = 1 {where_clause} AND
-				soi.qty > soi.picked_qty
+				soi.qty > soi.picked_qty AND
+				so.status != 'Closed'
 			ORDER BY
 				soi.order_item_priority DESC
 		""", as_dict = 1)
@@ -358,7 +363,8 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 			WHERE
 				so.docstatus = 1 AND
 				so.customer = '{customer}' AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		item_codes = [item[0] for item in item_code_list]
 	
@@ -371,7 +377,8 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
 			WHERE
 				so.docstatus = 1 AND
-				soi.qty != soi.picked_qty {where_cond}
+				soi.qty != soi.picked_qty {where_cond} AND
+				so.status != 'Closed'
 		""")
 		# where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -421,7 +428,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		return "Pick List to this Sales Order Have Been Deleted."
 	elif sales_order and sales_order_item:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'delivered_qty': 0, 'wastage_qty': 0}, ['name'])
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
@@ -430,7 +437,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', 0)
+			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))
 			
 			if doc.docstatus == 1:
 				doc.cancel()
@@ -439,7 +446,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		frappe.db.set_value("Sales Order Item", sales_order_item, 'picked_qty', 0)
 		return "Pick List to this Sales Order Have Been Deleted."
 	else:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'delivered_qty': 0, 'wastage_qty': 0}, ['name'])
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
@@ -448,13 +455,14 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', 0)
-			
+			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))
+
 			if doc.docstatus == 1:
 				doc.cancel()
+			
 			doc.delete()
+			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
-		frappe.db.set_value("Sales Order Item", sales_order_item, 'picked_qty', 0)
 		update_picked_percent(frappe.get_doc("Sales Order", sales_order))
 		return "Pick List to this Sales Order Have Been Deleted."
 

@@ -1,5 +1,9 @@
 {
 	"css/ceramic.min.css": [
 		"public/css/restricted.css"
+	],
+	"js/ceramic.min.js": [
+		"public/js/restricted_access.js",
+		"public/js/grid_row.js"
 	]
 }
