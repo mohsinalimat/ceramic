@@ -174,7 +174,8 @@ this.frm.cscript.onload = function (frm) {
 cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 	return {
 		filters: {
-			"company": doc.company
+			"company": doc.company,
+			"tax_paid": doc.tax_paid || 0
 		}
 	}
 };

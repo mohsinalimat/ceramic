@@ -13,6 +13,12 @@ def before_validate(self, method):
 		if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
 			frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 
+		if not item.rate and item.so_detail:
+			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'rate')
+		
+		if not item.discounted_amount and item.so_detail:
+			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_amount')
+
 	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
 	so_doc.db_set("customer",self.customer)
 	so_doc.db_set("title",self.customer)
@@ -97,6 +103,23 @@ def update_status_pick_list(self):
 
 def on_submit(self,method):
 	wastage_stock_entry(self)
+	check_qty_rate(self)
+	check_rate_qty(self)
+
+def check_rate_qty(self):
+	for item in self.items:
+		if not item.rate or item.rate <= 0:
+			frappe.throw(f"Row: {item.idx} Rate cannot be 0 or less")
+		if not item.qty or item.qty <= 0:
+			frappe.throw(f"Row: {item.idx} Quantity can not be 0 or less")
+
+def check_qty_rate(self):
+	for item in self.items:
+		if not item.discounted_rate:
+			frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+		if not item.real_qty:
+			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+
 
 def on_cancel(self, method):
 	for item in self.items:
