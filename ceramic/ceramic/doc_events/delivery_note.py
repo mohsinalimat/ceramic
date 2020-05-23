@@ -6,6 +6,7 @@ from frappe.model.utils import get_fetch_values
 from frappe.utils import flt
 
 def before_validate(self, method):
+	self.flag.ignore_permissions = True
 	for item in self.items:
 		item.discounted_amount = item.discounted_rate * item.real_qty
 		item.discounted_net_amount = item.discounted_amount
@@ -13,11 +14,11 @@ def before_validate(self, method):
 		if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
 			frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 
-		if not item.rate and item.so_detail:
+		if (not item.rate) and (item.so_detail):
 			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'rate')
 		
-		if not item.discounted_amount and item.so_detail:
-			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_amount')
+		if (not item.discounted_rate) and (item.so_detail):
+			item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
 
 	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
 	so_doc.db_set("customer",self.customer)

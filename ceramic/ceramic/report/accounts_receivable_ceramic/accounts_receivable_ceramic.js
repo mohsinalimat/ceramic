@@ -142,7 +142,7 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 		},
 		{
 			"fieldname":"regional_sales_manager",
-			"label": __("RHM"),
+			"label": __("RSM"),
 			"fieldtype": "Link",
 			"options": "Sales Person"
 		},
