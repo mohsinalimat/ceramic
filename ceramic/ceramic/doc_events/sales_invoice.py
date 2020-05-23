@@ -275,7 +275,7 @@ def create_main_sales_invoice(self):
 			si.amended_from = frappe.db.get_value("Sales Invoice", {"si_ref": source.amended_from}, "name")
 		si.save(ignore_permissions = True)
 		for tax in si.taxes:
-			if tax.tax_exclusive:
+			if tax.tax_exclusive and tax.charge_type != "Actual":
 				tax.included_in_print_rate = 1
 		si.save(ignore_permissions = True)
 		si.pay_amount_left = si.rounded_total - self.rounded_total
