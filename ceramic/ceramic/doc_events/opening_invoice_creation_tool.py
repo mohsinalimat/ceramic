@@ -247,6 +247,8 @@ def get_invoice_dict(self, row=None):
 			frappe.throw(
 				_("Please set the Default Cost Center in {0} company.").format(frappe.bold(self.company))
 			)
+		row.outstanding_amount = flt(row.outstanding_amount)
+		row.full_amount = flt(row.full_amount)
 		rate = flt(row.outstanding_amount) / flt(row.qty)
 		full_rate = flt(row.full_amount) / flt(row.qty)
 		# frappe.throw(str(rate))

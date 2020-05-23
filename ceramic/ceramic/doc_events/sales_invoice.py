@@ -260,6 +260,8 @@ def create_main_sales_invoice(self):
 		if self.items[0].delivery_docname:
 			if delivery_doc.discounted_grand_total == self.grand_total:
 				si = make_si_from_dn(delivery_doc.name)
+			else:
+				si = get_sales_invoice_entry(self.name)
 		else:
 			si = get_sales_invoice_entry(self.name)
 		si.naming_series = 'A' + self.naming_series
