@@ -31,6 +31,7 @@ def create_main_purchase_invoice(self):
 
 			target.pi_ref = self.name
 			target.authority = "Unauthorized"
+			target.update_stock = 0
 
 			if source.credit_to:
 				target.credit_to = source.credit_to.replace(source_company_abbr, target_company_abbr)
@@ -38,9 +39,10 @@ def create_main_purchase_invoice(self):
 				target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
 
 				for index, i in enumerate(source.taxes):
-					target.taxes[index].charge_type = "Actual"
+					# target.taxes[index].charge_type = "Actual"
 					target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
-
+					if source.taxes[index].cost_center:
+						target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 			if self.amended_from:
 				name = frappe.db.get_value("Sales Invoice", {"pi_ref": source.amended_from}, "name")
 				target.amended_from = name

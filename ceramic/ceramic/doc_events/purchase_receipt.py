@@ -72,6 +72,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 			for index, value in enumerate(source.taxes):
 				target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
 				# frappe.throw(source_company_abbr + target_company_abbr)
+				if source.taxes[index].cost_center:
+					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 		
 		doc.run_method("calculate_taxes_and_totals")
 
