@@ -283,7 +283,7 @@ def make_pick_list(source_name, target_doc=None):
 		},
 	}, target_doc)
 
-	doc.purpose = 'Delivery against Sales Order'
+	doc.purpose = 'Delivery'
 	doc.set_item_locations()
 	return doc
 

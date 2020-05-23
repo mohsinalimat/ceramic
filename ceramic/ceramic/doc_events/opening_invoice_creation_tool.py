@@ -51,6 +51,7 @@ def make_invoices(self):
 				doc = frappe.get_doc(args).insert()
 				if doc.doctype == 'Sales Invoice':
 					doc.sales_partner = row.sales_partner
+				doc.primary_customer = row.primary_customer
 			else:
 				difference = row.outstanding_amount - row.full_amount
 				# frappe.throw(str(difference))
@@ -58,8 +59,10 @@ def make_invoices(self):
 				doc = frappe.get_doc(args).insert()
 				if doc.doctype == 'Sales Invoice':
 					doc.sales_partner = row.sales_partner
+				doc.primary_customer = row.primary_customer
 				
 				doc2 = frappe.new_doc("Journal Entry")
+				doc2.primary_customer = row.primary_customer
 				doc2.voucher_type = "Credit Note" if self.invoice_type == 'Sales' else "Debit Note"
 				doc2.posting_date = row.posting_date
 				doc2.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
@@ -114,6 +117,7 @@ def make_invoices(self):
 				item['rate'] = flt(row.full_amount) / flt(item['qty'])
 			doc = frappe.get_doc(args).insert()
 			doc.company = frappe.db.get_value("Company", doc.company, 'alternate_company')
+			doc.primary_customer = row.primary_customer
 			for item in doc.items:
 				item.rate = flt(row.full_amount) / flt(item.qty)
 				item.cost_center = item.cost_center.replace(source_abbr, target_abbr)
@@ -134,6 +138,7 @@ def make_invoices(self):
 			doc = frappe.new_doc("Journal Entry")
 			doc.voucher_type = "Credit Note" if self.invoice_type == 'Sales' else "Debit Note"
 			doc.posting_date = row.posting_date
+			doc.primary_customer = row.primary_customer
 			doc.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
 			doc.company = self.company
 			doc.is_opening = 'Yes'
@@ -181,6 +186,7 @@ def make_invoices(self):
 			doc.voucher_type = "Credit Note" if self.invoice_type == 'Sales' else "Debit Note"
 			doc.posting_date = row.posting_date
 			doc.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
+			doc.primary_customer = row.primary_customer
 			doc.company = alternate_company
 			doc.is_opening = 'Yes'
 			if self.invoice_type == 'Sales':
