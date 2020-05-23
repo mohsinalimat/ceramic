@@ -253,6 +253,7 @@ class ReceivablePayableReport(object):
 	def append_row(self, row):
 		self.allocate_future_payments(row)
 		self.set_invoice_details(row)
+		self.set_payment_details(row)
 		self.set_party_details(row)
 		self.set_ageing(row)
 
@@ -263,6 +264,11 @@ class ReceivablePayableReport(object):
 			self.previous_party = row.party
 
 		self.data.append(row)
+
+	def set_payment_details(self, row):
+		if row.voucher_type == 'Payment Entry' and not row.reference_doc:
+			row.reference_doc = frappe.db.get_value("Payment Entry", row.voucher_no, 'pe_ref')
+			
 
 	def set_invoice_details(self, row):
 		invoice_details = self.invoice_details.get(row.voucher_no, {})
@@ -311,7 +317,7 @@ class ReceivablePayableReport(object):
 		self.invoice_details = frappe._dict()
 		if self.party_type == "Customer":
 			si_list = frappe.db.sql("""
-				select name, due_date, po_no, real_difference_amount, discounted_rounded_total
+				select name, due_date, po_no, pay_amount_left, discounted_rounded_total, si_ref as reference_doc
 				from `tabSales Invoice`
 				where posting_date <= %s
 			""",self.filters.report_date, as_dict=1)
@@ -457,7 +463,8 @@ class ReceivablePayableReport(object):
 				payment_entry.party_type,
 				payment_entry.posting_date as future_date,
 				ref.allocated_amount as future_amount,
-				payment_entry.reference_no as future_ref
+				payment_entry.reference_no as future_ref,
+				payment_entry.pe_ref as reference_doc
 			from
 				`tabPayment Entry` as payment_entry inner join `tabPayment Entry Reference` as ref
 			on
@@ -774,7 +781,7 @@ class ReceivablePayableReport(object):
 			# note: fieldname is still `credit_note`
 			self.add_column(_('Debit Note'), fieldname='credit_note')
 		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('Diff Amt'), fieldname='real_difference_amount')
+		self.add_column(_('Diff Amt'), fieldname='pay_amount_left')
 		self.add_column(_('Disc Amt'), fieldname='discounted_rounded_total')
 
 		self.setup_ageing_columns()
@@ -804,6 +811,7 @@ class ReceivablePayableReport(object):
 				options='Supplier Group')
 
 		self.add_column(label=_('Remarks'), fieldname='remarks', fieldtype='Text', width=200)
+		self.add_column(label=_('Reference Document'), fieldname='reference_doc', fieldtype='Text', width=200)
 
 	def add_column(self, label, fieldname=None, fieldtype='Currency', options=None, width=120):
 		if not fieldname: fieldname = scrub(label)
