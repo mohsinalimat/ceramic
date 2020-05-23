@@ -70,6 +70,7 @@ frappe.ui.form.on('Pick List', {
 			}
 			frm.trigger('naming_series');
 		}
+		frm.set_df_property("locations", "read_only", frm.doc.__islocal ? 0 : 1);
 	},
 	add_get_items_button: (frm) => {
 		frm.remove_custom_button(__('Get Items'));

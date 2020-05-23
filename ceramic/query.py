@@ -3,6 +3,8 @@ from frappe import _
 from frappe.desk.reportview import get_match_cond
 from six import string_types
 import json
+from erpnext.controllers.queries import get_doctype_wise_filters
+from frappe.desk.reportview import get_match_cond, get_filters_cond
 
 # from frappe.utils import (add_days, getdate, formatdate, date_diff,
 # 	add_years, get_timestamp, nowdate, flt, cstr, add_months, get_last_day)
@@ -122,6 +124,42 @@ def get_batch(args):
 
 	return batch_no
 			
+@frappe.whitelist()
+def warehouse_query(doctype, txt, searchfield, start, page_len, filters):
+	# Should be used when item code is passed in filters.
+	conditions, bin_conditions = [], []
+	filter_dict = get_doctype_wise_filters(filters)
+
+	sub_query = """ select round(`tabBin`.actual_qty, 2) from `tabBin`
+		where `tabBin`.warehouse = `tabWarehouse`.name
+		{bin_conditions} """.format(
+		bin_conditions=get_filters_cond(doctype, filter_dict.get("Bin"),
+			bin_conditions, ignore_permissions=True))
+
+	query = """select `tabWarehouse`.name,
+		CONCAT_WS(" : ", "Actual Qty", ifnull( ({sub_query}), 0) ) as actual_qty
+			from `tabWarehouse`
+		where
+		   `tabWarehouse`.`{key}` like {txt}
+			{fcond} {mcond}
+		having
+			ifnull( ({sub_query}), 0) > 0.0
+		order by
+			`tabWarehouse`.name desc
+		
+		limit
+			{start}, {page_len}
+		""".format(
+			sub_query=sub_query,
+			key=searchfield,
+			fcond=get_filters_cond(doctype, filter_dict.get("Warehouse"), conditions),
+			mcond=get_match_cond(doctype),
+			start=start,
+			page_len=page_len,
+			txt=frappe.db.escape('%{0}%'.format(txt))
+		)
+
+	return frappe.db.sql(query)
 
 # @frappe.whitelist()
 # def get_party_details(party=None, account=None, party_type="Customer", company=None, posting_date=None,

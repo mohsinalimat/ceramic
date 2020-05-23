@@ -28,9 +28,6 @@ cur_frm.fields_dict.items.grid.get_field("t_warehouse").get_query = function (do
 };
 
 
-this.frm.cscript.onload = function (frm) { 
-	
-}
 this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("item_code", "items", function (doc) {
 		return {
@@ -295,6 +292,42 @@ frappe.ui.form.on('Stock Entry Detail', {
 	},
 	qty: function (frm, cdt, cdn) {
 		frm.events.calculate_totals(frm)
+
+		var d = locals[cdt][cdn];
+		if (d.item_code) {
+			var args = {
+				'item_code': d.item_code,
+				'warehouse': cstr(d.s_warehouse) || cstr(d.t_warehouse),
+				'transfer_qty': d.transfer_qty,
+				'serial_no': d.serial_no,
+				'bom_no': d.bom_no,
+				'expense_account': d.expense_account,
+				'cost_center': d.cost_center,
+				'company': frm.doc.company,
+				'qty': d.qty,
+				'voucher_type': frm.doc.doctype,
+				'voucher_no': d.name,
+				'allow_zero_valuation': 1,
+			};
+
+			return frappe.call({
+				doc: frm.doc,
+				method: "get_item_details",
+				args: args,
+				callback: function (r) {
+					if (r.message) {
+						var d = locals[cdt][cdn];
+						$.each(r.message, function (k, v) {
+							if (v) {
+								frappe.model.set_value(cdt, cdn, k, v); // qty and it's subsequent fields weren't triggered
+							}
+						});
+						refresh_field("items");
+
+					}
+				}
+			});
+		}
 	},
 	lot_no: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn];
@@ -314,3 +347,34 @@ frappe.ui.form.on('Stock Entry Detail', {
 		});
 	},
 });
+
+erpnext.stock.select_batch_and_serial_no = (frm, item) => {
+	let get_warehouse_type_and_name = (item) => {
+		let value = '';
+		if (frm.fields_dict.from_warehouse.disp_status === "Write") {
+			value = cstr(item.s_warehouse) || '';
+			return {
+				type: 'Source Warehouse',
+				name: value
+			};
+		} else {
+			value = cstr(item.t_warehouse) || '';
+			return {
+				type: 'Target Warehouse',
+				name: value
+			};
+		}
+	}
+
+	if (item && !item.has_serial_no && !item.has_batch_no) return;
+	if (frm.doc.purpose === 'Material Receipt') return;
+
+	frappe.require("assets/ceramic/js/utils/serial_no_batch_selector.js", function () {
+		new erpnext.SerialNoBatchSelector({
+			frm: frm,
+			item: item,
+			warehouse_details: get_warehouse_type_and_name(item),
+		});
+	});
+
+}

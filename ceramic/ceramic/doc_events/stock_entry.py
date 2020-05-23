@@ -37,7 +37,7 @@ def calculate_totals(self):
 	self.golden_qty = golden_qty
 	self.classic_qty = classic_qty
 	self.economy_qty = economy_qty
-	self.premium_percentage = flt(premium_qty/total_qty*100)
+	self.premium_percentage = (flt(premium_qty)/flt(total_qty)*100)
 
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
