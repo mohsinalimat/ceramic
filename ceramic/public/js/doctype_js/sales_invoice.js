@@ -116,6 +116,9 @@ this.frm.cscript.onload = function (frm) {
 			]
 		}
 	});
+	this.frm.set_query("customer", function (doc) {
+		return { query: "erpnext.controllers.queries.customer_query" }
+	});
 }
 cur_frm.set_query("shipping_address_name", function () {
 	return {

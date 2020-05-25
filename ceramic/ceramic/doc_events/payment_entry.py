@@ -47,7 +47,7 @@ def create_payment_entry(self):
 
 			target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
 			target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
-
+			target.pe_ref = source.name
 			if source.deductions:
 				for index, i in enumerate(source.deductions):
 					target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
@@ -83,6 +83,7 @@ def create_payment_entry(self):
 					"bank_account_no",
 					"remarks",
 					"authority",
+					"pe_ref"
 				},
 			},
 			"Payment Entry Reference": {

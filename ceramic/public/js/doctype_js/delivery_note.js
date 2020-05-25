@@ -170,6 +170,9 @@ this.frm.cscript.onload = function (frm) {
 			]
 		}
 	});
+	this.frm.set_query("customer", function (doc) {
+		return { query: "erpnext.controllers.queries.customer_query" }
+	});
 }
 cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 	return {
