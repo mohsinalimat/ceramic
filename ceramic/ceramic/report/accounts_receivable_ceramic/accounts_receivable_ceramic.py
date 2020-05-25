@@ -317,7 +317,7 @@ class ReceivablePayableReport(object):
 		self.invoice_details = frappe._dict()
 		if self.party_type == "Customer":
 			si_list = frappe.db.sql("""
-				select name, due_date, po_no, pay_amount_left, discounted_rounded_total, si_ref as reference_doc
+				select name, primary_customer, due_date, po_no, discounted_rounded_total as billed_amount, real_difference_amount as cash_amount, (real_difference_amount - pay_amount_left) as cash_paid, discounted_rounded_total, si_ref as reference_doc
 				from `tabSales Invoice`
 				where posting_date <= %s
 			""",self.filters.report_date, as_dict=1)
@@ -736,7 +736,7 @@ class ReceivablePayableReport(object):
 		if not party in self.party_details:
 			if self.party_type == 'Customer':
 				self.party_details[party] = frappe.db.get_value('Customer', party, ['customer_name',
-					'territory', 'customer_group', 'customer_primary_contact', 'primary_customer'], as_dict=True)
+					'territory', 'customer_group', 'customer_primary_contact'], as_dict=True)
 			else:
 				self.party_details[party] = frappe.db.get_value('Supplier', party, ['supplier_name',
 					'supplier_group'], as_dict=True)
@@ -775,13 +775,14 @@ class ReceivablePayableReport(object):
 
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
 		self.add_column(_('Paid Amount'), fieldname='paid')
+		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		if self.party_type == "Customer":
 			self.add_column(_('Credit Note'), fieldname='credit_note')
 		else:
 			# note: fieldname is still `credit_note`
 			self.add_column(_('Debit Note'), fieldname='credit_note')
 		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('Diff Amt'), fieldname='pay_amount_left')
+		self.add_column(_('Diff Amt'), fieldname='cash_amount')
 		self.add_column(_('Disc Amt'), fieldname='discounted_rounded_total')
 
 		self.setup_ageing_columns()

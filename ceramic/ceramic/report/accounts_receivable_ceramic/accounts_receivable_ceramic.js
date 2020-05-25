@@ -207,9 +207,9 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 	},
 
 	onload: function(report) {
-		report.page.add_inner_button(__("Accounts Receivable Summary"), function() {
+		report.page.add_inner_button(__("Accounts Receivable Ceramic Summary"), function() {
 			var filters = report.get_values();
-			frappe.set_route('query-report', 'Accounts Receivable Summary', {company: filters.company});
+			frappe.set_route('query-report', 'Accounts Receivable Ceramic Summary', {company: filters.company});
 		});
 	}
 }

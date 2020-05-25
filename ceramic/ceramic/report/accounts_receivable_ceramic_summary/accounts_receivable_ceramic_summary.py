@@ -41,20 +41,23 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 			row = frappe._dict()
 
-			row.party = party
+			# row.party = party
+			# row.primary_customer = primary_customer
+			# row.primary_customer = frappe.db.get_value("Customer", row.party, 'primary_customer')
 			if self.party_naming_by == "Naming Series":
 				row.party_name = frappe.get_cached_value(self.party_type, party, scrub(self.party_type) + "_name")
 
 			row.update(party_dict)
-
+			
 			# Advance against party
 			row.advance = party_advance_amount.get(party, 0)
 
 			# In AR/AP, advance shown in paid columns,
 			# but in summary report advance shown in separate column
 			row.paid -= row.advance
-
+			
 			self.data.append(row)
+			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party'])) 
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
@@ -63,18 +66,23 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			self.init_party_total(d)
 
 			# Add all amount columns
-			for k in list(self.party_total[d.party]):
-				if k not in ["currency", "sales_person"]:
+			for k in list(self.party_total[d.party+(d.primary_customer or '')]):
+				if k not in ["currency", "sales_person", "party", "primary_customer"]:
 
-					self.party_total[d.party][k] += d.get(k, 0.0)
+					self.party_total[d.party+(d.primary_customer or '')][k] += d.get(k, 0.0)
 
 			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
 
 	def init_party_total(self, row):
-		self.party_total.setdefault(row.party, frappe._dict({
+		self.party_total.setdefault(row.party+(row.primary_customer or ''), frappe._dict({
+			"party": row.party,
+			"primary_customer": row.primary_customer or '',
 			"invoiced": 0.0,
+			"billed_amount": 0.0,
+			"cash_amount": 0.0,
 			"paid": 0.0,
+			"cash_paid": 0.0,
 			"credit_note": 0.0,
 			"outstanding": 0.0,
 			"range1": 0.0,
@@ -86,19 +94,24 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		}))
 
 	def set_party_details(self, row):
-		self.party_total[row.party].currency = row.currency
+		self.party_total[row.party+(row.primary_customer or '')].currency = row.currency
 
 		for key in ('territory', 'customer_group', 'supplier_group'):
 			if row.get(key):
-				self.party_total[row.party][key] = row.get(key)
+				self.party_total[row.party+(row.primary_customer or '')][key] = row.get(key)
 
 		if row.sales_person:
-			self.party_total[row.party].sales_person.append(row.sales_person)
+			self.party_total[row.party+(row.primary_customer or '')].sales_person.append(row.sales_person)
 
 	def get_columns(self):
 		self.columns = []
 		self.add_column(label=_(self.party_type), fieldname='party',
 			fieldtype='Link', options=self.party_type, width=180)
+		self.add_column(_('Primary Customer'), fieldname='primary_customer', fieldtype='Data')
+		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
+		# self.add_column(_('Invoice Amount'), fieldname='invoiced')
+		self.add_column(_('Billed Amount'), fieldname='billed_amount')
+		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),
@@ -107,10 +120,9 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		credit_debit_label = "Credit Note" if self.party_type == 'Customer' else "Debit Note"
 
 		self.add_column(_('Advance Amount'), fieldname='advance')
-		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
 		self.add_column(_('Paid Amount'), fieldname='paid')
+		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		self.add_column(_(credit_debit_label), fieldname='credit_note')
-		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
 
 		self.setup_ageing_columns()
 
