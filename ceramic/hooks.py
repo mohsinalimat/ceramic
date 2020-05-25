@@ -253,13 +253,13 @@ doc_events = {
 	},
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.api.naming_series_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"]
+		"before_validate": ["ceramic.api.naming_series_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
 		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
 		"validate": "ceramic.controllers.item_validation.validate_item_authority",
 	},
 	"Purchase Receipt":{
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.api.naming_series_validate"
+		"before_validate": "ceramic.api.naming_series_validate",
 		"before_validate": "ceramic.ceramic.doc_events.purchase_receipt.before_validate",
 		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
@@ -268,7 +268,7 @@ doc_events = {
 			"ceramic.ceramic.doc_events.purchase_invoice.before_naming",
 			"ceramic.api.before_naming",
 		],
-		"before_validate": "ceramic.api.naming_series_validate"
+		"before_validate": "ceramic.api.naming_series_validate",
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
