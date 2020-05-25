@@ -318,7 +318,10 @@ doc_events = {
 	},
 	"Customer": {
 		'validate':"ceramic.ceramic.doc_events.customer.validate",
-	}
+	},
+	"Lead": {
+		'validate':"ceramic.ceramic.doc_events.lead.validate",
+	},
 }
 
 
