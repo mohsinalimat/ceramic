@@ -1,4 +1,7 @@
 frappe.ui.form.on('Work Order', {
+    refresh: (frm) => {
+        frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+    },
 	setup: function(frm){
         frm.set_query("production_item", function() {
 			return {

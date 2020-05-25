@@ -22,6 +22,7 @@ frappe.ui.form.on('Payment Entry', {
 			if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0 && frm.doc.authority == "Authorized"){
 				frm.set_value('pe_ref', null);
 			}
+			frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 			frm.trigger('company');
 		}
 	},

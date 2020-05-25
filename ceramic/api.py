@@ -55,10 +55,11 @@ def check_counter_series(name, company_series = None, date = None):
 @frappe.whitelist()
 def before_naming(self, method):
 	#if not hasattr(self, 'amended_from'):
-	if not self.get('amended_from'):
+	if not self.get('amended_from') and not self.get('name'):
 		date = self.get("transaction_date") or self.get("posting_date") or  self.get("manufacturing_date") or getdate()
 		fiscal = get_fiscal(date)
 		self.fiscal = fiscal
+		self.company_series = frappe.db.get_value("Company", self.company, 'company_series')
 		if self.get('series_value'):
 			if self.series_value > 0:
 				name = naming_series_name(self.naming_series, fiscal,self.company_series)
@@ -511,3 +512,11 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 	
 	
 	return picked_item
+
+def naming_series_validate(self, method):
+	if self.get('company_series'):
+		if not frappe.db.exists("Company", {'name': self.company, 'company_series': self.company_series}):
+			frappe.throw("You can not change company")
+	
+	frappe.throw("hahah")
+		

@@ -135,6 +135,7 @@ frappe.ui.form.on('Purchase Order', {
 			}
 			frm.trigger('company');
 		}
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){

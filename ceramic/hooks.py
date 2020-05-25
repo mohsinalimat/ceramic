@@ -210,7 +210,7 @@ doc_events = {
 	},
 	"Sales Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.ceramic.doc_events.sales_order.before_validate",
+		"before_validate": ["ceramic.ceramic.doc_events.sales_order.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
 		"before_validate_after_submit": "ceramic.ceramic.doc_events.sales_order.before_validate_after_submit",
 		"on_submit": "ceramic.ceramic.doc_events.sales_order.on_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
@@ -221,14 +221,14 @@ doc_events = {
 	},
 	"Pick List": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.ceramic.doc_events.pick_list.validate",
+		"before_validate": ["ceramic.ceramic.doc_events.pick_list.validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
 		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 	},
 	"Delivery Note": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.ceramic.doc_events.delivery_note.before_validate",
+		"before_validate": ["ceramic.ceramic.doc_events.delivery_note.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"before_submit": "ceramic.ceramic.doc_events.delivery_note.before_submit",
@@ -240,7 +240,7 @@ doc_events = {
 			"ceramic.ceramic.doc_events.sales_invoice.before_naming",
 			"ceramic.api.before_naming"
 		],
-		"before_validate": "ceramic.ceramic.doc_events.sales_invoice.before_validate",
+		"before_validate": ["ceramic.ceramic.doc_events.sales_invoice.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
 		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
 		# "before_submit": "ceramic.ceramic.doc_events.sales_invoice.before_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
@@ -253,12 +253,13 @@ doc_events = {
 	},
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.ceramic.doc_events.purchase_order.before_validate",
+		"before_validate": ["ceramic.api.naming_series_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"]
 		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
 		"validate": "ceramic.controllers.item_validation.validate_item_authority",
 	},
 	"Purchase Receipt":{
 		"before_naming": "ceramic.api.before_naming",
+		"before_validate": "ceramic.api.naming_series_validate"
 		"before_validate": "ceramic.ceramic.doc_events.purchase_receipt.before_validate",
 		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
@@ -267,6 +268,7 @@ doc_events = {
 			"ceramic.ceramic.doc_events.purchase_invoice.before_naming",
 			"ceramic.api.before_naming",
 		],
+		"before_validate": "ceramic.api.naming_series_validate"
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
@@ -286,6 +288,7 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
 	"Payment Entry": {
+		"before_validate": "ceramic.api.naming_series_validate",
 		"validate": "ceramic.ceramic.doc_events.payment_entry.validate",
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",

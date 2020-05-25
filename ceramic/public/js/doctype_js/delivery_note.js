@@ -195,6 +195,7 @@ frappe.ui.form.on('Delivery Note', {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
+		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
