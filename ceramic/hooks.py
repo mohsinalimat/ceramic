@@ -210,7 +210,7 @@ doc_events = {
 	},
 	"Sales Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.sales_order.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
+		"before_validate": ["ceramic.ceramic.doc_events.sales_order.before_validate", "ceramic.api.naming_series_validate"],
 		"before_validate_after_submit": "ceramic.ceramic.doc_events.sales_order.before_validate_after_submit",
 		"on_submit": "ceramic.ceramic.doc_events.sales_order.on_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
@@ -221,14 +221,14 @@ doc_events = {
 	},
 	"Pick List": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.pick_list.validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
+		"before_validate": ["ceramic.ceramic.doc_events.pick_list.validate", "ceramic.api.naming_series_validate"],
 		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 	},
 	"Delivery Note": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.delivery_note.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
+		"before_validate": ["ceramic.ceramic.doc_events.delivery_note.before_validate", "ceramic.api.naming_series_validate"],
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
 		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"before_submit": "ceramic.ceramic.doc_events.delivery_note.before_submit",
