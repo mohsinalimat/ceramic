@@ -480,6 +480,13 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (doc) {
+	return {
+		filters: {
+			"authority": "Authorized",
+		}
+	}
+}
 frappe.ui.form.on('Sales Order', {
 	refresh: (frm) => {
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);

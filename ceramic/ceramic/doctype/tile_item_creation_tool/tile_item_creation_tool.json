@@ -11,6 +11,7 @@
   "item_design",
   "is_item_series",
   "maintain_stock",
+  "disabled",
   "image",
   "column_break_6",
   "uom",
@@ -395,11 +396,18 @@
    "fieldtype": "Link",
    "label": "Punch No",
    "options": "Punch No"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
   }
  ],
  "image_field": "image",
  "is_submittable": 1,
- "modified": "2020-05-20 11:56:51.624961",
+ "modified": "2020-05-26 14:56:41.568931",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item Creation Tool",

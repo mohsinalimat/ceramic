@@ -252,22 +252,52 @@ class ReceivablePayableReport(object):
 
 	def append_row(self, row):
 		self.allocate_future_payments(row)
-		self.set_invoice_details(row)
-		self.set_payment_details(row)
+		self.set_jv_details(row)
 		self.set_party_details(row)
 		self.set_ageing(row)
+		self.set_invoice_details(row)
+		self.set_payment_details(row)
 
 		if self.filters.get('group_by_party'):
 			self.update_sub_total_row(row, row.party)
 			if self.previous_party and (self.previous_party != row.party):
 				self.append_subtotal_row(self.previous_party)
 			self.previous_party = row.party
+		if not row.primary_customer and row.party:
+			row.primary_customer = row.party
+		if not row.reference_doc and row.voucher_type == "Payment Entry":
+			row.cash_paid = row.paid
+			row.bank_paid = 0
+			row.billed_amount = 0
+			row.cash_amount = 0
+			row.cash_outstanding = row.outstanding
+			row.bank_outstanding = 0
+		elif row.reference_doc and row.voucher_type == "Payment Entry":
+			row.bank_paid = row.paid
+			row.cash_paid = 0
+			row.billed_amount = 0
+			row.cash_amount = 0
+			row.bank_outstanding = row.outstanding
+			row.cash_outstanding = 0
+		elif row.voucher_type == "Sales Invoice":
+			row.billed_amount = row.discounted_rounded_total
+			row.cash_amount = row.real_difference_amount
+			row.cash_paid = row.real_difference_amount - row.pay_amount_left
+			row.cash_paid = row.cash_paid if row.cash_paid > 0 else 0
+			row.bank_paid = row.paid - row.cash_paid
+			row.cash_outstanding = row.cash_amount - row.cash_paid
+			row.bank_outstanding = row.billed_amount - row.bank_paid
 
 		self.data.append(row)
 
 	def set_payment_details(self, row):
 		if row.voucher_type == 'Payment Entry' and not row.reference_doc:
 			row.reference_doc = frappe.db.get_value("Payment Entry", row.voucher_no, 'pe_ref')
+			row.primary_customer = frappe.db.get_value("Payment Entry", row.primary_customer, 'primary_customer')
+	
+	def set_jv_details(self, row):
+		if row.voucher_type == 'Journal Entry':
+			row.primary_customer = frappe.db.get_value("Journal Entry", row.voucher_no, 'primary_customer')
 			
 
 	def set_invoice_details(self, row):
@@ -317,7 +347,7 @@ class ReceivablePayableReport(object):
 		self.invoice_details = frappe._dict()
 		if self.party_type == "Customer":
 			si_list = frappe.db.sql("""
-				select name, primary_customer, due_date, po_no, discounted_rounded_total as billed_amount, real_difference_amount as cash_amount, (real_difference_amount - pay_amount_left) as cash_paid, discounted_rounded_total, si_ref as reference_doc
+				select name, primary_customer, due_date, po_no, discounted_rounded_total, real_difference_amount, pay_amount_left, discounted_rounded_total, si_ref as reference_doc
 				from `tabSales Invoice`
 				where posting_date <= %s
 			""",self.filters.report_date, as_dict=1)
@@ -774,16 +804,19 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_('Invoice Grand Total'), fieldname='invoice_grand_total')
 
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
-		self.add_column(_('Paid Amount'), fieldname='paid')
+		self.add_column(_('Cash Amount'), fieldname='cash_amount')
+		self.add_column(_('Billed Amount'), fieldname='billed_amount')
+		self.add_column(_('Total Paid Amount'), fieldname='paid')
 		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
+		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
+		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
+		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		if self.party_type == "Customer":
 			self.add_column(_('Credit Note'), fieldname='credit_note')
 		else:
 			# note: fieldname is still `credit_note`
 			self.add_column(_('Debit Note'), fieldname='credit_note')
-		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('Diff Amt'), fieldname='cash_amount')
-		self.add_column(_('Disc Amt'), fieldname='discounted_rounded_total')
 
 		self.setup_ageing_columns()
 
@@ -812,7 +845,8 @@ class ReceivablePayableReport(object):
 				options='Supplier Group')
 
 		self.add_column(label=_('Remarks'), fieldname='remarks', fieldtype='Text', width=200)
-		self.add_column(label=_('Reference Document'), fieldname='reference_doc', fieldtype='Text', width=200)
+		self.add_column(label=_('Reference Document'), fieldname='reference_doc', fieldtype='Dynamic Link',
+			options='voucher_type', width=180)
 
 	def add_column(self, label, fieldname=None, fieldtype='Currency', options=None, width=120):
 		if not fieldname: fieldname = scrub(label)
