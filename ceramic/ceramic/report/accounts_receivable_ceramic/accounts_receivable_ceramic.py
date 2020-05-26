@@ -287,6 +287,13 @@ class ReceivablePayableReport(object):
 			row.bank_paid = row.paid - row.cash_paid
 			row.cash_outstanding = row.cash_amount - row.cash_paid
 			row.bank_outstanding = row.billed_amount - row.bank_paid
+		elif row.voucher_type == "Journal Entry":
+			row.billed_amount = 0
+			row.cash_amount = 0
+			row.bank_paid = 0
+			row.cash_paid = row.paid
+			row.bank_outstanding = 0
+			row.cash_outstanding = row.outstanding
 
 		self.data.append(row)
 
@@ -803,20 +810,20 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_('Payment Term'), fieldname='payment_term', fieldtype='Data')
 			self.add_column(label=_('Invoice Grand Total'), fieldname='invoice_grand_total')
 
-		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
-		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
-		self.add_column(_('Total Paid Amount'), fieldname='paid')
-		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
+		self.add_column(_('Cash Amount'), fieldname='cash_amount')
+		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
+		# if self.party_type == "Customer":
+		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
+		# else:
+		# 	# note: fieldname is still `credit_note`
+		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
 		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
-		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
+		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
+		self.add_column(_('Total Paid Amount'), fieldname='paid')
 		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
-		if self.party_type == "Customer":
-			self.add_column(_('Credit Note'), fieldname='credit_note')
-		else:
-			# note: fieldname is still `credit_note`
-			self.add_column(_('Debit Note'), fieldname='credit_note')
+		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 
 		self.setup_ageing_columns()
 

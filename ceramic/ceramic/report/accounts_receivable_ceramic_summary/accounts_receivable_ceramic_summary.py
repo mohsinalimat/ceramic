@@ -83,8 +83,11 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			"cash_amount": 0.0,
 			"paid": 0.0,
 			"cash_paid": 0.0,
+			"bank_paid": 0.0,
 			"credit_note": 0.0,
 			"outstanding": 0.0,
+			"bank_outstanding": 0.0,
+			"cash_outstanding": 0.0,
 			"range1": 0.0,
 			"range2": 0.0,
 			"range3": 0.0,
@@ -108,10 +111,20 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(label=_(self.party_type), fieldname='party',
 			fieldtype='Link', options=self.party_type, width=180)
 		self.add_column(_('Primary Customer'), fieldname='primary_customer', fieldtype='Data')
-		self.add_column(_('Outstanding Amount'), fieldname='outstanding')
-		# self.add_column(_('Invoice Amount'), fieldname='invoiced')
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
 		self.add_column(_('Cash Amount'), fieldname='cash_amount')
+		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
+		# if self.party_type == "Customer":
+		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
+		# else:
+		# 	# note: fieldname is still `credit_note`
+		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
+		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
+		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
+		self.add_column(_('Total Paid Amount'), fieldname='paid')
+		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
+		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),
@@ -119,10 +132,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		credit_debit_label = "Credit Note" if self.party_type == 'Customer' else "Debit Note"
 
-		self.add_column(_('Advance Amount'), fieldname='advance')
-		self.add_column(_('Paid Amount'), fieldname='paid')
-		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
-		self.add_column(_(credit_debit_label), fieldname='credit_note')
+		# self.add_column(_(credit_debit_label), fieldname='credit_note')
 
 		self.setup_ageing_columns()
 
