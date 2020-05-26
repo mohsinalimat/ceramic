@@ -189,6 +189,13 @@ cur_frm.fields_dict.customer.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (doc) {
+	return {
+		filters: {
+			"authority": "Authorized",
+		}
+	}
+}
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
 		frm.trigger('add_get_items_button')
