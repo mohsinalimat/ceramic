@@ -1,0 +1,53 @@
+{
+ "autoname": "field:product_looking_for",
+ "creation": "2020-05-26 14:50:28.416656",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "product_looking_for"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_looking_for",
+   "fieldtype": "Data",
+   "label": "Product Looking For",
+   "unique": 1
+  }
+ ],
+ "modified": "2020-05-26 14:50:50.863018",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Product Looking For",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Local Admin",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

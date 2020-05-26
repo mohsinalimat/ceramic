@@ -1,0 +1,30 @@
+{
+ "creation": "2020-05-26 14:52:08.285573",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "product_looking_for_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_looking_for_details",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Product Looking For Details",
+   "options": "Product Looking For",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-05-26 14:52:08.285573",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Product Looking For Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
