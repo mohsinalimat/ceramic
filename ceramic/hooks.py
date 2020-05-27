@@ -191,6 +191,7 @@ doctype_js = {
 	"Stock Entry": "public/js/doctype_js/stock_entry.js",
 	"Pick List": "public/js/doctype_js/pick_list.js",
 	"Company": "public/js/doctype_js/company.js",
+	"Quotation": "public/js/doctype_js/quotation.js",
 }
 
 doc_events = {
