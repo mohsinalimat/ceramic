@@ -111,6 +111,9 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(label=_(self.party_type), fieldname='party',
 			fieldtype='Link', options=self.party_type, width=180)
 		self.add_column(_('Primary Customer'), fieldname='primary_customer', fieldtype='Data')
+		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
+		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
 		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
@@ -122,9 +125,6 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
 		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		self.add_column(_('Total Paid Amount'), fieldname='paid')
-		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
-		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
-		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),

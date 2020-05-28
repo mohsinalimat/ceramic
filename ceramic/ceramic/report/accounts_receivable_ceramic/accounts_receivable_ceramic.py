@@ -96,15 +96,20 @@ class ReceivablePayableReport(object):
 			key = (gle.voucher_type, gle.voucher_no, gle.party)
 			if not key in self.voucher_balance:
 				self.voucher_balance[key] = frappe._dict(
+					company = gle.company,
 					voucher_type = gle.voucher_type,
 					voucher_no = gle.voucher_no,
 					party = gle.party,
 					posting_date = gle.posting_date,
 					remarks = gle.remarks,
 					account_currency = gle.account_currency,
+					# bill_amt = 0.0,
 					invoiced = 0.0,
+					# bank_paid = 0.0,
 					paid = 0.0,
+					# credit_note_bill = 0.0,
 					credit_note = 0.0,
+					# bank_outstanding = 0.0,
 					outstanding = 0.0
 				)
 			self.get_invoices(gle)
@@ -223,6 +228,7 @@ class ReceivablePayableReport(object):
 		# as we can use this to filter out invoices without outstanding
 		for key, row in self.voucher_balance.items():
 			row.outstanding = flt(row.invoiced - row.paid - row.credit_note, self.currency_precision)
+			# row.bank_outstanding = flt(row.bill_amt - row.bank_outstanding - row.credit_note_bill, self.currency_precision)
 			row.invoice_grand_total = row.invoiced
 
 			if abs(row.outstanding) > 1.0/10 ** self.currency_precision:
@@ -265,37 +271,54 @@ class ReceivablePayableReport(object):
 			self.previous_party = row.party
 		if not row.primary_customer and row.party:
 			row.primary_customer = row.party
-		if not row.reference_doc and row.voucher_type == "Payment Entry":
-			row.cash_paid = row.paid
-			row.bank_paid = 0
-			row.billed_amount = 0
-			row.cash_amount = 0
-			row.cash_outstanding = row.outstanding
-			row.bank_outstanding = 0
-		elif row.reference_doc and row.voucher_type == "Payment Entry":
-			row.bank_paid = row.paid
-			row.cash_paid = 0
-			row.billed_amount = 0
-			row.cash_amount = 0
-			row.bank_outstanding = row.outstanding
-			row.cash_outstanding = 0
-		elif row.voucher_type == "Sales Invoice":
-			row.billed_amount = row.discounted_rounded_total
-			row.cash_amount = row.real_difference_amount
-			row.cash_paid = row.real_difference_amount - row.pay_amount_left
-			row.cash_paid = row.cash_paid if row.cash_paid > 0 else 0
-			row.bank_paid = row.paid - row.cash_paid
-			row.cash_outstanding = row.cash_amount - row.cash_paid
-			row.bank_outstanding = row.billed_amount - row.bank_paid
-		elif row.voucher_type == "Journal Entry":
-			row.billed_amount = 0
-			row.cash_amount = 0
-			row.bank_paid = 0
-			row.cash_paid = row.paid
-			row.bank_outstanding = 0
-			row.cash_outstanding = row.outstanding
+		
+		if row.company == self.filters.company or (row.company != self.filters.company and not row.reference_doc):
+			if row.voucher_type == "Journal Entry":
+				row.billed_amount = 0
+				row.cash_amount = 0
+				if row.company == self.filters.company:
+					row.cash_paid = row.paid
+					row.bank_paid = 0
+					row.bank_outstanding = 0
+					row.cash_outstanding = row.outstanding
+				else:
+					row.cash_paid = 0
+					row.bank_paid = row.paid
+					row.bank_outstanding = row.outstanding
+					row.cash_outstanding = 0
+			elif row.voucher_type == "Sales Invoice":
+				if row.company == self.filters.company:
+					row.billed_amount = row.discounted_rounded_total
+					row.cash_amount = row.real_difference_amount
+					row.cash_paid = row.real_difference_amount - row.pay_amount_left
+					row.cash_paid = row.cash_paid if row.cash_paid > 0 else 0
+					row.bank_paid = row.paid - row.cash_paid
+					row.cash_outstanding = row.cash_amount - row.cash_paid
+					row.bank_outstanding = row.billed_amount - row.bank_paid
+				else:
+					row.billed_amount = row.invoiced
+					row.cash_amount = 0
+					row.cash_paid = 0
+					row.bank_paid = row.paid
+					row.cash_outstanding = 0
+					row.bank_outstanding = row.outstanding
+			elif row.voucher_type == "Payment Entry":
+				if not row.reference_doc:
+					row.cash_paid = row.paid
+					row.bank_paid = 0
+					row.billed_amount = 0
+					row.cash_amount = 0
+					row.cash_outstanding = row.outstanding
+					row.bank_outstanding = 0
+				else:
+					row.bank_paid = row.paid
+					row.cash_paid = 0
+					row.billed_amount = 0
+					row.cash_amount = 0
+					row.bank_outstanding = row.outstanding
+					row.cash_outstanding = 0
 
-		self.data.append(row)
+			self.data.append(row)
 
 	def set_payment_details(self, row):
 		if row.voucher_type == 'Payment Entry' and not row.reference_doc:
@@ -627,7 +650,7 @@ class ReceivablePayableReport(object):
 		self.gl_entries = frappe.db.sql("""
 			select
 				name, posting_date, account, party_type, party, voucher_type, voucher_no,
-				against_voucher_type, against_voucher, account_currency, remarks, {0}
+				against_voucher_type, against_voucher, account_currency, remarks, company, {0}
 			from
 				`tabGL Entry`
 			where
@@ -694,8 +717,9 @@ class ReceivablePayableReport(object):
 
 	def add_common_filters(self, conditions, values, party_type_field):
 		if self.filters.company:
-			conditions.append("company=%s")
-			values.append(self.filters.company)
+			alternate_company = frappe.get_value("Company", self.filters.company, 'alternate_company')
+			conditions.append(f"company in ('{self.filters.company}', '{alternate_company}')")
+			# values.append(self.filters.company)
 
 		if self.filters.finance_book:
 			conditions.append("ifnull(finance_book, '') in (%s, '')")
@@ -708,7 +732,7 @@ class ReceivablePayableReport(object):
 		# get GL with "receivable" or "payable" account_type
 		account_type = "Receivable" if self.party_type == "Customer" else "Payable"
 		accounts = [d.name for d in frappe.get_all("Account",
-			filters={"account_type": account_type, "company": self.filters.company})]
+			filters={"account_type": account_type, "company": ['in', (self.filters.company, alternate_company)]})]
 		conditions.append("account in (%s)" % ','.join(['%s'] *len(accounts)))
 		values += accounts
 
@@ -796,10 +820,6 @@ class ReceivablePayableReport(object):
 				fieldtype='Link', options='Contact')
 			self.add_column(_("Primary Customer"), fieldname='primary_customer',
 				fieldtype='Link', options='Customer')
-
-		self.add_column(label=_('Voucher Type'), fieldname='voucher_type', fieldtype='Data')
-		self.add_column(label=_('Voucher No'), fieldname='voucher_no', fieldtype='Dynamic Link',
-			options='voucher_type', width=180)
 		self.add_column(label='Due Date', fieldtype='Date')
 
 		if self.party_type == "Supplier":
@@ -810,6 +830,9 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_('Payment Term'), fieldname='payment_term', fieldtype='Data')
 			self.add_column(label=_('Invoice Grand Total'), fieldname='invoice_grand_total')
 
+		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
+		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
 		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
@@ -821,13 +844,16 @@ class ReceivablePayableReport(object):
 		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
 		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		self.add_column(_('Total Paid Amount'), fieldname='paid')
-		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
-		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
-		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 
 		self.setup_ageing_columns()
 
 		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link', options='Currency', width=80)
+		self.add_column(_("Company"), fieldname='company',
+			fieldtype='Link', options='Company')
+
+		self.add_column(label=_('Voucher Type'), fieldname='voucher_type', fieldtype='Data')
+		self.add_column(label=_('Voucher No'), fieldname='voucher_no', fieldtype='Dynamic Link',
+			options='voucher_type', width=180)
 
 		if self.filters.show_future_payments:
 			self.add_column(label=_('Future Payment Ref'), fieldname='future_ref', fieldtype='Data')

@@ -9,7 +9,14 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 			"fieldtype": "Link",
 			"options": "Company",
 			"reqd": 1,
-			"default": frappe.defaults.get_user_default("Company")
+			"default": frappe.defaults.get_user_default("Company"),
+			get_query: () => {
+				return {
+					filters: {
+						'authority': "Unauthorized"
+					}
+				}
+			}
 		},
 		{
 			"fieldname":"ageing_based_on",
