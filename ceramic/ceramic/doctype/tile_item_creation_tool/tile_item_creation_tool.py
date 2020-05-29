@@ -11,6 +11,9 @@ class TileItemCreationTool(Document):
 
 	def on_submit(self):
 		self.create_items()
+
+	def on_cancel(self):
+		self.delete_item()
 	
 	def on_update_after_submit(self):
 		for tile in self.tile_quality:
@@ -60,6 +63,16 @@ class TileItemCreationTool(Document):
 		tile_size_code = '-' + frappe.db.get_value('Tile Size', self.tile_size, 'size_code')
 		tile_type_code = '-' + frappe.db.get_value('Tile Type', self.tile_type, 'type_code')
 		tile_surface_code = '-' + frappe.db.get_value('Tile Surface', self.tile_surface, 'surface_code')
+		item_group_code = frappe.db.get_value("Item Group", self.item_group, 'item_group_code')
+		if item_group_code:
+			item_group_code = '-' + item_group_code
+		else:
+			item_group_code = ''
+		item_group_name = frappe.db.get_value("Item Group", self.item_group, 'item_name')
+		if item_group_name:
+			item_group_name = '-' + item_group_name
+		else:
+			item_group_name = ''
 
 		if self.item_series and not self.is_item_series:
 			for tile in self.tile_quality:
@@ -70,8 +83,9 @@ class TileItemCreationTool(Document):
 				else:
 					item = frappe.get_doc("Item", {'item_name': self.item_name + category})
 				
-				item.item_code = self.item_design + tile_grade + tile_surface_code + tile_type_code + tile_size_code
-				item.item_name = self.item_name + category
+				
+				item.item_code = self.item_design + tile_grade + item_group_code
+				item.item_name = self.item_design + item_group_name + category
 				item.item_design = self.item_design
 				item.item_series = self.item_series
 				item.item_creation_tool = self.name
@@ -95,7 +109,7 @@ class TileItemCreationTool(Document):
 				item.tile_quality = tile.tile_quality
 				item.cover_image = self.cover_image
 				item.image = self.image
-				item.authority = "Authorized"
+				item.authority = "Unauthorized"
 
 				if self.show_in_website:
 					if frappe.db.get_value("Tile Quality", tile.tile_quality, 'show_in_website'):
@@ -148,7 +162,7 @@ class TileItemCreationTool(Document):
 			item.tile_shape = self.tile_shape
 			item.tile_price = self.tile_price
 			item.tile_thickness = self.tile_thickness
-			item.authority = "Unauthorized"
+			item.authority = "Authorized"
 			item.tile_anti_slip_properties = self.tile_anti_slip_properties
 			# item.tile_quality = tile.tile_quality
 
@@ -165,6 +179,23 @@ class TileItemCreationTool(Document):
 						'income_account': i.income_account,
 					})
 			item.save(ignore_permissions = True)
+
+	def delete_item(self):
+		if self.tile_quality:
+			item_list = [row.item_code for row in self.tile_quality]
+			for row in self.tile_quality:
+				if row.item_code:
+					row.db_set('item_code', None)
+					row.db_set('item_name', None)
+
+			
+			for item in item_list:
+				frappe.db.set_value("Item", item, 'item_creation_tool', None)
+				doc = frappe.get_doc("Item", item)
+				doc.delete()
+			
+					
+
 	# def after_submit(self):
 	# 	for tile in self.tile_quality:
 	# 		if not frappe.db.exists("Item Price", {'item_code': tile.item_code}):
