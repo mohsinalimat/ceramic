@@ -103,6 +103,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 	parent.reload()
 	parent.flags.ignore_validate_update_after_submit = True
+	parent.flags.ignore_permission = True
 	parent.set_qty_as_per_stock_uom()
 	parent.calculate_taxes_and_totals()
 	if parent_doctype == "Sales Order":

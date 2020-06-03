@@ -44,6 +44,8 @@ frappe.ui.form.on('Payment Entry', {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
+		frm.trigger('mode_of_payment');
+		frm.trigger('party');
 	},
 	mode_of_payment: function (frm) {
 		if (frm.doc.deductions == undefined && frm.doc.mode_of_payment == "Shroff / Hawala") {
@@ -59,9 +61,20 @@ frappe.ui.form.on('Payment Entry', {
 	before_save: function (frm) {
 		frm.trigger('get_sales_partner');
 	 },
-	
+	party: function (frm) {
+		frm.trigger('get_primary_customer')
+	},
 	get_outstanding_invoices: function (frm) {
 		frm.trigger('get_sales_partner')
+	},
+	get_primary_customer: function (frm) {
+		if (frm.doc.party_type == "Customer") {
+			frappe.db.get_value("Customer", frm.doc.party, 'primary_customer', function (r) {
+				if (r.primary_customer) {
+					frm.set_value('primary_customer', r.primary_customer)
+				}
+			});
+		}
 	},
 	get_sales_partner: function (frm) {
 		frm.doc.references.forEach(function (d) {

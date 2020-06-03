@@ -272,7 +272,7 @@ def create_main_sales_invoice(self):
 		si.posting_date = self.posting_date
 		si.posting_time = self.posting_time
 		if self.amended_from:
-			si.amended_from = frappe.db.get_value("Sales Invoice", {"si_ref": source.amended_from}, "name")
+			si.amended_from = frappe.db.get_value("Sales Invoice", {"si_ref": self.amended_from}, "name")
 		si.save(ignore_permissions = True)
 		for tax in si.taxes:
 			if tax.tax_exclusive and tax.charge_type != "Actual":

@@ -115,21 +115,22 @@ def make_invoices(self):
 		elif flt(row.outstanding_amount) <= 0.0 and row.full_amount > 0.0:
 			for item in args['items']:
 				item['rate'] = flt(row.full_amount) / flt(item['qty'])
+			args['company'] = frappe.db.get_value("Company", self.company, 'alternate_company')
 			doc = frappe.get_doc(args).insert()
-			doc.company = frappe.db.get_value("Company", doc.company, 'alternate_company')
 			doc.primary_customer = row.primary_customer
 			for item in doc.items:
 				item.rate = flt(row.full_amount) / flt(item.qty)
 				item.cost_center = item.cost_center.replace(source_abbr, target_abbr)
 				if doc.doctype == 'Sales Invoice':
 					item.income_account = item.income_account.replace(source_abbr, target_abbr)
-				elif doc.party_type == 'Purchase Invoice':
+				elif doc.doctype == 'Purchase Invoice':
 					item.expense_account = item.expense_account.replace(source_abbr, target_abbr)
 			if doc.doctype == 'Sales Invoice':
-				doc.debit_to = doc.debit_to.replace(source_abbr, target_abbr)
+				# doc.debit_to = doc.debit_to.replace(source_abbr, target_abbr)
 				doc.sales_partner = row.sales_partner
-			elif doc.party_type == 'Purchase Invoice':
-				doc.credit_to = doc.credit_to.replace(source_abbr, target_abbr)
+			elif doc.doctype == 'Purchase Invoice':
+				# doc.credit_to = doc.credit_to.replace(source_abbr, target_abbr)
+				pass
 			
 			doc.submit()
 			names.append(doc.name)

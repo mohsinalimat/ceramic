@@ -79,9 +79,11 @@ def before_validate_after_submit(self, method):
 
 def validate_after_submit(self, method):
 	update_discounted_net_total(self)
+	calculate_totals(self)
 
 def before_update_after_submit(self, method):
 	setting_rate_qty(self)
+	calculate_totals(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)

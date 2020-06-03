@@ -257,7 +257,7 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 		item['item_name'] = frappe.db.get_value('Item', item['item_code'], 'item_name')
 		
 		pick_list_available = frappe.db.sql(f"""
-			SELECT SUM(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli
+			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
 			JOIN `tabPick List` AS pl ON pl.name = pli.parent
 			WHERE pli.`item_code` = '{item['item_code']}'
 			AND pli.`warehouse` = '{item['warehouse']}'

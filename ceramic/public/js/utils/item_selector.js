@@ -345,7 +345,6 @@ ItemSelector = Class.extend({
 				item_location.__checked = 1;
 			} else {
 				item_location.__checked = 0;
-				console.log(remaining_to_pick)
 				item_location.to_pick_qty = Math.min((remaining_to_pick || 0), (item_location.to_pick_qty || 0))
 			}
 		});
