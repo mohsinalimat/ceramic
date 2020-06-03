@@ -413,7 +413,7 @@ class ReceivablePayableReport(object):
 
 		if self.party_type == "Supplier":
 			for pi in frappe.db.sql("""
-				select name, due_date, bill_no, bill_date, discounted_rounded_total, real_difference_amount, discounted_rounded_total, pi_ref as reference_doc
+				select name, due_date, bill_no, bill_date, discounted_rounded_total, real_difference_amount, discounted_rounded_total, pay_amount_left, pi_ref as reference_doc
 				from `tabPurchase Invoice`
 				where posting_date <= %s
 			""", self.filters.report_date, as_dict=1):
