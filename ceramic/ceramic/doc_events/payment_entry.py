@@ -63,6 +63,7 @@ def create_payment_entry(self):
 					target_doc.reference_name = frappe.db.get_value("Purchase Invoice", reference_name, 'pi_ref')
 					target_doc.total_amount = frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'rounded_total') or frappe.db.get_value("Purchase Invoice", reference_name, 'total')
 					target_doc.outstanding_amount = frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'outstanding_amount')
+					target_doc.allocated_amount = min(target_doc.outstanding_amount - (frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'pay_amount_left')), source_doc.allocated_amount)
 
 			if source_parent.payment_type == 'Receive':
 				if source_doc.reference_doctype == 'Sales Invoice':

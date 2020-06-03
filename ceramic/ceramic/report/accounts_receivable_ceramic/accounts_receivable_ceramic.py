@@ -302,6 +302,22 @@ class ReceivablePayableReport(object):
 					row.bank_paid = row.paid
 					row.cash_outstanding = 0
 					row.bank_outstanding = row.outstanding
+			elif row.voucher_type == "Purchase Invoice":
+				if row.company == self.filters.company:
+					row.billed_amount = row.discounted_rounded_total
+					row.cash_amount = row.real_difference_amount
+					row.cash_paid = row.real_difference_amount - row.pay_amount_left
+					row.cash_paid = row.cash_paid if row.cash_paid > 0 else 0
+					row.bank_paid = row.paid - row.cash_paid
+					row.cash_outstanding = row.cash_amount - row.cash_paid
+					row.bank_outstanding = row.billed_amount - row.bank_paid
+				else:
+					row.billed_amount = row.invoiced
+					row.cash_amount = 0
+					row.cash_paid = 0
+					row.bank_paid = row.paid
+					row.cash_outstanding = 0
+					row.bank_outstanding = row.outstanding
 			elif row.voucher_type == "Payment Entry":
 				if not row.reference_doc:
 					row.cash_paid = row.paid
@@ -397,7 +413,7 @@ class ReceivablePayableReport(object):
 
 		if self.party_type == "Supplier":
 			for pi in frappe.db.sql("""
-				select name, due_date, bill_no, bill_date
+				select name, due_date, bill_no, bill_date, discounted_rounded_total, real_difference_amount, discounted_rounded_total, pi_ref as reference_doc
 				from `tabPurchase Invoice`
 				where posting_date <= %s
 			""", self.filters.report_date, as_dict=1):

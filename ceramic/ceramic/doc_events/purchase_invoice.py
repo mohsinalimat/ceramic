@@ -4,6 +4,8 @@ from frappe.model.mapper import get_mapped_doc
 
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
+	if self.authority == "Unauthorized":
+		self.pay_amount_left = self.real_difference_amount
 	create_main_purchase_invoice(self)
 
 def on_cancel(self, test):
@@ -121,13 +123,10 @@ def create_main_purchase_invoice(self):
 		pi.naming_series = 'A' + pi.naming_series
 		pi.company_series = self.company_series
 		pi.flags.ignore_permissions = True
-		try:
-			pi.save(ignore_permissions= True)
-			self.db_set('pi_ref', pi.name)
-			pi.submit()
-		except Exception as e:
-			frappe.db.rollback()
-			frappe.throw(e)
+
+		pi.save(ignore_permissions= True)
+		self.db_set('pi_ref', pi.name)
+		pi.submit()
 	
 	
 def before_validate(self, method):
@@ -139,6 +138,23 @@ def before_validate(self, method):
 		for item in self.items:
 			item.full_rate = 0
 			item.full_qty = 0
+
+	update_discounted_net_total(self)
+
+def update_discounted_net_total(self):
+	self.discounted_total = sum(x.discounted_amount for x in self.items)
+	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
+	testing_only_tax = 0
+	
+	for tax in self.taxes:
+		if tax.testing_only:
+			testing_only_tax += tax.tax_amount
+	
+	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
+	if self.rounded_total:
+		self.discounted_rounded_total = round(self.discounted_grand_total)
+	self.real_difference_amount = (self.rounded_total or self.grand_total) - (self.discounted_rounded_total or self.discounted_grand_total)
+
 
 def before_naming(self, method):
 	if self.is_opening == "Yes":

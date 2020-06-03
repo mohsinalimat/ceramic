@@ -517,3 +517,9 @@ def naming_series_validate(self, method):
 	if self.get('company_series'):
 		if not frappe.db.exists("Company", {'name': self.company, 'company_series': self.company_series}):
 			frappe.throw("You can not change company")
+
+def pi_patch():
+	pi_list = frappe.db.sql("select name from `tabPurchase Invoice` WHERE pi_ref != '' and authority = 'Unauthorized'")
+
+	for pi in pi_list:
+		pass
