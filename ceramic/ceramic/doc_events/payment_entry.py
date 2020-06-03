@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.mapper import get_mapped_doc
 
 def validate(self,method):
+	if self.authority == "Unauthorized" and not self.pe_ref and self.mode_of_payment not in ['Shroff / Hawala', 'Cash']:
+		frappe.throw(f"You can not select mode of payment other than Cash or Shroff / Hawala. for company {self.company}")
 	get_sales_person(self)
 	for item in self.references:
 		if self.payment_type == "Pay":

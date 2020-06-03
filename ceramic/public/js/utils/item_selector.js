@@ -145,7 +145,7 @@ ItemSelector = Class.extend({
 	get_items: function(filters) {
 		let me = this;
 		let item_locations = me.dialog.fields_dict.item_locations;
-
+		console.log(me.dialog.fields_dict.remaining_to_pick.value)
 		if(!filters['item_code']){
 			item_locations.grid.df.data = [];
 			item_locations.grid.refresh();
@@ -174,7 +174,7 @@ ItemSelector = Class.extend({
 					if (me.batch_no && value.batch_no == me.batch_no){
 						value.available_qty = value.available_qty + me.qty
 					}
-					value.to_pick_qty = Math.min(value.to_pick_qty, value.available_qty)
+					value.to_pick_qty = Math.min(me.dialog.fields_dict.remaining_to_pick.value, value.available_qty)
 					item_locations.grid.df.data.push(value)
 				});
 
@@ -345,7 +345,7 @@ ItemSelector = Class.extend({
 				item_location.__checked = 1;
 			} else {
 				item_location.__checked = 0;
-				item_location.to_pick_qty = Math.min((remaining_to_pick || 0), (item_location.to_pick_qty || 0))
+				item_location.to_pick_qty = Math.min((remaining_to_pick || 0), (item_location.available_qty || 0))
 			}
 		});
 		let item_locations2 = me.dialog.fields_dict.item_locations;
