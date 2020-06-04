@@ -128,15 +128,15 @@ frappe.query_reports["Accounts Payable Ceramic"] = {
 	},
 
 	onload: function(report) {
-		report.page.add_inner_button(__("Accounts Payable Summary"), function() {
+		report.page.add_inner_button(__("Accounts Payable Ceramic Summary"), function() {
 			var filters = report.get_values();
-			frappe.set_route('query-report', 'Accounts Payable Summary', {company: filters.company});
+			frappe.set_route('query-report', 'Accounts Payable Ceramic Summary', {company: filters.company});
 		});
 	}
 }
 
 erpnext.dimension_filters.forEach((dimension) => {
-	frappe.query_reports["Accounts Payable"].filters.splice(9, 0 ,{
+	frappe.query_reports["Accounts Payable Ceramic"].filters.splice(9, 0 ,{
 		"fieldname": dimension["fieldname"],
 		"label": __(dimension["label"]),
 		"fieldtype": "Link",

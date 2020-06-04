@@ -46,7 +46,7 @@ def create_main_purchase_invoice(self):
 					if source.taxes[index].cost_center:
 						target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
 			if self.amended_from:
-				name = frappe.db.get_value("Sales Invoice", {"pi_ref": source.amended_from}, "name")
+				name = frappe.db.get_value("Purchase Invoice", {"pi_ref": source.amended_from}, "name")
 				target.amended_from = name
 
 			target.set_missing_values()
@@ -96,6 +96,8 @@ def create_main_purchase_invoice(self):
 					# Ref Links
 					"purchase_receipt_docname": "purchase_receipt",
 					"purchase_receipt_childname": "pr_detail",
+					"po_docname": "purchase_order",
+					"po_childname": "po_detail",
 				},
 				"field_no_map": {
 					"full_rate",
@@ -134,12 +136,17 @@ def before_validate(self, method):
 		
 	if self.authority == "Authorized":
 		for item in self.items:
-			if not item.delivery_docname:
+			if not item.po_docname:
 				if not item.full_rate:
 					item.full_rate = item.rate
 
 				if not item.full_qty:
 					item.full_qty = item.qty
+	
+	if self.authority == "Unauthorized" and not self.pi_ref:
+		for item in self.items:
+			item.discounted_rate = 0
+			item.real_qty = 0
 
 	for item in self.items:
 		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
@@ -192,8 +199,8 @@ def cancel_main_purchase_invoice(self):
 def delete_purchase_invoice(self):
 	ref_name = self.pi_ref
 	try:
-		frappe.db.set_value("Purchase Invoice", self.name, 'pi_ref', '')    
-		frappe.db.set_value("Purchase Invoice", ref_name, 'pi_ref', '') 
+		frappe.db.set_value("Purchase Invoice", self.name, 'pi_ref', '')
+		frappe.db.set_value("Purchase Invoice", ref_name, 'pi_ref', '')
 		frappe.delete_doc("Purchase Invoice", ref_name, force = 1, ignore_permissions=True)  
 	except Exception as e:
 		frappe.db.rollback()

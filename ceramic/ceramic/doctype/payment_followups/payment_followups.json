@@ -1,0 +1,114 @@
+{
+ "autoname": "field:customer",
+ "creation": "2020-06-04 11:49:02.094812",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_invoice",
+  "sales_invoice_date",
+  "customer",
+  "primary_customer",
+  "column_break_5",
+  "expected_date_of_payment",
+  "expected_amount_of_payment",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fetch_from": "sales_invoice.posting_date",
+   "fieldname": "sales_invoice_date",
+   "fieldtype": "Date",
+   "label": "Sales Invoice Date",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "sales_invoice.customer",
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "sales_invoice.primary_customer",
+   "fieldname": "primary_customer",
+   "fieldtype": "Data",
+   "label": "Primary Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "expected_date_of_payment",
+   "fieldtype": "Date",
+   "label": "Expected Date of Payment"
+  },
+  {
+   "fetch_from": "sales_invoice.grand_total",
+   "fieldname": "expected_amount_of_payment",
+   "fieldtype": "Currency",
+   "label": "Expected Amount of Payment"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "modified": "2020-06-04 12:53:35.287719",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Payment Followups",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

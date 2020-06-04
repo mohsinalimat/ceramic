@@ -540,3 +540,91 @@ def pi_patch():
 		pi_doc.save()
 	
 	frappe.db.commit()
+
+def pi_patch():
+	pi_list = frappe.db.sql("Select name from `tabPurchase Invoice` WHERE pi_ref is null and authority = 'Unauthorized'")
+
+	for pi in pi_list:
+		pi_doc = frappe.get_doc("Purchase Invoice", pi[0])
+
+		for item in pi_doc.items:
+			item.discounted_rate = item.real_qty = item.discounted_amount = item.discounted_net_amount = 0
+		
+		pi_doc.pay_amount_left  = pi_doc.real_difference_amount = pi_doc.rounded_total or pi_doc.grand_total
+		pi_doc.discounted_grand_total = pi_doc.discounted_rounded_total = 0
+
+		pi_doc.flags.ignore_validate_update_after_submit = True
+
+		pi_doc.save()
+	
+	frappe.db.commit()
+
+from frappe.utils import flt
+def po_ref_match_patch():
+	pi_list = frappe.get_list("Purchase Invoice", {"authority": "Authorized"})
+	po = []
+
+	for pi in pi_list:
+		pi_authorized_doc = frappe.get_doc("Purchase Invoice", pi['name'])
+		pi_unauthorized_doc = frappe.get_doc("Purchase Invoice", pi_authorized_doc.pi_ref)
+
+		for item in pi_authorized_doc.items:
+			item.po_docname = frappe.db.get_value("Purchase Receipt Item", item.purchase_receipt_childname, 'purchase_order')
+			item.po_childname = frappe.db.get_value("Purchase Receipt Item", item.purchase_receipt_childname, 'purchase_order_item')
+			print(item.po_docname)
+			print(item.po_childname)
+		
+		for item in pi_unauthorized_doc.items:
+			item.purchase_order = frappe.db.get_value("Purchase Receipt Item", item.pr_detail, 'purchase_order')
+			item.po_detail = frappe.db.get_value("Purchase Receipt Item", item.pr_detail, 'purchase_order_item')
+			billed_amt, parent = frappe.db.get_value("Purchase Order Item", item.po_detail, ['billed_amt', 'parent'])
+			frappe.db.set_value("Purchase Order Item", item.po_detail,'billed_amt', (flt(billed_amt) + flt(item.amount)))
+	
+		pi_authorized_doc.flags.ignore_validate_update_after_submit = True
+		pi_unauthorized_doc.flags.ignore_validate_update_after_submit = True
+		pi_authorized_doc.save()
+		pi_unauthorized_doc.save()
+
+		for item in set(po):
+			po_doc = frappe.get_doc("Purchase Order", item)
+
+			amt = 0
+			for row in po_doc.items:
+				row += row.billed_amt
+			
+			per_billed = (amt / total) * 100
+			p
+			po_doc.db_set('per_billed', per_billed)
+			
+			if per_billed >= '100':
+				po_doc.db_set('status', 'completed')
+		
+	
+	frappe.db.commit()
+
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import update_billed_amount_based_on_po
+
+def update_billing_status_in_pr(self, update_modified=True):
+	updated_pr = []
+	for d in self.get("items"):
+		if d.po_detail:
+			updated_pr += update_billed_amount_based_on_po(d.po_detail, update_modified)
+
+	for pr in set(updated_pr):
+		frappe.get_doc("Purchase Receipt", pr).update_billing_percentage(update_modified=update_modified)
+
+def update_po():
+	for item in frappe.get_all("Purchase Order"):
+		po_doc = frappe.get_doc("Purchase Order", item.name)
+
+		amt = 0
+		for row in po_doc.items:
+			amt += flt(row.billed_amt)
+		per_billed = flt((amt / po_doc.total) * 100)
+		
+		po_doc.db_set('per_billed', per_billed)
+		
+		if per_billed >= 100:
+			po_doc.db_set('status', 'Completed')
+	
+	frappe.db.commit()
