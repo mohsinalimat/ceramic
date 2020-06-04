@@ -130,6 +130,17 @@ def create_main_purchase_invoice(self):
 	
 	
 def before_validate(self, method):
+	self.flags.ignore_permissions = True
+		
+	if self.authority == "Authorized":
+		for item in self.items:
+			if not item.delivery_docname:
+				if not item.full_rate:
+					item.full_rate = item.rate
+
+				if not item.full_qty:
+					item.full_qty = item.qty
+
 	for item in self.items:
 		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
 		item.discounted_net_amount = item.discounted_amount

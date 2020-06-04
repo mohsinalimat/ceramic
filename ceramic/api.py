@@ -519,7 +519,24 @@ def naming_series_validate(self, method):
 			frappe.throw("You can not change company")
 
 def pi_patch():
-	pi_list = frappe.db.sql("select name from `tabPurchase Invoice` WHERE pi_ref != '' and authority = 'Unauthorized'")
+	pi_list = frappe.db.sql("select name from `tabPurchase Invoice` WHERE authority = 'Unauthorized'")
 
 	for pi in pi_list:
-		pass
+		pi_doc = frappe.get_doc("Purchase Invoice", pi[0])
+		pi_doc.discounted_total = sum(x.discounted_amount for x in pi_doc.items)
+		pi_doc.discounted_net_total = sum(x.discounted_net_amount for x in pi_doc.items)
+		testing_only_tax = 0
+		
+		for tax in pi_doc.taxes:
+			if tax.testing_only:
+				testing_only_tax += tax.tax_amount
+		
+		pi_doc.discounted_grand_total = pi_doc.discounted_net_total + pi_doc.total_taxes_and_charges - testing_only_tax
+		if pi_doc.rounded_total:
+			pi_doc.discounted_rounded_total = round(pi_doc.discounted_grand_total)
+		pi_doc.real_difference_amount = (pi_doc.rounded_total or pi_doc.grand_total) - (pi_doc.discounted_rounded_total or pi_doc.discounted_grand_total)
+		pi_doc.pay_amount_left = pi_doc.real_difference_amount
+		pi_doc.flags.ignore_validate_update_after_submit = True
+		pi_doc.save()
+	
+	frappe.db.commit()
