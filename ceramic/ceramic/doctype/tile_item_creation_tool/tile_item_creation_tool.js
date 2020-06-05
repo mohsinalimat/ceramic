@@ -48,7 +48,7 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 		if (frm.doc.docstatus == 1 && frm.doc.item_series) {
 			frm.add_custom_button(__("Change Design"), function () {
 				var dialog = new frappe.ui.Dialog({
-					title: __("Change Item Design"),
+					title: __("Change Item Design Name"),
 					fields: [
 						{
 							"fieldtype": "Data", "label": __("Old Item Design"), "fieldname": "old_item_design",
