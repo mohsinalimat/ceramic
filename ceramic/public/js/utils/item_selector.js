@@ -61,6 +61,14 @@ ItemSelector = Class.extend({
 				}
 			},
 			{
+				label: __('Packaging Type'),
+				fieldtype:'Data',
+				fieldname: 'packaging_type',
+				reqd: 0,
+				read_only: 1,
+				default: me.packaging_type
+			},
+			{
 				label: __('Previously Picked'),
 				fieldtype:'Float',
 				fieldname: 'previously_picked',
@@ -69,6 +77,7 @@ ItemSelector = Class.extend({
 				read_only: 1,
 				hidden: 1,
 			},
+			{fieldtype:'Column Break'},
 			{
 				label: __('Sales Order Real Qty'),
 				fieldtype:'Float',
@@ -167,11 +176,11 @@ ItemSelector = Class.extend({
 				item_locations.grid.df.data = []
 				r.message.forEach(value => {
 					me.frm.doc.available_qty.forEach(element => {
-						if (value.batch_no == element.batch_no){
+						if (value.batch_no == element.batch_no && value.warehouse == element.warehouse){
 							value.available_qty = value.available_qty - (element.picked_in_current || 0)
 						}
 					});
-					if (me.batch_no && value.batch_no == me.batch_no){
+					if (me.batch_no && value.batch_no == me.batch_no && value.warehouse == me.warehouse){
 						value.available_qty = value.available_qty + me.qty
 					}
 					value.to_pick_qty = Math.min(me.dialog.fields_dict.remaining_to_pick.value, value.available_qty)
@@ -368,7 +377,7 @@ ItemSelector = Class.extend({
 			}
 		});
 		me.frm.doc.locations = loc;
-
+		
 		(selected_item_locations || []).forEach(function(d){
 			d.__checked = 0;
 			var locations = me.frm.add_child('locations');
@@ -386,6 +395,7 @@ ItemSelector = Class.extend({
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order', sales_order);
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order_item', sales_order_item);
 			frappe.model.set_value(locations.doctype, locations.name, 'batch_no', d.batch_no);
+			frappe.model.set_value(locations.doctype, locations.name, 'packaging_type', d.packaging_type);
 		})
 
 		me.frm.doc.locations.forEach(function(d, idx){

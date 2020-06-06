@@ -28,7 +28,7 @@ def before_validate(self, method):
 def validate(self, method):
 	validate_item_from_so(self)
 	update_discounted_net_total(self)
-	calculate_totals(self)
+	# calculate_totals(self)
 
 def validate_item_from_so(self):
 	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)

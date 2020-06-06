@@ -40,6 +40,12 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"options": "Item Group",
 		},
 		{
+			"fieldname":"tile_quality",
+			"label": __("Tile Qulaity"),
+			"fieldtype": "Link",
+			"options": "Tile Quality",
+		},
+		{
 			"fieldname":"item_code",
 			"label": __("Item Code"),
 			"fieldtype": "Link",
@@ -63,6 +69,6 @@ frappe.query_reports["Lot-Wise Balance"] = {
 					}
 				}
 			}
-		},
+		}
 	]
 }

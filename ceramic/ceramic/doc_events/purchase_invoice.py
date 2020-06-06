@@ -40,6 +40,7 @@ def create_main_purchase_invoice(self):
 			if source.taxes_and_charges:
 				target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
 
+			if source.taxes:
 				for index, i in enumerate(source.taxes):
 					# target.taxes[index].charge_type = "Actual"
 					target.taxes[index].account_head = source.taxes[index].account_head.replace(source_company_abbr, target_company_abbr)
