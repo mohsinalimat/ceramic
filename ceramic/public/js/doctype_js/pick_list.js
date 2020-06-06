@@ -159,7 +159,7 @@ frappe.ui.form.on('Pick List', {
 						if ((item.qty - item.picked_qty) > 0.0){
 							var d = frm.add_child('locations')
 							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.qty)
-							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty - item.picked_qty);
+							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
 							frappe.model.set_value(d.doctype, d.name, 'warehouse', frm.doc.warehouse);
 							frappe.model.set_value(d.doctype, d.name, 'date', item.transaction_date);
@@ -169,7 +169,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty || 0);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
-							frappe.model.set_value(d.doctype, d.name, 'so_real_qty', item.qty);
+							frappe.model.set_value(d.doctype, d.name, 'so_real_qty', item.real_qty);
 						}
 					});
 					frm.refresh_field('locations');

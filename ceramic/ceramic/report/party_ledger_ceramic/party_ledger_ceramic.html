@@ -1,0 +1,201 @@
+<h2 class="text-center">{%= __("Statement of Account") %}</h2>
+<h4 class="text-center">
+	{% if (filters.party_name) { %}
+		{%= filters.party_name %}
+	{% } else if (filters.party && filters.show_name) { %}
+		{%= filters.party %}
+	{% } else if (filters.account) { %}
+		{%= filters.account %}
+	{% } %}
+</h4>
+
+<h6 class="text-center">
+	{% if (filters.tax_id) { %}
+	{%= __("Tax Id: ")%}	{%= filters.tax_id %}
+	{% } %}
+</h6>
+
+<h5 class="text-center">
+	{%= frappe.datetime.str_to_user(filters.from_date) %}
+	{%= __("to") %}
+	{%= frappe.datetime.str_to_user(filters.to_date) %}
+</h5>
+<hr>
+<table border="1" cellspacing="0" cellpadding="0" width="100%">
+    <tbody>
+        <tr>
+            <td width="17%" colspan="2" valign="top">
+                <p align="center">
+                    Opeaning Balance
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p align="center">
+                    DR
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p align="center">
+                    CR
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p align="center">
+                    Balance
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="8%" valign="top">
+                <p>
+                    DATE
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Bill No
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p>
+                    Dr
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p>
+                    Cr
+                </p>
+            </td>
+            <td width="27%" colspan="3" valign="top">
+                <p>
+                    Balance
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Billed
+                </p>
+            </td>
+            <td width="10%" valign="top">
+                <p>
+                    Without
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Total
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    bank
+                </p>
+            </td>
+            <td width="10%" valign="top">
+                <p>
+                    Without
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Total
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Bank
+                </p>
+            </td>
+            <td width="10%" valign="top">
+                <p>
+                    Without
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    Total
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+        </tr>
+        <tr>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+        </tr>
+        <tr>
+            <td width="17%" colspan="2" valign="top">
+                <p align="right">
+                    Total
+                </p>
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+            <td width="10%" valign="top">
+            </td>
+            <td width="8%" valign="top">
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
