@@ -85,6 +85,9 @@ def get_conditions(filters):
 	if filters.get("item_code"):
 		conditions += " and sle.item_code = '%s'" % filters["item_code"]
 	
+	if filters.get("tile_quality"):
+		conditions += f" and i.tile_quality = '{filters.tile_quality}'"
+	
 	conditions += f" and company = '{filters.get('company')}'"
 
 	return conditions

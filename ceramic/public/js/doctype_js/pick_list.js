@@ -70,7 +70,7 @@ frappe.ui.form.on('Pick List', {
 			}
 			frm.trigger('naming_series');
 		}
-		frm.set_df_property("locations", "read_only", frm.doc.__islocal ? 0 : 1);
+		frm.set_df_property("locations", "read_only", frm.doc.docstatus == 0 ? 0 : 1);
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	add_get_items_button: (frm) => {
@@ -301,7 +301,7 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, warehouse: d.warehouse, packaging_type: d.packaging_type});
 	}
 });
 

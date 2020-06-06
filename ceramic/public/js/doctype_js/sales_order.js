@@ -470,6 +470,9 @@ this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("customer", function (doc) {
 		return { query: "erpnext.controllers.queries.customer_query" }
 	});
+	this.frm.set_query("primary_customer", function (doc) {
+		return { query: "erpnext.controllers.queries.customer_query" }
+	});
 
 }
 cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
@@ -555,11 +558,35 @@ frappe.ui.form.on('Sales Order', {
 	// 	})
 	// },
 	customer: function (frm) {
-		if (frm.doc.customer){
+		if (!frm.doc.primary_customer){
 			setTimeout(function () { 
 				frm.doc.sales_team = []
 				frappe.model.with_doc("Customer", frm.doc.customer, function () {
 					var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
+					$.each(cus_doc.sales_team, function (index, row) {
+						let st = frm.add_child("sales_team");
+						st.sales_person = row.sales_person
+						st.contact_no = row.contact_no
+						st.allocated_percentage = row.allocated_percentage
+						st.allocated_amount = row.allocated_amount
+						st.commission_rate = row.commission_rate
+						st.incentives = row.incentives
+						st.company = row.company
+						st.regional_sales_manager = row.regional_sales_manager
+						st.sales_manager = row.sales_manager
+					})
+
+					frm.refresh_field("sales_team");
+				});
+			}, 1000);
+		}
+	},
+	primary_customer: function (frm) {
+		if (frm.doc.primary_customer) {
+			setTimeout(function () {
+				frm.doc.sales_team = []
+				frappe.model.with_doc("Customer", frm.doc.primary_customer, function () {
+					var cus_doc = frappe.model.get_doc("Customer", frm.doc.primary_customer)
 					$.each(cus_doc.sales_team, function (index, row) {
 						let st = frm.add_child("sales_team");
 						st.sales_person = row.sales_person

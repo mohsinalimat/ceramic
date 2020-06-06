@@ -326,7 +326,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
 				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date,
-				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
+				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
 				`tabSales Order`as so ON soi.parent = so.name 
