@@ -26,7 +26,6 @@ def execute(filters=None):
 		if not filters.get("item") or filters.get("item") == item:
 			for batch in sorted(iwb_map[item]):
 				qty_dict = iwb_map[item][batch]
-				lot_no = frappe.db.get_value("Batch", batch, 'lot_no')
 				try:
 					picked_qty = item_pick_map[item][batch].pickedqty
 				except KeyError:
@@ -38,37 +37,107 @@ def execute(filters=None):
 				detail_button = """
 					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 						type='button' item-code='{}' batch-no='{}' company='{}' from-date='{}' to-date='{}' bal-qty='{}', total-picked-qty = '{}' total-remaining-qty='{}' lot-no='{}'
-						onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"), this.getAttribute("bal-qty"), this.getAttribute("total-picked-qty"), this.getAttribute("total-remaining-qty"), this.getAttribute("lot-no"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'), flt(qty_dict.bal_qty, float_precision), picked_qty, flt(qty_dict.bal_qty, float_precision) - picked_qty, lot_no)
+						onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"), this.getAttribute("bal-qty"), this.getAttribute("total-picked-qty"), this.getAttribute("total-remaining-qty"), this.getAttribute("lot-no"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'), flt(qty_dict.bal_qty, float_precision), picked_qty, flt(qty_dict.bal_qty, float_precision) - picked_qty, qty_dict.lot_no)
 				# # frappe.throw(str(detail_button))
 				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
-					data.append([
-						item,
-						lot_no,
-						flt(qty_dict.bal_qty, float_precision),
-						picked_qty,
-						flt(qty_dict.bal_qty, float_precision) - picked_qty,
-						detail_button,
-						flt(qty_dict.opening_qty, float_precision),
-						flt(qty_dict.in_qty, float_precision),
-						flt(qty_dict.out_qty, float_precision), 
-						batch,
-					])
+					data.append({
+						'item_code': item,
+						'lot_no': qty_dict.lot_no,
+						'balance_qty': flt(qty_dict.bal_qty, float_precision),
+						'picked_qty': picked_qty,
+						'remaining_qty': flt(qty_dict.bal_qty, float_precision) - picked_qty,
+						'picked_detail': detail_button,
+						'opening_qty': flt(qty_dict.opening_qty, float_precision),
+						'in_qty': flt(qty_dict.in_qty, float_precision),
+						'out_qty': flt(qty_dict.out_qty, float_precision), 
+						'batch_no': batch,
+						'item_group': qty_dict.item_group,
+						'tile_quality': qty_dict.tile_quality,
+						'item_design': qty_dict.item_design
+					})
 
 	return columns, data
 
 def get_columns(filters):
 	"""return columns based on filters"""
 
-	columns = [_("Item Code") + ":Link/Item:200"] + \
-		[_("Lot No") + "::100"] + \
-		[_("Balance Qty") + ":Float:80"] + \
-		[_("Picked Qty") + ":Float:80"] + \
-		[_("Remaining Qty") + ":Float:80"] + \
-		[_("Picked Details") + ":Data:80"] + \
-		[_("Opening Qty") + ":Float:90"] + \
-		[_("In Qty") + ":Float:80"] + \
-		[_("Out Qty") + ":Float:80"] + \
-		[_("Batch") + ":Link/Batch:150"]
+	columns = [
+		{
+			"label": _("Item Code"),
+			"fieldname": "item_code",
+			"fieldtype": "link",
+			"options": "Item",
+			"width": 180
+		},
+		{
+			"label": _("Lot No"),
+			"fieldname": "lot_no",
+			"fieldtype": "Data",
+			"width": 100
+		},
+		{
+			"label": _("Balance Qty"),
+			"fieldname": "balance_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("Picked Qty"),
+			"fieldname": "picked_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("Remaining Qty"),
+			"fieldname": "remaining_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("Picked Detail"),
+			"fieldname": "picked_detail",
+			"fieldtype": "Data",
+			"width": 80
+		},
+		{
+			"label": _("Opening Qty"),
+			"fieldname": "opening_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("In Qty"),
+			"fieldname": "in_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch_no",
+			"fieldtype": "Link",
+			"options": "Batch",
+			"width": 150
+		},
+		{
+			"label": _("Item Group"),
+			"fieldname": "item_group",
+			"fieldtype": "Link",
+			"options": "Item Group",
+			"width": 150
+		},
+		{
+			"label": _("Tile Quality"),
+			"fieldname": "tile_quality",
+			"fieldtype": "Data",
+			"width": 150
+		},
+		{
+			"label": _("Item Design"),
+			"fieldname": "item_design",
+			"fieldtype": "Data",
+			"width": 150
+		},
+	]
 
 	return columns
 
@@ -102,10 +171,12 @@ def get_conditions(filters):
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	return frappe.db.sql("""
-		select sle.item_code, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
-		from `tabStock Ledger Entry` as sle JOIN `tabItem` as i on i.item_code = sle.item_code
+		select sle.item_code, i.item_group, i.tile_quality, i.item_design, batch.lot_no, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
+		from `tabStock Ledger Entry` as sle 
+		JOIN `tabItem` as i on i.item_code = sle.item_code
+		JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
-		group by voucher_no, batch_no, item_code
+		group by item_group, item_code, tile_quality
 		order by item_code""" %
 		conditions, as_dict=1)
 
@@ -134,6 +205,10 @@ def get_item_warehouse_batch_map(filters, float_precision):
 					+ abs(flt(d.actual_qty, float_precision))
 
 		qty_dict.bal_qty = flt(qty_dict.bal_qty, float_precision) + flt(d.actual_qty, float_precision)
+		qty_dict.lot_no = d.lot_no
+		qty_dict.item_group = d.item_group
+		qty_dict.tile_quality = d.tile_quality
+		qty_dict.item_design = d.item_design
 	return iwb_map
 
 

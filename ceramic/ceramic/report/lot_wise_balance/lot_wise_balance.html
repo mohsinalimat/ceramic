@@ -1,0 +1,239 @@
+<style>
+    table,
+    tr {
+        width: 100%;
+        border: 0;
+        border-collapse: collapse;
+    }
+
+    td {
+        padding: 0 10px 0 0;
+        margin: 0;
+        border: 0;
+    }
+
+    td.last {
+        padding: 0;
+        margin: 0;
+        border: 0;
+    }
+
+    table.item-table {
+        padding: 2.2% 0;
+    }
+
+    .border-top {
+        border-top: 1px solid #f67d2a;
+    }
+
+    .border-bottom {
+        border-bottom: 1px solid #f67d2a;
+    }
+
+    .tbspace>tbody>tr>td {
+        padding: 0 2px 0 2px !important;
+        margin: 0 !important;
+        border-spacing: 0 !important;
+    }
+
+    p.field-title {
+        font-size: 16px;
+
+        color: #002c67;
+        margin: 0;
+        padding: 2px;
+
+    }
+
+    p.text-size {
+        font-size: 16px;
+        color: #6c757d !important;
+        margin: 0;
+        padding: 2px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .img-background {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background-color: #002c67;
+    }
+
+    .product-img {
+        position: relative;
+        top: 20px;
+        left: 20px;
+        width: 200px;
+    }
+
+    .loader {
+        z-index: 2;
+        height: 20px;
+        width: 250px;
+        margin: auto
+    }
+
+    .loader--dot {
+        height: 7px;
+        width: 7px;
+        border-radius: 10%;
+        background-color: #f67d2a;
+        position: absolute;
+        border: 2px solid #fff
+    }
+
+    .item-name {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .loader--dot:nth-child(1) {
+        z-index: 5
+    }
+
+    .loader--dot:nth-child(2) {
+        z-index: 4
+    }
+
+    .loader--dot:nth-child(3) {
+        z-index: 3
+    }
+
+    .loader--dot:nth-child(4) {
+        z-index: 2
+    }
+
+    .loader--dot:nth-child(5) {
+        z-index: 1
+    }
+
+    .loader--dot:nth-child(6) {
+        z-index: 6
+    }
+
+    .loader--dot--product {
+        background-color: #fff;
+        border: none;
+        width: 7px;
+        height: 7px
+    }
+
+    .item-table-wrapper {
+        padding: 1% 0;
+        border-top: 1px solid #f67d2a;
+    }
+
+    @media print {
+        @page {
+            size: landscape
+        }
+    }
+
+    .overlap-wrapper {
+        height: 220px;
+    }
+</style>
+
+{% for(var i=0, l=data.length-1; i<l; i++) { %}
+<table>
+    {% if(i==0 || data[i].item_group!=data[i-1].item_group) { %}
+    <tr>
+        <td>
+            <table>
+                <tbody>
+                    <tr>
+                        <td width="10%">
+                            <p class="field-title"> Group</p>
+
+                        </td>
+                        <td>
+                            <p class="text-size">{{ data[i].item_group }}</p>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    {% } %}
+
+
+    <tr>
+        <td>
+            <div class="item-table-wrapper">
+                <table class="item-table" cellspacing="0" cellpadding="0" width="100%" style="padding: 10%;">
+                    <thead>
+
+                    </thead>
+                    <tbody class="">
+
+                        <tr>
+                            <td valign="top" width="40%" colspan="2" rowspan="5" style="position: relative;"
+                                valign="top">
+                                <div class="overlap-wrapper">
+                                    <div class="img-background"></div>
+                                    <img style="width: 200px !important;" class="product-img"
+                                        src="https://www.somanyceramics.com/pub/media/catalog/product/cache/1bee143e5c1d7daf0d32058630e8617f/v/o/volante-tagtile.jpg"
+                                        alt="tile-image">
+                                </div>
+                            </td>
+
+                            {% if(i==0 || data[i].item_design!=data[i-1].item_design) %}
+                            <td width="60%" valign="top">
+                                <table width="100%">
+                                    <thead>
+                                        <tr>
+                                            <td colspan="4" width="60%">
+                                                <p class="field-title item-name">{{data[i].item_design}}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p class="field-title">Quality</p>
+                                            </td>
+                                            <td>
+                                                <p class="field-title">Lot No.</p>
+                                            </td>
+                                            <td>
+                                                <p class="field-title">Availible Quantity</p>
+                                            </td>
+                                            <td>
+                                                <p class="field-title">Total</p>
+                                            </td>
+                                        </tr>
+
+                                    </thead>
+                                    <tbody>
+
+                                        <tr>
+                                            <td>
+                                                <p class="text-size">{{data[i].tile_quality}}</p>
+                                            </td>
+                                            <td>
+                                                <p class="text-size">{{data[i].lot_no}}</p>
+                                            </td>
+                                            <td>
+                                                <p class="text-size">{{data[i].remaining_qty}}</p>
+                                            </td>
+                                            <td>
+                                                <p class="text-size">400</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                            {% } %}
+                        </tr>
+                    </tbody>
+                </table>
+        </td>
+    </tr>
+
+
+</table>
+{% } %}

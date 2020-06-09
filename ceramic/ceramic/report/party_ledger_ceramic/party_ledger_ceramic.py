@@ -37,33 +37,73 @@ def process_data(filters, res):
 		"voucher_no": "Closing (Opening + Total)",
 		"total_debit": total['total_debit'] + opening['total_debit'],
 		"total_credit": total['total_credit'] + opening['total_credit'],
-		"total_balance": total['total_balance'] + opening['total_balance'],
+		"total_balance": total['total_balance'],
 		"billed_debit": total['billed_debit'] + opening['billed_debit'],
 		"billed_credit": total['billed_credit'] + opening['billed_credit'],
-		"billed_balance": total['billed_balance'] + opening['billed_balance'],
+		"billed_balance": total['billed_balance'],
 		"cash_debit": total['cash_debit'] + opening['cash_debit'],
 		"cash_credit": total['cash_credit'] + opening['cash_credit'],
-		"cash_balance": total['cash_balance'] + opening['cash_balance'],
+		"cash_balance": total['cash_balance'],
 	})
 
 	return result
 
+def reference_doc_details(filters):
+	conditions = ''
+
+	if filters.get('company'):
+		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
+		conditions += f"`company` in ('{alternate_company}', '{filters.company}')"
+
+	if filters.get('from_date'):
+		conditions += f" AND posting_date >= '{filters.from_date}'"
+	
+	if filters.get('to_date'):
+		conditions += f" AND posting_date <= '{filters.to_date}'"
+	
+	pe_cond = ''
+	si_cond = ''
+	pi_cond = ''
+	
+	if filters.get('party'):
+		pe_cond = f" AND `party` = '{filters.party}'"
+		si_cond = f" AND `customer` = '{filters.party}'"
+		pi_cond = f" AND `supplier` = '{filters.party}'"
+	
+	ref_si = frappe.db.sql(f"""
+		SELECT name, si_ref as ref_doc from `tabSales Invoice` 
+		WHERE {conditions} {si_cond}
+	""", as_dict = True)
+
+	ref_pi = frappe.db.sql(f"""
+		SELECT name, pi_ref as ref_doc from `tabPurchase Invoice` 
+		WHERE {conditions} {pi_cond}
+	""", as_dict = True)
+
+	ref_pe = frappe.db.sql(f"""
+		SELECT name, pe_ref as ref_doc from `tabPayment Entry` 
+		WHERE {conditions} {pe_cond}
+	""", as_dict = True)
+
+	reference_doc_dict = ref_si + ref_pi + ref_pe
+	reference_doc_dict = {x['name']:x['ref_doc'] for x in reference_doc_dict}
+	return reference_doc_dict
+
 def generate_data(filters, res):
+	opening = get_opening(filters)[0]
 	data = []
 	total_debit_total = billed_debit_total = cash_debit_total = 0
 	total_credit_total = billed_credit_total = cash_credit_total = 0
-	total_balance_total = billed_balance_total = cash_balance_total = 0
+	total_balance_total = opening['total_balance']
+	billed_balance_total = opening['billed_balance']
+	cash_balance_total = opening['cash_balance']
+
+	ref_doc_map = reference_doc_details(filters)
 	for d in res:
-		d.reference_doc = None
 		flag = False
 		
-		if d.voucher_type == "Sales Invoice":
-			d.reference_doc = frappe.db.get_value("Sales Invoice", d['voucher_no'], 'si_ref')
-		if d.voucher_type == "Purchase Invoice":
-			d.reference_doc = frappe.db.get_value("Purchase Invoice", d['voucher_no'], 'pi_ref')
-		if d.voucher_type == "Payment Entry":
-			d.reference_doc = frappe.db.get_value("Payment Entry", d['voucher_no'], 'pe_ref')
-		
+		d.reference_doc = ref_doc_map.get(d.voucher_no)
+			
 		if d.company != filters.company:
 			flag = True
 			d.billed_credit = d.credit
@@ -89,7 +129,7 @@ def generate_data(filters, res):
 							"voucher_type": d.voucher_type,
 							"voucher_no": d.reference_doc,
 						},
-						['credit', 'debit']
+						['sum(credit)', 'sum(debit)']
 					)
 				d.total_balance = d.total_debit - d.total_credit
 			else:
@@ -100,7 +140,6 @@ def generate_data(filters, res):
 			d.cash_debit = d.total_debit - d.billed_debit
 			d.cash_credit = d.total_credit - d.billed_credit
 			d.cash_balance = d.total_balance - d.billed_balance
-			data.append(d)
 		elif d.company == filters.company and not d.reference_doc:
 			flag = True
 			d.cash_debit = d.total_debit = d.debit
@@ -108,20 +147,21 @@ def generate_data(filters, res):
 			d.cash_balance = d.total_balance = d.balance
 
 			d.billed_debit = d.billed_credit = d.billed_balance = 0
-			data.append(d)
 
 		if flag:
-			billed_debit_total += d.billed_debit
-			billed_credit_total += d.billed_credit
-			billed_balance_total += d.billed_balance
-
 			cash_debit_total += d.cash_debit
 			cash_credit_total += d.cash_credit
-			cash_balance_total += d.cash_balance
 
 			total_debit_total += d.total_debit
 			total_credit_total += d.total_credit
-			total_balance_total += d.total_balance
+			
+			billed_debit_total = d.billed_balance
+			billed_credit_total = d.billed_credit
+			
+			total_balance_total = d.total_balance = flt(d.total_balance) + flt(total_balance_total)
+			cash_balance_total = d.cash_balance = flt(d.cash_balance) + flt(cash_balance_total)
+			billed_balance_total = d.billed_balance = flt(d.billed_balance) + flt(billed_balance_total)
+			data.append(d)
 			
 	data += [{
 		"voucher_no": "Total",
@@ -219,9 +259,9 @@ def validate_party(filters):
 
 def get_result(filters, account_details):
 	conditions = ''
-	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
-
+	
 	if filters.get('company'):
+		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
 		conditions += f" AND gle.`company` in ('{filters.company}', '{alternate_company}')"
 
 	if filters.get('from_date'):
@@ -240,11 +280,13 @@ def get_result(filters, account_details):
 	
 	return frappe.db.sql(f"""
 		SELECT 
-			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, gle.debit, gle.credit, gle.voucher_type, gle.voucher_no, gle.debit - gle.credit AS balance, gle.cost_center, gle.company
+			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, (sum(gle.debit) - sum(gle.credit)) AS balance, gle.cost_center, gle.company
 		FROM 
 			`tabGL Entry` as gle
 		WHERE
 			{conditions}
+		GROUP BY
+			gle.voucher_no, gle.party
 		ORDER BY
 			gle.party
 	""", as_dict = True)
@@ -376,7 +418,7 @@ def get_columns(filters):
 			"fieldname": "total_balance",
 			"fieldtype": "Float",
 			"width": 130
-		}
+		},
 	]
 
 	columns.extend([
