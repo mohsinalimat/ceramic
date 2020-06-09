@@ -176,6 +176,11 @@ frappe.ui.form.on('Sales Invoice', {
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
+	customer: function(frm){
+		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+		    frm.set_value("primary_customer", r.message.primary_customer)
+		})
+	},
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 	},

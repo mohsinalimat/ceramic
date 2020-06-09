@@ -121,7 +121,6 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 			}, __('Create'))
 		}
 	},
-
     make_sales_invoice: function() {
 		frappe.model.open_mapped_doc({
 			method: "ceramic.ceramic.doc_events.delivery_note.create_invoice",
@@ -204,9 +203,11 @@ frappe.ui.form.on('Delivery Note', {
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
-	// before_save: function (frm) {
-	// 	frm.trigger('calculate_total');
-	// },
+	customer: function (frm) {
+		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+		    frm.set_value("primary_customer", r.message.primary_customer)
+		});
+	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
 			frappe.call({

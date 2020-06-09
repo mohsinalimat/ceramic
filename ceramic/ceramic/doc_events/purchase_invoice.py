@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
+from frappe.utils import flt
 
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
@@ -169,10 +170,10 @@ def update_discounted_net_total(self):
 		if tax.testing_only:
 			testing_only_tax += tax.tax_amount
 	
-	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
+	self.discounted_grand_total = flt(self.discounted_net_total) + flt(self.total_taxes_and_charges) - flt(testing_only_tax)
 	if self.rounded_total:
 		self.discounted_rounded_total = round(self.discounted_grand_total)
-	self.real_difference_amount = (self.rounded_total or self.grand_total) - (self.discounted_rounded_total or self.discounted_grand_total)
+	self.real_difference_amount = flt(self.rounded_total or self.grand_total) - (flt(self.discounted_rounded_total) or flt(self.discounted_grand_total))
 
 
 def before_naming(self, method):

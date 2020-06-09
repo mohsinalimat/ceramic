@@ -537,27 +537,10 @@ frappe.ui.form.on('Sales Order', {
 			});
 		}
 	},
-	// "customer": function (frm) {
-	// 	frappe.call({
-	// 		method: "ceramic.query.get_party_details",
-	// 		args: {
-	// 			party: frm.doc.customer,
-	// 			party_type: 'Customer'
-	// 		},
-	// 		callback: function (r) {
-	// 			if (r.message) {
-	// 				frm.set_value('contact_person', r.message.contact_person);
-	// 				frm.set_value('contact_email', r.message.contact_email);
-	// 				frm.set_value('customer_address', r.message.customer_address);
-	// 				frm.set_value('address_display', r.message.address_display);
-	// 				frm.set_value('shipping_address', r.message.shipping_address);
-	// 				frm.set_value('shipping_address_name', r.message.shipping_address_name);
-
-	// 			}
-	// 		}
-	// 	})
-	// },
 	customer: function (frm) {
+		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+		    frm.set_value("primary_customer", r.message.primary_customer)
+		})
 		if (!frm.doc.primary_customer){
 			setTimeout(function () { 
 				frm.doc.sales_team = []

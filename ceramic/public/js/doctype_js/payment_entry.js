@@ -26,6 +26,11 @@ frappe.ui.form.on('Payment Entry', {
 			frm.trigger('company');
 		}
 	},
+	customer: function(frm) {
+		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+		    frm.set_value("primary_customer", r.message.primary_customer)
+		});
+	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
 			frappe.call({
