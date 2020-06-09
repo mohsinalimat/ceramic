@@ -1,51 +1,74 @@
-function get_lot_wise_item_details(item_code, company, from_date, to_date) {
-	let template = `
-		<h3 style="text-align: center">{{ data[0]['item_name'] }}</h3>
-		<table class="table table-bordered" style="margin: 0;">
-			<thead>
-				<th>{{ __("Lot No") }}</th>
-				<th>{{ __("Warehouse") }}</th>
-				<th>{{ __("Balance Qty") }}</th>
-				<th>{{ __("Picked Qty") }}</th>
-				<th>{{ __("Remaining Qty") }}</th>
-			</thead>
-			<tbody>
-				{% for (let row of data ) { %}
-					<tr>
-						<td>{{ __(row['lot_no']) }}</td>
-						<td>{{ __(row['warehouse']) }}</td>
-						<td>{{ __(row['bal_qty']) }}</td>
-						<td>{{ __(row['picked_qty']) }}</td>
-						<td>{{ __(row['remaining_qty']) }}</td>
-					</tr>
-				{% } %}
-			</tbody>
-		</table>`;
-		
-		// docudocument.getElementById("demo").innerHTML = item_code;
+// Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
+// License: GNU General Public License v3. See license.txt
 
-		frappe.call({
-		method: "ceramic.api.get_lot_wise_data",
-		args: {
-			item_code: item_code,
-			company: company,
-			from_date: from_date,
-			to_date: to_date
+frappe.query_reports["Test Lot-Wise Balance"] = {
+	"filters": [
+				{
+			"fieldname": "company",
+			"label": __("Company"),
+			"fieldtype": "Link",
+			"options": "Company",
+			"width": "80",
+			"default": frappe.defaults.get_user_default("Company"),
+			"reqd": 1
 		},
-		callback: function(r){
-			let message = frappe.template.compile(template)({'data': r.message});
-			frappe.msgprint({
-				message: message, 
-				title: "Lot-Wise Detail",
-				wide: true,
-			});
+		{
+			"fieldname":"from_date",
+			"label": __("From Date"),
+			"fieldtype": "Date",
+			"width": "80",
+			"default": frappe.datetime.get_today(),
+		},
+		{
+			"fieldname":"to_date",
+			"label": __("To Date"),
+			"fieldtype": "Date",
+			"width": "80",
+			"default": frappe.datetime.get_today()
+		},
+		{
+			"fieldname":"item_group",
+			"label": __("Item Group"),
+			"fieldtype": "Link",
+			"options": "Item Group",
+		},
+		{
+			"fieldname":"tile_quality",
+			"label": __("Tile Qulaity"),
+			"fieldtype": "Link",
+			"options": "Tile Quality",
+		},
+		{
+			"fieldname":"item_code",
+			"label": __("Item Code"),
+			"fieldtype": "Link",
+			"options": "Item",
+			get_query: function() {
+				var item_group = frappe.query_report.get_filter_value('item_group')
+				if (item_group){
+					return {
+						doctype: "Item",
+						filters: {
+							"item_group": item_group,
+							"is_item_series": 0
+						}
+					}
+				} else {
+					return {
+						doctype: "Item",
+						filters: {
+							"is_item_series": 0
+						}
+					}
+				}
+			}
 		}
-	})
+	]
 }
+
 function get_picked_item_details(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty, lot_no) {
 	let template = `
-		<h3 style="text-align: center">{{ data[0]['item_name'] }}</h3>
-		<table class="table table-borderless" style="border: 0 !important;">
+		<table class="table table-borderless" style="border: 0 !important; font-size:95%;">
 			<tr style="border: 0 !important;">
 				<td style="border: 0 !important;"><b>Lot No: </b> {{ data[0]['lot_no'] }}</td>
 				<td style="border: 0 !important;"><b>Picked Qty: </b> {{ data[0]['total_picked_qty'] }}</td>
@@ -56,7 +79,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			</tr>
 		</table>
 		{% if data[0]['customer'] %}
-		<table class="table table-bordered" style="margin: 0;">
+		<table class="table table-bordered" style="margin: 0; font-size:85%;">
 			<thead>
 				<th>{{ __("Customer") }}</th>
 				<th>{{ __("Sales Order") }}</th>
@@ -97,7 +120,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			let message = frappe.template.compile(template)({'data': r.message});
 			frappe.msgprint({
 				message: message, 
-				title: "Lot-Wise Detail",
+				title: "Lot-Wise Balance Details : " + item_code,
 				wide: true,
 			});
 		}

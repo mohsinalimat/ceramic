@@ -37,7 +37,8 @@ def calculate_totals(self):
 	self.golden_qty = golden_qty
 	self.classic_qty = classic_qty
 	self.economy_qty = economy_qty
-	self.premium_percentage = (flt(premium_qty)/flt(total_qty)*100)
+	if total_qty !=0:
+		self.premium_percentage = (flt(premium_qty)/flt(total_qty)*100)
 
 def before_validate(self,method):
 	StockEntry.validate_finished_goods = validate_finished_goods
@@ -119,9 +120,10 @@ def update_work_order(self):
 # 		return rate
 
 @frappe.whitelist()
-def get_product_price(item_code, item_group = None):
-	if not item_group:
-		item_group = frappe.db.get_value("Item",item_code,'item_group')
+def get_product_price(item_code):
+	frappe.msgprint(str(item_code))
+	item_group = frappe.db.get_value("Item", item_code,'item_group')
+	frappe.msgprint(str(item_group))
 	rate = frappe.db.get_value("Item Group",item_group,'production_price')
 	if not rate:
 		frappe.throw(_("Price not found for item <b>{}</b> in item group <b>{}/b>").format(item_code,item_group))

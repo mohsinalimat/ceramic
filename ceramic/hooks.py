@@ -211,57 +211,79 @@ doc_events = {
 	},
 	"Sales Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.sales_order.before_validate", "ceramic.api.naming_series_validate"],
-		"before_validate_after_submit": "ceramic.ceramic.doc_events.sales_order.before_validate_after_submit",
+		"before_validate": [
+			"ceramic.ceramic.doc_events.sales_order.before_validate", 
+			"ceramic.api.naming_series_validate"
+		],
+		"validate": [
+			"ceramic.controllers.item_validation.validate_item_authority", 
+			"ceramic.ceramic.doc_events.sales_order.validate"
+		],
 		"on_submit": "ceramic.ceramic.doc_events.sales_order.on_submit",
+		"before_validate_after_submit": "ceramic.ceramic.doc_events.sales_order.before_validate_after_submit",
+		"validate_after_submit": "ceramic.ceramic.doc_events.sales_order.validate_after_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
 		"on_update_after_submit": "ceramic.ceramic.doc_events.sales_order.on_update_after_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_order.on_cancel",
-		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.sales_order.validate"],
-		"validate_after_submit": "ceramic.ceramic.doc_events.sales_order.validate_after_submit",
 	},
 	"Pick List": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.pick_list.validate", "ceramic.api.naming_series_validate"],
+		"before_validate": [
+			"ceramic.ceramic.doc_events.pick_list.validate", 
+			"ceramic.api.naming_series_validate"
+		],
 		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 	},
 	"Delivery Note": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.ceramic.doc_events.delivery_note.before_validate", "ceramic.api.naming_series_validate"],
+		"before_validate": [
+			"ceramic.ceramic.doc_events.delivery_note.before_validate", 
+			"ceramic.api.naming_series_validate"
+		],
+		"validate": [
+			"ceramic.controllers.item_validation.validate_item_authority", 
+			"ceramic.ceramic.doc_events.delivery_note.validate"
+		],
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
-		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 		"before_submit": "ceramic.ceramic.doc_events.delivery_note.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.delivery_note.on_submit",
-		"validate": ["ceramic.controllers.item_validation.validate_item_authority", "ceramic.ceramic.doc_events.delivery_note.validate"]
+		"on_cancel": "ceramic.ceramic.doc_events.delivery_note.on_cancel",
 	},
 	"Sales Invoice": {
 		"before_naming": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_naming",
 			"ceramic.api.before_naming"
 		],
-		"before_validate": ["ceramic.ceramic.doc_events.sales_invoice.before_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
-		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
-		# "before_submit": "ceramic.ceramic.doc_events.sales_invoice.before_submit",
-		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
-		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
+		"before_validate": [
+			"ceramic.ceramic.doc_events.sales_invoice.before_validate", 
+			"ceramic.ceramic.doc_events.purchase_order.before_validate"
+		],
 		"validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.validate",
 			"ceramic.controllers.item_validation.validate_item_authority",
 		],
-		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_invoice.before_update_after_submit"
+		"on_submit": "ceramic.ceramic.doc_events.sales_invoice.on_submit",
+		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_invoice.before_update_after_submit",
+		"on_cancel": "ceramic.ceramic.doc_events.sales_invoice.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
 	},
 	"Purchase Order": {
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": ["ceramic.api.naming_series_validate", "ceramic.ceramic.doc_events.purchase_order.before_validate"],
-		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
+		"before_validate": [
+			"ceramic.api.naming_series_validate", 
+			"ceramic.ceramic.doc_events.purchase_order.before_validate"
+		],
 		"validate": "ceramic.controllers.item_validation.validate_item_authority",
+		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
 	},
 	"Purchase Receipt":{
 		"before_naming": "ceramic.api.before_naming",
-		"before_validate": "ceramic.api.naming_series_validate",
-		"before_validate": "ceramic.ceramic.doc_events.purchase_receipt.before_validate",
+		"before_validate": [
+			"ceramic.api.naming_series_validate",
+			"ceramic.ceramic.doc_events.purchase_receipt.before_validate",
+		],
 		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
 	"Purchase Invoice": {
@@ -269,11 +291,14 @@ doc_events = {
 			"ceramic.ceramic.doc_events.purchase_invoice.before_naming",
 			"ceramic.api.before_naming",
 		],
+		"before_validate": [
+			"ceramic.ceramic.doc_events.purchase_invoice.before_validate", 
+			"ceramic.api.naming_series_validate"
+		],
+		"validate": "ceramic.controllers.item_validation.validate_item_authority",
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
-		"before_validate": ["ceramic.ceramic.doc_events.purchase_invoice.before_validate", "ceramic.api.naming_series_validate"],
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
 	"BOM": {
 		"before_naming": "ceramic.ceramic.doc_events.bom.before_naming",
@@ -288,16 +313,17 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
 	"Payment Entry": {
+		"before_naming": "ceramic.api.before_naming",
 		"before_validate": "ceramic.api.naming_series_validate",
 		"validate": "ceramic.ceramic.doc_events.payment_entry.validate",
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
-		"before_naming": "ceramic.api.before_naming",
 	},	
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",
 		'before_submit': "ceramic.ceramic.doc_events.stock_entry.before_submit",
+		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
 		'before_cancel': "ceramic.ceramic.doc_events.stock_entry.before_cancel",
 		# 'on_cancel': "ceramic.ceramic.doc_events.stock_entry.on_cancel",
 		'before_save': "ceramic.ceramic.doc_events.stock_entry.before_save",
@@ -305,8 +331,6 @@ doc_events = {
 			"ceramic.ceramic.doc_events.stock_entry.validate",
 			"ceramic.controllers.item_validation.validate_item_authority"
 		],
-		'on_submit':"ceramic.batch_creation.stock_entry_on_sumbit",
-		# 'on_cancel':"ceramic.batch_creation.stock_entry_on_cancel"
 	},
 	"Fiscal Year": {
 		'before_save': 'ceramic.ceramic.doc_events.fiscal_year.before_save'
@@ -325,5 +349,3 @@ doc_events = {
 	},
 }
 
-
-fixtures = ['Custom Field']

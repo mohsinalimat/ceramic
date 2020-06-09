@@ -15,6 +15,13 @@ class TileItemCreationTool(Document):
 	def on_cancel(self):
 		self.delete_item()
 	
+	def validate(self):
+		if self.is_item_series:
+			self.item_series = None
+		else:
+			if not self.item_series:
+				frappe.throw("Please select item series")
+
 	def on_update_after_submit(self):
 		for tile in self.tile_quality:
 			tile_item =  frappe.get_doc("Item", {'item_code': tile.item_code})

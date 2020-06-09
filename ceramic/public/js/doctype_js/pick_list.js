@@ -302,7 +302,7 @@ frappe.ui.form.on('Pick List Item', {
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
 		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, warehouse: d.warehouse, packaging_type: d.packaging_type});
-	}
+	},
 });
 
 const select_items = (args) => {
@@ -329,4 +329,66 @@ frappe.ui.form.on('Picked Sales Orders', {
 			}
 		})
 	}
-})
+});
+
+frappe.ui.keys.add_shortcut({
+	shortcut: 'ctrl+i',
+    action: () => { 
+		const current_doc = $('.data-row.editable-row').parent().attr("data-name");
+		const d = locals["Pick List Item"][current_doc];
+		select_items({
+			frm:cur_frm, 
+			item_code: d.item_code, 
+			sales_order: d.sales_order, 
+			sales_order_item: d.sales_order_item, 
+			so_qty: d.so_qty, 
+			company: cur_frm.doc.company, 
+			customer: d.customer, date: d.date, 
+			delivery_date: d.delivery_date, 
+			picked_qty: d.picked_qty, 
+			so_real_qty: d.so_real_qty, 
+			remaining_to_pick: (d.so_qty - d.picked_qty), 
+			batch_no: d.batch_no, 
+			qty: d.qty, 
+			warehouse: d.warehouse, 
+			packaging_type: d.packaging_type
+		});
+	},
+	page: this.page,
+    description: __('Select Lot from warehouse'),
+    ignore_inputs: true,
+});
+
+frappe.ui.keys.add_shortcut({
+	shortcut: 'ctrl+m',
+    action: function(e){ 
+		e.preventDefault();
+		console.log("ctrl+DOWN_ARROW called")
+		cur_dialog.cancel();
+		const current_doc = $('.data-row.editable-row').parent().attr("data-name");
+		var d = locals["Pick List Item"][current_doc];
+		next = flt(d.idx) + 1
+		cur_frm.get_field('items').grid.get_field("item_code").$input.focus()
+		var d = locals["Pick List Item"][current_doc];
+		select_items({
+			frm:cur_frm, 
+			item_code: d.item_code, 
+			sales_order: d.sales_order, 
+			sales_order_item: d.sales_order_item, 
+			so_qty: d.so_qty, 
+			company: cur_frm.doc.company, 
+			customer: d.customer, date: d.date, 
+			delivery_date: d.delivery_date, 
+			picked_qty: d.picked_qty, 
+			so_real_qty: d.so_real_qty, 
+			remaining_to_pick: (d.so_qty - d.picked_qty), 
+			batch_no: d.batch_no, 
+			qty: d.qty, 
+			warehouse: d.warehouse, 
+			packaging_type: d.packaging_type
+		});
+	},
+	page: this.page,
+    description: __('Select Lot from warehouse'),
+    ignore_inputs: true,
+});

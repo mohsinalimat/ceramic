@@ -40,6 +40,10 @@ def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
 	create_main_sales_invoice(self)
 
+def before_update_after_submit(self, method):
+	"""On Update after Submit Custom Function for Sales Invoice"""
+	update_linked_invoice(self)
+
 def on_cancel(self, test):
 	"""On Cancel Custom Function for Sales Invoice"""
 	cancel_main_sales_invoice(self)
@@ -304,11 +308,12 @@ def update_discounted_net_total(self):
 	self.discounted_rounded_total = round(self.discounted_grand_total)
 	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
 
-def before_update_after_submit(self, method):
+def update_linked_invoice(self):
 	self.flags.ignore_validate_update_after_submit = True
 	if self.si_ref:
 		si = frappe.get_doc("Sales Invoice",self.si_ref)
 		si.db_set('sales_partner',self.sales_partner)
+		si.db_set('primary_customer',self.primary_customer)
 		if self.sales_team:
 			for row in self.sales_team:
 				si.append('sales_team',{

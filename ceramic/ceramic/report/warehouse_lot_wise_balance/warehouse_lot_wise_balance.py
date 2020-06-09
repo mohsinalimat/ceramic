@@ -22,7 +22,8 @@ def execute(filters=None):
 				qty_dict = iwb_map[item][wh][batch]
 
 				if qty_dict.bal_qty:
-					data.append([item, wh, batch, frappe.db.get_value("Batch", batch, "lot_no"),
+					lot_no, packing_type = frappe.db.get_value("Batch", batch, ["lot_no", "packing_type"])
+					data.append([item, wh, batch, lot_no, packing_type,
 						flt(qty_dict.bal_qty, float_precision),
 						item_map[item]["stock_uom"]
 					])
@@ -33,8 +34,8 @@ def get_columns(filters):
 	"""return columns based on filters"""
 
 	columns = [_("Item") + ":Link/Item:200"] + [_("Warehouse") + ":Link/Warehouse:120"] +\
-	[_("Batch") + ":Link/Batch:120"] + [_("Lot No") + ":Link/Batch:100"] + [_("Balance Qty") + ":Float:90"] + \
-	[_("UOM") + "::90"]
+	[_("Batch") + ":Link/Batch:120"] + [_("Lot No") + ":Data:100"] + [_("Packing") + ":Link/Packing Type:100"] +\
+	[_("Balance Qty") + ":Float:90"] + [_("UOM") + "::90"]
 
 
 	return columns

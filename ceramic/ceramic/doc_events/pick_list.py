@@ -481,6 +481,7 @@ def get_items(filters):
 			sle.`warehouse`,
 			sle.`batch_no`,
 			batch.lot_no,
+			batch.packing_type,
 			SUM(sle.`actual_qty`) AS `actual_qty`
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch

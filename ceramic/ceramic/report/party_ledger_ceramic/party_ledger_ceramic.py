@@ -34,16 +34,16 @@ def process_data(filters, res):
 	total = result[-1]
 	opening = result[0]
 	result.append({
-		"account": "Closing (Opening + Total)",
+		"voucher_no": "Closing (Opening + Total)",
+		"total_debit": total['total_debit'] + opening['total_debit'],
+		"total_credit": total['total_credit'] + opening['total_credit'],
+		"total_balance": total['total_balance'] + opening['total_balance'],
 		"billed_debit": total['billed_debit'] + opening['billed_debit'],
 		"billed_credit": total['billed_credit'] + opening['billed_credit'],
 		"billed_balance": total['billed_balance'] + opening['billed_balance'],
 		"cash_debit": total['cash_debit'] + opening['cash_debit'],
 		"cash_credit": total['cash_credit'] + opening['cash_credit'],
 		"cash_balance": total['cash_balance'] + opening['cash_balance'],
-		"total_debit": total['total_debit'] + opening['total_debit'],
-		"total_credit": total['total_credit'] + opening['total_credit'],
-		"total_balance": total['total_balance'] + opening['total_balance'],
 	})
 
 	return result
@@ -100,7 +100,6 @@ def generate_data(filters, res):
 			d.cash_debit = d.total_debit - d.billed_debit
 			d.cash_credit = d.total_credit - d.billed_credit
 			d.cash_balance = d.total_balance - d.billed_balance
-			frappe.msgprint(str(d.name) + ' ' + str(d.cash_credit))
 			data.append(d)
 		elif d.company == filters.company and not d.reference_doc:
 			flag = True
@@ -109,7 +108,6 @@ def generate_data(filters, res):
 			d.cash_balance = d.total_balance = d.balance
 
 			d.billed_debit = d.billed_credit = d.billed_balance = 0
-			frappe.msgprint(str(d.name) + ' ' + str(d.cash_credit))
 			data.append(d)
 
 		if flag:
@@ -126,7 +124,7 @@ def generate_data(filters, res):
 			total_balance_total += d.total_balance
 			
 	data += [{
-		"account": "Total",
+		"voucher_no": "Total",
 		"billed_debit": billed_debit_total,
 		"billed_credit": billed_credit_total,
 		"billed_balance": billed_balance_total,
@@ -173,7 +171,7 @@ def get_opening(filters):
 	data = []
 
 	data.append({
-		"account": 'Opening',
+		"voucher_no": 'Opening',
 		"billed_debit": flt(authorized_data['debit'], 2),
 		"cash_debit": flt(total_data['debit'], 2) - flt(authorized_data['debit'], 2),
 		"total_debit": flt(total_data['debit'], 2),
@@ -306,18 +304,24 @@ def get_columns(filters):
 			"width": 90
 		},
 		{
-			"label": _("Name"),
-			"fieldname": "name",
-			"fieldtype": "Link",
-			"options": "GL Entry",
-			"width": 180
+			"label": _("Voucher Type"),
+			"fieldname": "voucher_type",
+			"width": 100
+		},
+		{
+			"label": _("Voucher No"),
+			"fieldname": "voucher_no",
+			"fieldtype": "Dynamic Link",
+			"options": "voucher_type",
+			"width": 120
 		},
 		{
 			"label": _("Account"),
 			"fieldname": "account",
 			"fieldtype": "Link",
 			"options": "Account",
-			"width": 180
+			"width": 180,
+			"hidden": 1
 		},
 		{
 			"label": _("Billed Debit ({0})".format(currency)),
@@ -377,18 +381,6 @@ def get_columns(filters):
 
 	columns.extend([
 		{
-			"label": _("Voucher Type"),
-			"fieldname": "voucher_type",
-			"width": 120
-		},
-		{
-			"label": _("Voucher No"),
-			"fieldname": "voucher_no",
-			"fieldtype": "Dynamic Link",
-			"options": "voucher_type",
-			"width": 180
-		},
-		{
 			"label": _("Party Type"),
 			"fieldname": "party_type",
 			"width": 100
@@ -396,7 +388,7 @@ def get_columns(filters):
 		{
 			"label": _("Party"),
 			"fieldname": "party",
-			"width": 100
+			"width": 150
 		},
 	])
 

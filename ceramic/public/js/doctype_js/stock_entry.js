@@ -77,6 +77,7 @@ frappe.ui.form.on('Stock Entry', {
 	},
 	validate: function (frm) {
 		frm.trigger('calculate_totals')
+		frm.trigger("get_product_price");
 	},
 	calculate_totals: function (frm) {
 		let premium_qty = 0.0
@@ -173,18 +174,22 @@ frappe.ui.form.on('Stock Entry', {
 
 						if (count === 0) {
 							for (var j = 0; j < categories.length; j++) {
-								var new_name = finish_item.replace('-I-', categories[j]);
-								let item_row = frappe.model.add_child(frm.doc, 'Stock Entry Detail', 'items');
-								item_row.item_code = new_name;
-								// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
-								frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
-								get_item_details(new_name).then(data => {
-									frappe.model.set_value(item_row.doctype, item_row.name, 'item_name', data.name);
-									frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
-									frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
-									frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
-								});
-							
+								setTimeout(() => {
+									var new_name = finish_item.replace('-I-', categories[j]);
+									let item_row = frappe.model.add_child(frm.doc, 'Stock Entry Detail', 'items');
+									item_row.item_code = new_name;
+									// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+									item_row.qty = 0.0;
+	
+									frappe.db.get_value("Item",new_name,["item_group","stock_uom","item_name"],function(r){
+										frappe.model.set_value(item_row.doctype, item_row.name,"item_group",r.item_group);
+										frappe.model.set_value(item_row.doctype, item_row.name,"item_name",r.item_name);
+										frappe.model.set_value(item_row.doctype, item_row.name,"stock_uom", r.stock_uom);
+										frappe.model.set_value(item_row.doctype, item_row.name,"uom", r.stock_uom);
+										frappe.model.set_value(item_row.doctype, item_row.name,"conversion_factor",1);
+									})										
+								}, 1000);
+
 							}
 						}
 					}
@@ -192,21 +197,22 @@ frappe.ui.form.on('Stock Entry', {
 				} else {
 					frm.doc.finish_item.forEach(function (originial_item, index) {
 						categories.forEach(function (item, index) {
+							setTimeout(() => {
+								var new_name = originial_item["item_detail"].replace('-I-', item);
 						
-							var new_name = originial_item["item_detail"].replace('-I-', item);
-						
-							let item_row = frappe.model.add_child(frm.doc, 'Stock Entry Detail', 'items');
-							item_row.item_code = new_name;
-
-							// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
-							frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
-							get_item_details(new_name).then(data => {
-								frappe.model.set_value(item_row.doctype, item_row.name, 'item_name', data.name);
-								frappe.model.set_value(item_row.doctype, item_row.name, 'uom', data.stock_uom);
-								frappe.model.set_value(item_row.doctype, item_row.name, 'stock_uom', data.stock_uom);
-								frappe.model.set_value(item_row.doctype, item_row.name, 't_warehouse', frm.doc.to_warehouse);
-							});
-						
+								let item_row = frappe.model.add_child(frm.doc, 'Stock Entry Detail', 'items');
+								item_row.item_code = new_name;
+								item_row.qty = 0
+								// frappe.model.set_value(item_row.doctype, item_row.name, 'item_code', new_name);
+								//frappe.model.set_value(item_row.doctype, item_row.name, 'qty', 0);
+								frappe.db.get_value("Item",new_name,["item_group","stock_uom","item_name"],function(r){
+									frappe.model.set_value(item_row.doctype, item_row.name,"item_group",r.item_group);
+									frappe.model.set_value(item_row.doctype, item_row.name,"item_name",r.item_name);
+									frappe.model.set_value(item_row.doctype, item_row.name,"stock_uom", r.stock_uom);
+									frappe.model.set_value(item_row.doctype, item_row.name,"uom", r.stock_uom);
+									frappe.model.set_value(item_row.doctype, item_row.name,"conversion_factor",1);
+								})								
+							}, 1000);
 						});
 					});
 					frm.refresh_field('items');
@@ -218,32 +224,41 @@ frappe.ui.form.on('Stock Entry', {
 			for (i = 0; i < frm.doc.items.length; i++) {
 				frm.doc.items[i].idx = i + 1;
 			}
+			//frm.trigger("get_product_price");
 		}
-		frm.doc.items.forEach(function (d) {
-			frappe.call({
-				method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
-				args: {
-					'item_code': d.item_code,
-					'item_group': d.item_group
-				},
-				callback: function (r) {
-					if (r.message) {
 
-						frappe.model.set_value(d.doctype, d.name, 'basic_rate', r.message);
-						frappe.model.set_value(d.doctype, d.name, 'valuation_rate', r.message);
-					}
-					if (r.error) {
-						frappe.throw({
-							title: __('Item Price not found'),
-							message: r.error
-						});
-					}
-
-				}
-			});
-		})
 		frm.refresh_field('items');
 	},
+
+	get_product_price:function(frm){
+		if (frm.doc.purpose == "Material Receipt"){
+			frm.doc.items.forEach(function (d) {
+				if (!d.basic_rate) {
+					frappe.call({
+						method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
+						args: {
+							'item_code': d.item_code
+						},
+						callback: function (r) {
+							if (r.message) {
+
+								frappe.model.set_value(d.doctype, d.name, 'basic_rate', r.message);
+								frappe.model.set_value(d.doctype, d.name, 'valuation_rate', r.message);
+							}
+							if (r.error) {
+								frappe.throw({
+									title: __('Item Price not found'),
+									message: r.error
+								});
+							}
+
+						}
+					});
+				}
+			})
+		}
+	},
+
 	before_validate2: function (frm) {
 		console.log("Before Validate get price");
 		frm.doc.items.forEach(function (d) { 
@@ -281,56 +296,83 @@ function get_item_details(item_code) {
 }
 
 frappe.ui.form.on('Stock Entry Detail', {
-	duplicate: function(frm, cdt, cdn) {
-		let d = locals[cdt][cdn];
-		let m = frm.add_child("items");
-		frappe.model.set_value(m.doctype, m.name, 's_warehouse', d.s_warehouse);
-		frappe.model.set_value(m.doctype, m.name, 's_warehouse', d.s_warehouse);
-		frappe.model.set_value(m.doctype, m.name, 'item_code', d.item_code);
-		frappe.model.set_value(m.doctype, m.name, 'packing_type', d.packing_type);
-		frappe.model.set_value(m.doctype, m.name, 'lot_no', d.lot_no);
-		frappe.model.set_value(m.doctype, m.name, 'rate', d.rate);
-		
-		frm.refresh();
-	},
 	qty: function (frm, cdt, cdn) {
 		frm.events.calculate_totals(frm)
 
 		var d = locals[cdt][cdn];
 		if (d.item_code) {
-			var args = {
-				'item_code': d.item_code,
-				'warehouse': cstr(d.s_warehouse) || cstr(d.t_warehouse),
-				'transfer_qty': d.transfer_qty,
-				'serial_no': d.serial_no,
-				'bom_no': d.bom_no,
-				'expense_account': d.expense_account,
-				'cost_center': d.cost_center,
-				'company': frm.doc.company,
-				'qty': d.qty,
-				'voucher_type': frm.doc.doctype,
-				'voucher_no': d.name,
-				'allow_zero_valuation': 1,
-			};
+			frappe.db.get_value("Item",d.item_code,["item_group","stock_uom"],function(r){
+				frappe.model.set_value(cdt,cdn,"item_group",r.item_group);
+				frappe.model.set_value(cdt,cdn,"stock_uom", r.stock_uom);
+				frappe.model.set_value(cdt,cdn,"uom", r.stock_uom);
+				frappe.model.set_value(cdt,cdn,"conversion_factor",1);
+			})
 
-			return frappe.call({
-				doc: frm.doc,
-				method: "get_item_details",
-				args: args,
-				callback: function (r) {
-					if (r.message) {
-						var d = locals[cdt][cdn];
-						$.each(r.message, function (k, v) {
-							if (v) {
-								frappe.model.set_value(cdt, cdn, k, v); // qty and it's subsequent fields weren't triggered
-							}
-						});
-						refresh_field("items");
+			// var args = {
+			// 	'item_code': d.item_code,
+			// 	'warehouse': cstr(d.s_warehouse) || cstr(d.t_warehouse),
+			// 	'transfer_qty': d.transfer_qty,
+			// 	'serial_no': d.serial_no,
+			// 	'bom_no': d.bom_no,
+			// 	'expense_account': d.expense_account,
+			// 	'cost_center': d.cost_center,
+			// 	'company': frm.doc.company,
+			// 	'qty': d.qty,
+			// 	'voucher_type': frm.doc.doctype,
+			// 	'voucher_no': d.name,
+			// 	'allow_zero_valuation': d.allow_zero_valuation,
+			// };
 
+			// frappe.call({
+			// 	doc: frm.doc,
+			// 	method: "get_item_details",
+			// 	args: args,
+			// 	callback: function (r) {
+			// 		if (r.message) {
+			// 			var d = locals[cdt][cdn];
+			// 			$.each(r.message, function (k, v) {
+			// 				if (v) {
+			// 					console.log(k);
+			// 					if (k == "basic_rate" || "actual_qty"){
+			// 						console.log(v);
+			// 						if (flt(v)!=0.0){
+			// 							frappe.model.set_value(cdt, cdn, k, v);
+			// 						}
+			// 					}
+			// 					else {
+			// 						frappe.model.set_value(cdt, cdn, k, v); // qty and it's subsequent fields weren't triggered
+			// 					}
+			// 				}
+			// 			});
+			// 			refresh_field("items");
+
+			// 		}
+			// 	}
+			// });
+			if(frm.doc.purpose == "Material Receipt" && d.basic_rate == 0.0){
+				frappe.call({
+					method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
+					args: {
+						'item_code': d.item_code
+					},
+					callback: function (r) {
+						if (r.message) {
+		
+							frappe.model.set_value(d.doctype, d.name, 'basic_rate', r.message);
+							frappe.model.set_value(d.doctype, d.name, 'valuation_rate', r.message);
+						}
+						if (r.error) {
+							frappe.throw({
+								title: __('Item Price not found'),
+								message: r.error
+							});
+						}
+		
 					}
-				}
-			});
+				});
+			}
 		}
+
 	},
 	lot_no: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn];
@@ -339,7 +381,8 @@ frappe.ui.form.on('Stock Entry Detail', {
 			args: {
 				'args': {
 					'item_code': d.item_code,
-					'lot_no': d.lot_no
+					'lot_no': d.lot_no,
+					'packing_type': d.packing_type
 				},
 			},
 			callback: function (r) {
@@ -349,6 +392,24 @@ frappe.ui.form.on('Stock Entry Detail', {
 			}
 		});
 	},
+	packing_type: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		frappe.call({
+			method: "ceramic.query.get_batch",
+			args: {
+				'args': {
+					'item_code': d.item_code,
+					'lot_no': d.lot_no,
+					'packing_type': d.packing_type
+				},
+			},
+			callback: function (r) {
+				if (r.message) {
+					frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message)
+				}
+			}
+		});
+	},	
 });
 
 erpnext.stock.select_batch_and_serial_no = (frm, item) => {

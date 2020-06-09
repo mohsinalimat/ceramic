@@ -27,15 +27,25 @@ def before_validate(self, method):
 
 def validate(self, method):
 	validate_item_from_so(self)
+	validate_item_from_picklist(self)
 	update_discounted_net_total(self)
-	# calculate_totals(self)
+	calculate_totals(self)
 
 def validate_item_from_so(self):
-	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
 	for row in self.items:
-		for d in so_doc.items:
-			if row.so_detail == d.name and d.item_code != row.item_code:
-				frappe.throw(_(f"Row: {row.idx} : Not allowed to change item {frappe.bold(row.item_code)}."))
+		so_item = frappe.db.get_value("Sales Order Item",row.so_detail,"item_code")
+		if row.item_code != so_item:
+			frappe.throw(_(f"Row: {row.idx}: Not allowed to change item {frappe.bold(row.item_code)}."))
+
+def validate_item_from_picklist(self):
+	for row in self.items:
+		if frappe.db.exists("Pick List Item",row.pl_detail):
+			picked_qty = flt(frappe.db.get_value("Pick List Item",row.pl_detail,"qty"))
+			if flt(row.qty) > picked_qty:
+				frappe.throw(_(f"Row: {row.idx}: Delivered Qty {frappe.bold(row.qty)} can not be higher than picked Qty {frappe.bold(picked_qty)} for item {frappe.bold(row.item_code)}."))
+		else:
+			frappe.throw(_(f"Row: {row.idx}: The item {frappe.bold(row.item_code)} has been unpicked from picklist {frappe.bold(row.against_pick_list)}"))
+
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
@@ -53,7 +63,7 @@ def update_discounted_net_total(self):
 
 def calculate_totals(self):
 	for d in self.items:
-		d.wastage_qty = flt(d.picked_qty - d.qty)
+		#d.wastage_qty = flt(d.picked_qty - d.qty)
 		d.total_weight = flt(d.weight_per_unit * d.qty)
 	self.total_qty = sum([row.qty for row in self.items])
 	self.total_real_qty = sum([row.real_qty for row in self.items])
@@ -98,7 +108,11 @@ def update_status_pick_list(self):
 			wastage_qty += item.wastage_qty
 			picked_qty += item.qty
 
-			frappe.db.set_value("Pick List", pick, 'per_delivered', flt((delivered_qty / picked_qty) * 100))
+		if picked_qty == 0:
+			per_delivered = 100.0
+		else:
+			per_delivered = flt((delivered_qty / picked_qty) * 100)
+		frappe.db.set_value("Pick List", pick, 'per_delivered', per_delivered)
 
 	change_delivery_authority(self.name)
 

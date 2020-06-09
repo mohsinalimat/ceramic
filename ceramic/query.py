@@ -95,6 +95,7 @@ def get_batch(args):
 		args = {
 			"item_code": "",
 			"lot_no": "",
+			"packing_type":""
 		}
 	"""
 	def process_args(args):
@@ -111,12 +112,15 @@ def get_batch(args):
 		elif not args.lot_no:
 			frappe.throw(_("Please specify Lot NO"))
 
+		elif not args.packing_type:
+			frappe.throw(_("Please specify Packing"))
+
 	args = process_args(args)
 
 	validate_args(args)
 
 	batch_nos = frappe.db.sql_list(""" select name from `tabBatch` 
-		where lot_no = %s and item = %s """, (args.lot_no, args.item_code))
+		where lot_no = %s and packing_type = %s and item = %s """, (args.lot_no,args.packing_type,args.item_code))
 
 	batch_no = None
 	if batch_nos:

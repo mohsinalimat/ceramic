@@ -154,7 +154,6 @@ ItemSelector = Class.extend({
 	get_items: function(filters) {
 		let me = this;
 		let item_locations = me.dialog.fields_dict.item_locations;
-		console.log(me.dialog.fields_dict.remaining_to_pick.value)
 		if(!filters['item_code']){
 			item_locations.grid.df.data = [];
 			item_locations.grid.refresh();
@@ -224,6 +223,7 @@ ItemSelector = Class.extend({
 						'options': 'Warehouse',
 						'read_only': 1,
 						'in_list_view': 1,
+						'columns': 2,
 					},
 					{
 						'label': 'Batch No',
@@ -234,17 +234,27 @@ ItemSelector = Class.extend({
 						'in_list_view': 0,
 					},
 					{
-						'label': 'Lot No',
+						'label': 'Lot',
 						'fieldtype': 'Data',
 						'fieldname': 'lot_no',
 						'read_only': 1,
 						'in_list_view': 1,
+						'columns': 2,
 					},
+					{
+						'label': 'Packing',
+						'fieldtype': 'Data',
+						'fieldname': 'packing_type',
+						'read_only': 1,
+						'in_list_view': 1,
+						'columns': 2,
+					},					
 					{
 						'label': 'To Pick',
 						'fieldtype': 'Float',
 						'fieldname': 'to_pick_qty',
 						'in_list_view': 1,
+						'columns': 2,
 						change: function(){
 							me.cal_picked_qty();
 						}
@@ -265,6 +275,7 @@ ItemSelector = Class.extend({
 						'fieldname': 'available_qty',
 						'read_only': 1,
 						'in_list_view': 1,
+						'columns': 1,
 					},
 					{
 						'label': 'Actual Qty',
@@ -272,6 +283,7 @@ ItemSelector = Class.extend({
 						'fieldname': 'actual_qty',
 						'read_only': 1,
 						'in_list_view': 1,
+						'columns': 1,
 					},
 					{
 						'label': 'Picked Qty',

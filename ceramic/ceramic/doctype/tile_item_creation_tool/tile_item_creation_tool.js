@@ -6,7 +6,7 @@ cur_frm.fields_dict.item_defaults.grid.get_field("default_warehouse").get_query 
 	return {
 		filters: {
             "is_group": 0,
-            "company":d.company,           
+            "company":d.company,
 		}
 	}
 };
@@ -84,30 +84,46 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 		
 		}
 	},
-	before_save: function(frm){
+
+	// validate: function(frm){
+	// 	if (frm.doc.is_item_series) {
+	// 		console.log("item is series item")
+	// 		frm.doc.item_series = ''
+	// 	} 
+	// 	else {
+	// 		if (!frm.doc.item_series) {
+	// 			msgprint("Please Select Item Series");
+	// 			frappe.validated = false;
+	// 		}
+	// 	}
+	// },
+
+	item_group: function(frm){
 		if (frm.doc.__islocal) {
 			if (frm.doc.is_item_series) {
 				frm.doc.item_name = frm.doc.item_design
 			}
 			else {	
-				frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.tile_surface_item + '-' + frm.doc.tile_type_item + '-' + frm.doc.tile_size_item
-			}
-		}
-		if (frm.doc.is_item_series) {
-			frm.doc.item_series = ''
-		} 
-		else {
-			if (!frm.doc.item_series) {
-				msgprint("Please Select Item Series");
-				validated = false;
+				frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.item_group_name
 			}
 		}
 	},
 
-	default_production_price: function(frm) {
-		$.each(frm.doc.tile_quality || [], function(i, d) {
-			d.production_price = frm.doc.default_production_price;
-		});
-		refresh_field("tile_quality");
-	},
+	item_design: function(frm){
+		if (frm.doc.__islocal) {
+			if (frm.doc.is_item_series) {
+				frm.doc.item_name = frm.doc.item_design
+			}
+			else {	
+				frm.doc.item_name = frm.doc.item_design + '-' + frm.doc.item_group_name
+			}
+		}
+	},	
+
+	// default_production_price: function(frm) {
+	// 	$.each(frm.doc.tile_quality || [], function(i, d) {
+	// 		d.production_price = frm.doc.default_production_price;
+	// 	});
+	// 	refresh_field("tile_quality");
+	// },
 });

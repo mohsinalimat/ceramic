@@ -1,19 +1,16 @@
+<style>
+    @media print{
+        @page{
+            size : landscape
+        }
+    }
+</style>
 <h2 class="text-center">{%= __("Statement of Account") %}</h2>
 <h4 class="text-center">
-	{% if (filters.party_name) { %}
-		{%= filters.party_name %}
-	{% } else if (filters.party && filters.show_name) { %}
+	{% if (filters.party) { %}
 		{%= filters.party %}
-	{% } else if (filters.account) { %}
-		{%= filters.account %}
-	{% } %}
+    {% } %}
 </h4>
-
-<h6 class="text-center">
-	{% if (filters.tax_id) { %}
-	{%= __("Tax Id: ")%}	{%= filters.tax_id %}
-	{% } %}
-</h6>
 
 <h5 class="text-center">
 	{%= frappe.datetime.str_to_user(filters.from_date) %}
@@ -25,177 +22,160 @@
     <tbody>
         <tr>
             <td width="17%" colspan="2" valign="top">
-                <p align="center">
-                    Opeaning Balance
-                </p>
+
             </td>
             <td width="27%" colspan="3" valign="top">
                 <p align="center">
-                    DR
+                    <strong>DR</strong>
                 </p>
             </td>
             <td width="27%" colspan="3" valign="top">
                 <p align="center">
-                    CR
+                    <strong>CR</strong>
                 </p>
             </td>
             <td width="27%" colspan="3" valign="top">
                 <p align="center">
-                    Balance
+                    <strong>Balance</strong>
                 </p>
             </td>
         </tr>
         <tr>
             <td width="8%" valign="top">
                 <p>
-                    DATE
+                    <strong>Voucher Type</strong>
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Bill No
+                    <strong>Voucher No</strong>
                 </p>
             </td>
-            <td width="27%" colspan="3" valign="top">
+            <td width="8%" valign="top">
                 <p>
-                    Dr
+                    <strong>Billed</strong>
                 </p>
             </td>
-            <td width="27%" colspan="3" valign="top">
+            <td width="10%" valign="top">
                 <p>
-                    Cr
+                    <strong>Cash</strong>
                 </p>
             </td>
-            <td width="27%" colspan="3" valign="top">
+            <td width="8%" valign="top">
                 <p>
-                    Balance
+                    <strong>Total</strong>
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    <strong>Billed</strong>
+                </p>
+            </td>
+            <td width="10%" valign="top">
+                <p>
+                    <strong>Cash</strong>
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    <strong>Total</strong>
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    <strong>Billed</strong>
+                </p>
+            </td>
+            <td width="10%" valign="top">
+                <p>
+                    <strong>Cash</strong>
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
+                    <strong>Total</strong>
                 </p>
             </td>
         </tr>
+        {% for(var i=0, l=data.length; i<l; i++) { %}
         <tr>
-            <td width="8%" valign="top">
+            {% if(i == 0){ %}
+            <td width="16%" valign="top" colspan="2">
+                <p align="center">
+                    <strong>Opening Balance</strong>
+                </p>
             </td>
+            {% } else if(i == l - 2) { %}
+            <td width="16%" valign="top" colspan="2">
+                <p align="center">
+                    <strong>Total</strong>
+                </p>
+            </td>
+            {% } else if(i == l - 1)  { %}
+            <td width="16%" valign="top" colspan="2">
+                <p align="center">
+                    <strong>Closing (Opening + Total)</strong>
+                </p>
+            </td>
+            {% } else { %}
             <td width="8%" valign="top">
+                <p>
+                    {{ data[i].voucher_type }}
+                </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Billed
+                    {{ data[i].voucher_no }}
+                </p>
+            </td>
+            {% } %}
+            <td width="8%" valign="top">
+                <p>
+                    {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="10%" valign="top">
                 <p>
-                    Without
+                    {{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Total
+                    {{ frappe.format(data[i].total_debit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    bank
+                    {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="10%" valign="top">
                 <p>
-                    Without
+                    {{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Total
+                    {{ frappe.format(data[i].total_credit, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Bank
+                    {{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="10%" valign="top">
                 <p>
-                    Without
+                    {{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
             <td width="8%" valign="top">
                 <p>
-                    Total
+                    {{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
         </tr>
-        <tr>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-        </tr>
-        <tr>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-        </tr>
-        <tr>
-            <td width="17%" colspan="2" valign="top">
-                <p align="right">
-                    Total
-                </p>
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-            <td width="10%" valign="top">
-            </td>
-            <td width="8%" valign="top">
-            </td>
-        </tr>
+        {% } %}
     </tbody>
 </table>
 <p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>

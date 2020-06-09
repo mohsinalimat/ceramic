@@ -34,14 +34,13 @@
   },
   {
    "allow_on_submit": 1,
-   "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "label": "Item Name"
   }
  ],
  "istable": 1,
- "modified": "2020-06-04 14:13:26.695784",
+ "modified": "2020-06-07 18:33:30.925296",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Tile Item TIle Quality",
