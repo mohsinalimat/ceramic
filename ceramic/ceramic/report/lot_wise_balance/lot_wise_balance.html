@@ -86,29 +86,33 @@
 
     @media print {
         @page {
-            size: portrait
+            size: portrait !important
         }
     }
 
     .overlap-wrapper {
         height: 160px;
     }
+
+
 </style>
 
 {% var i = 0 %}
-{% var premiumTotal = 0 %}
+{% var j = 0 %}
+{% var total = 0 %}
 
 
-{% while(i<data.length) { %}
+{% while(i<data.length && data[i].item_group) { %}
 <table>
     {% if(i==0 || data[i].item_group!=data[i-1].item_group) { %}
+    
     <tr>
         <td>
-            <table>
+            <table class="group-table">
                 <tbody>
                     <tr>
-                        <td width="10%">
-                            <p class="field-title group-text" style="font-weight: 400; color: #002c67; !important"> Group</p>
+                        <td width="10%" >
+                            <p class="field-title group-text" style="font-weight: 400; color: #002c67; !important"> Group:</p>
 
                         </td>
                         <td>
@@ -136,7 +140,7 @@
                                 valign="top">
                                 <div class="overlap-wrapper">
                                     <div class="img-background"></div>
-                                    {% if(data[i].image!='None'){ %}
+                                    {% if(data[i].image){ %}
                                     <img style="width: 140px !important;" class="product-img" src="{{data[i].image}}"
                                         alt="tile-image">
                                     {% } else { %}
@@ -159,21 +163,21 @@
                                             <td>
                                                 <p class="field-title">Quality</p>
                                             </td>
-                                            <td>
+                                            <td align="right">
                                                 <p class="field-title">Lot No.</p>
                                             </td>
                                             {% if(filters.print_with_picked_qty==1){ %}
-                                            <td>
-                                                <p class="field-title">Balance</p>
-                                            </td>
-                                            <td>
-                                                <p class="field-title">Picked</p>
-                                            </td>
+                                                <td align="right">
+                                                    <p class="field-title">Balance</p>
+                                                </td>
+                                                <td align="right">
+                                                    <p class="field-title">Picked</p>
+                                                </td>
                                             {% } %}
-                                            <td>
+                                            <td align="right">
                                                 <p class="field-title">Quantity</p>
                                             </td>
-                                            <td>
+                                            <td align="right">
                                                 <p class="field-title">Total</p>
                                             </td>
                                         </tr>
@@ -183,30 +187,39 @@
                                         {% while(1){ %}
                                         <tr>
                                             <td>
-                                                {% if(data[i].tile_quality=="Premium" && data[i-1].tile_quality=="Premium" && data[i].item_design == data[i-1].item_design){ %}
+                                                {% if(i>0 && data[i].tile_quality == data[i-1].tile_quality && data[i].item_design == data[i-1].item_design){ %}
                                                 <p class="text-size"></p>
                                                 {% } else { %}
                                                 <p class="text-size">{{data[i].tile_quality}}</p>
                                                 {% } %}
                                             </td>
-                                            <td>
+                                            <td align="right">
                                                 <p class="text-size">{{data[i].lot_no}}</p>
                                             </td>
                                             {% if(filters.print_with_picked_qty==1){ %}
-                                            <td>
+                                            <td align="right">
                                                 <p class="text-size">{{data[i].balance_qty}}</p>
                                             </td>
-                                            <td>
+                                            <td align="right">
                                                 <p class="text-size">{{data[i].picked_qty}}</p>
                                             </td>
                                             {% } %}
-                                            <td>
+                                            <td align="right">
                                                 <p class="text-size">{{data[i].remaining_qty}}</p>
                                             </td>
 
-                                            <td>
-                                                    <p class="text-size"> </p>
-                                                
+                                            <td align="right">
+                                                {% if(i==0 || data[i].tile_quality != data[i-1].tile_quality || data[i].item_design!=data[i-1].item_design){ %} 
+                                                    {% total = 0%}
+                                                    {% thisQuality = data[i].tile_quality %}
+                                                    {% thisDesign = data[i].item_design %}
+                                                    {% j = i %}
+                                                        {% while(data[j].tile_quality==thisQuality && data[j].item_design==thisDesign){ %}
+                                                            {% total = total + data[j].remaining_qty %}
+                                                            {% j = j+1 %}
+                                                        {% } %}
+                                                    <p class="text-size">{{total}}</p>
+                                                {% }%}
                                             </td>
                                         </tr>
                                         {% if(i!=data.length-1 && data[i].item_design == data[i+1].item_design){ %}
@@ -214,7 +227,6 @@
                                         {% } else { %}
                                         {% break  %}
                                         {% } %}
-
                                         {% } %}
                                     </tbody>
                                 </table>

@@ -35,7 +35,7 @@ def get_conditions(filters):
 		conditions += " AND so.transaction_date <= '%s'" % filters.get('to_date')
 	
 	if filters.get('item_group'):
-		conditions += "AND i.item_group = '%s'" % filters.get('item_group')
+		conditions += "AND soi.item_group = '%s'" % filters.get('item_group')
 
 	return conditions
 
@@ -46,53 +46,43 @@ def get_data(filters):
 	
 	data = frappe.db.sql("""
 		SELECT 
-			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.item_name, soi.qty, soi.base_rate, soi.base_amount, soi.name as sales_order_item, i.item_group
+			so.name as sales_order, so.transaction_date, so.customer, soi.item_code, soi.base_rate, soi.base_amount, soi.qty, soi.picked_qty as picked_total, (soi.qty - soi.picked_qty) as pending_qty, soi.base_rate, soi.base_amount, soi.name as sales_order_item, soi.item_group, \
+				pni.parent as pick_list, pni.lot_no as picked_lot_no, pni.warehouse as picked_warehouse, pl.posting_date, pni.qty as picked_qty
 		FROM 
-			`tabSales Order` as so LEFT JOIN `tabSales Order Item` as soi ON (so.name = soi.parent)
-			JOIN `tabItem` as i on soi.item_code = i.name
+			`tabSales Order Item` as soi 
+		JOIN 
+			`tabSales Order` as so ON so.name = soi.parent
+		LEFT JOIN 
+			`tabPick List Item` as pni on soi.name = pni.sales_order_item
+		LEFT JOIN
+			`tabPick List` as pl on (pni.parent = pl.name and pl.docstatus = 1)
 		WHERE
-			so.docstatus = 1 %s
+			so.docstatus = 1%s
 		ORDER BY
-			so.transaction_date
+			so.transaction_date, so.name, soi.item_code
 		""" % conditions, as_dict = True)
 
-	data_copy = data[:]
-	idx = 0
+	for idx in reversed(range(0, len(data))):
+		if idx != 0:
+			if data[idx].sales_order == data[idx-1].sales_order:
+				data[idx].sales_order = None
+				data[idx].transaction_date = None
+				data[idx].customer = None
+				
+				if data[idx].sales_order_item == data[idx-1].sales_order_item:
+					data[idx].picked_total = None
+					data[idx].pending_qty = None
+					data[idx].item_code = None
+					data[idx].item_group = None
+					data[idx].qty = None
+					data[idx].base_rate = None
+					data[idx].base_amount = None
 
-	for row in data_copy:
-		idx = insert_pick_list(data, row, idx + 1)
+	
+	# for row in data_copy:
+	# 	idx = insert_pick_list(data, row, idx + 1)
 
 	return data
-
-def insert_pick_list(data, row , idx):
-
-	dn_data = frappe.db.sql(f"""
-		SELECT pni.parent as pick_list, pni.lot_no as picked_lot_no, pni.warehouse as picked_warehouse, pl.posting_date, pni.qty as picked_qty
-		FROM `tabPick List` as pl LEFT JOIN `tabPick List Item` as pni ON (pl.name = pni.parent)
-		WHERE 
-			pl.docstatus = 1
-			AND pni.sales_order_item = '{row.sales_order_item}'
-		ORDER BY
-			pl.posting_date
-		""", as_dict = 1)
-	
-	total_qty_picked = 0.0
-	if dn_data:
-		row.pick_list = dn_data[0].pick_list
-		row.picked_lot_no = dn_data[0].picked_lot_no
-		row.picked_warehouse = dn_data[0].picked_warehouse
-		row.posting_date = dn_data[0].posting_date
-		row.picked_qty = dn_data[0].picked_qty
-		total_qty_picked += dn_data[0].picked_qty
-	
-	for i in dn_data[1:]:
-		data.insert(idx, i)
-		total_qty_picked += i.picked_qty
-		idx += 1
-
-	row.picked_total = total_qty_picked
-	row.pending_qty = row.qty - total_qty_picked
-	return idx
 
 
 def get_columns():
@@ -123,12 +113,6 @@ def get_columns():
 			"fieldtype": "Link",
 			"options": "Item",
 			"width": 190
-		},
-		{
-			"fieldname": "item_name",
-			"label": _("Item Name"),
-			"fieldtype": "Data",
-			"width": 220
 		},
 		{
 			"fieldname": "item_group",

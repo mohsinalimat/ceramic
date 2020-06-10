@@ -103,14 +103,12 @@ class ReceivablePayableReport(object):
 					posting_date = gle.posting_date,
 					remarks = gle.remarks,
 					account_currency = gle.account_currency,
-					# bill_amt = 0.0,
 					invoiced = 0.0,
-					# bank_paid = 0.0,
 					paid = 0.0,
-					# credit_note_bill = 0.0,
 					credit_note = 0.0,
-					# bank_outstanding = 0.0,
-					outstanding = 0.0
+					outstanding = 0.0,
+					primary_customer = gle.primary_customer,
+					reference_doc = gle.reference_doc
 				)
 			self.get_invoices(gle)
 
@@ -269,8 +267,6 @@ class ReceivablePayableReport(object):
 			if self.previous_party and (self.previous_party != row.party):
 				self.append_subtotal_row(self.previous_party)
 			self.previous_party = row.party
-		if not row.primary_customer and row.party:
-			row.primary_customer = row.party
 		
 		if row.company == self.filters.company or (row.company != self.filters.company and not row.reference_doc):
 			if row.voucher_type == "Journal Entry":
@@ -337,13 +333,10 @@ class ReceivablePayableReport(object):
 			self.data.append(row)
 
 	def set_payment_details(self, row):
-		if row.voucher_type == 'Payment Entry' and not row.reference_doc:
-			row.reference_doc = frappe.db.get_value("Payment Entry", row.voucher_no, 'pe_ref')
-			row.primary_customer = frappe.db.get_value("Payment Entry", row.primary_customer, 'primary_customer')
+		pass
 	
 	def set_jv_details(self, row):
-		if row.voucher_type == 'Journal Entry':
-			row.primary_customer = frappe.db.get_value("Journal Entry", row.voucher_no, 'primary_customer')
+		pass
 			
 
 	def set_invoice_details(self, row):
@@ -393,7 +386,7 @@ class ReceivablePayableReport(object):
 		self.invoice_details = frappe._dict()
 		if self.party_type == "Customer":
 			si_list = frappe.db.sql("""
-				select name, primary_customer, due_date, po_no, discounted_rounded_total, real_difference_amount, pay_amount_left, discounted_rounded_total, si_ref as reference_doc
+				select name, due_date, po_no, discounted_rounded_total, real_difference_amount, pay_amount_left, discounted_rounded_total
 				from `tabSales Invoice`
 				where posting_date <= %s
 			""",self.filters.report_date, as_dict=1)
@@ -413,7 +406,7 @@ class ReceivablePayableReport(object):
 
 		if self.party_type == "Supplier":
 			for pi in frappe.db.sql("""
-				select name, due_date, bill_no, bill_date, discounted_rounded_total, real_difference_amount, discounted_rounded_total, pay_amount_left, pi_ref as reference_doc
+				select name, due_date, bill_no, bill_date, discounted_rounded_total, real_difference_amount, discounted_rounded_total, pay_amount_left
 				from `tabPurchase Invoice`
 				where posting_date <= %s
 			""", self.filters.report_date, as_dict=1):
@@ -540,7 +533,6 @@ class ReceivablePayableReport(object):
 				payment_entry.posting_date as future_date,
 				ref.allocated_amount as future_amount,
 				payment_entry.reference_no as future_ref,
-				payment_entry.pe_ref as reference_doc
 			from
 				`tabPayment Entry` as payment_entry inner join `tabPayment Entry Reference` as ref
 			on
@@ -667,16 +659,22 @@ class ReceivablePayableReport(object):
 			select
 				gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, gle.voucher_type, gle.voucher_no,
 				gle.against_voucher_type, gle.against_voucher, gle.account_currency, gle.remarks, gle.company, {0},
-				si.primary_customer, si.si_ref
+				IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
+				IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc
 			from
 				`tabGL Entry` as gle
+				LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+				LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+				LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+				LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 			where
-				docstatus < 2
-				and party_type=%s
-				and (party is not null and party != '')
-				and posting_date <= %s
+				gle.docstatus < 2
+				and gle.party_type=%s
+				and (gle.party is not null and gle.party != '')
+				and gle.posting_date <= %s
 				{1} {2}"""
 			.format(select_fields, conditions, order_by), values, as_dict=True)
+		
 
 	def get_sales_invoices_or_customers_based_on_sales_person(self):
 		if self.filters.get("sales_person"):
@@ -735,7 +733,7 @@ class ReceivablePayableReport(object):
 	def add_common_filters(self, conditions, values, party_type_field):
 		if self.filters.company:
 			alternate_company = frappe.get_value("Company", self.filters.company, 'alternate_company')
-			conditions.append(f"company in ('{self.filters.company}', '{alternate_company}')")
+			conditions.append(f"gle.company in ('{self.filters.company}', '{alternate_company}')")
 			# values.append(self.filters.company)
 
 		if self.filters.finance_book:

@@ -148,3 +148,4 @@ function remove_picked_item_lot_wise(sales_order, sales_order_item, pick_list, p
 		}
 	})
 }
+
