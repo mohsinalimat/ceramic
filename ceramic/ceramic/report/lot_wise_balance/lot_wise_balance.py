@@ -43,6 +43,7 @@ def execute(filters=None):
 					data.append({
 						'item_code': item,
 						'lot_no': qty_dict.lot_no,
+						'packing_type': qty_dict.packing_type,
 						'balance_qty': flt(qty_dict.bal_qty, float_precision),
 						'picked_qty': picked_qty,
 						'remaining_qty': flt(qty_dict.bal_qty, float_precision) - picked_qty,
@@ -73,8 +74,15 @@ def get_columns(filters):
 			"label": _("Lot No"),
 			"fieldname": "lot_no",
 			"fieldtype": "Data",
-			"width": 100
+			"width": 80
 		},
+		{
+			"label": _("Packing Type"),
+			"fieldname": "packing_type",
+			"fieldtype": "link",
+			"options": "Packing Type",			
+			"width": 80
+		},		
 		{
 			"label": _("Balance Qty"),
 			"fieldname": "balance_qty",
@@ -94,10 +102,36 @@ def get_columns(filters):
 			"width": 80
 		},
 		{
-			"label": _("Picked Detail"),
+			"label": _("Details"),
 			"fieldname": "picked_detail",
 			"fieldtype": "Data",
-			"width": 80
+			"width": 70
+		},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch_no",
+			"fieldtype": "Link",
+			"options": "Batch",
+			"width": 100
+		},
+		{
+			"label": _("Item Group"),
+			"fieldname": "item_group",
+			"fieldtype": "Link",
+			"options": "Item Group",
+			"width": 180
+		},
+		{
+			"label": _("Quality"),
+			"fieldname": "tile_quality",
+			"fieldtype": "Data",
+			"width": 70
+		},
+		{
+			"label": _("Item Design"),
+			"fieldname": "item_design",
+			"fieldtype": "Data",
+			"width": 100
 		},
 		{
 			"label": _("Opening Qty"),
@@ -112,30 +146,10 @@ def get_columns(filters):
 			"width": 80
 		},
 		{
-			"label": _("Batch"),
-			"fieldname": "batch_no",
-			"fieldtype": "Link",
-			"options": "Batch",
-			"width": 150
-		},
-		{
-			"label": _("Item Group"),
-			"fieldname": "item_group",
-			"fieldtype": "Link",
-			"options": "Item Group",
-			"width": 150
-		},
-		{
-			"label": _("Tile Quality"),
-			"fieldname": "tile_quality",
-			"fieldtype": "Data",
-			"width": 150
-		},
-		{
-			"label": _("Item Design"),
-			"fieldname": "item_design",
-			"fieldtype": "Data",
-			"width": 150
+			"label": _("Out Qty"),
+			"fieldname": "out_qty",
+			"fieldtype": "Float",
+			"width": 80
 		},
 	]
 
@@ -171,13 +185,13 @@ def get_conditions(filters):
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	return frappe.db.sql("""
-		select sle.item_code, i.item_group, i.tile_quality, i.item_design, batch.lot_no, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
+		select sle.item_code, i.item_group, i.tile_quality, i.item_design, batch.lot_no, batch.packing_type, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
 		from `tabStock Ledger Entry` as sle 
 		JOIN `tabItem` as i on i.item_code = sle.item_code
 		JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
-		group by item_group, item_code, tile_quality
-		order by item_code""" %
+		group by voucher_no, batch_no, item_code
+		order by item_group, item_code, tile_quality""" %
 		conditions, as_dict=1)
 
 
@@ -209,6 +223,7 @@ def get_item_warehouse_batch_map(filters, float_precision):
 		qty_dict.item_group = d.item_group
 		qty_dict.tile_quality = d.tile_quality
 		qty_dict.item_design = d.item_design
+		qty_dict.packing_type = d.packing_type
 	return iwb_map
 
 

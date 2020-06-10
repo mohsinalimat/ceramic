@@ -6,7 +6,7 @@ from frappe.utils import flt
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
 	if self.authority == "Unauthorized":
-		self.pay_amount_left = self.real_difference_amount
+		self.db_set("pay_amount_left", self.real_difference_amount)
 	create_main_purchase_invoice(self)
 
 def on_cancel(self, test):
