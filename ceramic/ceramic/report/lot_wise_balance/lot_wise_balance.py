@@ -22,7 +22,7 @@ def execute(filters=None):
 		conditions += " AND pl.posting_date <= '%s'" % filters["to_date"]
 	
 	data = []
-	for item in sorted(iwb_map):
+	for item in iwb_map:
 		if not filters.get("item") or filters.get("item") == item:
 			for batch in sorted(iwb_map[item]):
 				qty_dict = iwb_map[item][batch]
@@ -54,7 +54,8 @@ def execute(filters=None):
 						'batch_no': batch,
 						'item_group': qty_dict.item_group,
 						'tile_quality': qty_dict.tile_quality,
-						'item_design': qty_dict.item_design
+						'item_design': qty_dict.item_design,
+						'image': qty_dict.image
 					})
 
 	return columns, data
@@ -151,6 +152,12 @@ def get_columns(filters):
 			"fieldtype": "Float",
 			"width": 80
 		},
+		{
+			"label": _("image"),
+			"fieldname": "image",
+			"fieldtype": "data",
+			"width": 80
+		},
 	]
 
 	return columns
@@ -185,13 +192,13 @@ def get_conditions(filters):
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	return frappe.db.sql("""
-		select sle.item_code, i.item_group, i.tile_quality, i.item_design, batch.lot_no, batch.packing_type, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
+		select sle.item_code, i.item_group, i.tile_quality, i.item_design, i.website_image as image, batch.lot_no, batch.packing_type, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
 		from `tabStock Ledger Entry` as sle 
 		JOIN `tabItem` as i on i.item_code = sle.item_code
 		JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
 		group by voucher_no, batch_no, item_code
-		order by item_group, item_code, tile_quality""" %
+		order by i.item_group, i.item_code""" %
 		conditions, as_dict=1)
 
 
@@ -201,7 +208,6 @@ def get_item_warehouse_batch_map(filters, float_precision):
 
 	from_date = getdate(filters["from_date"])
 	to_date = getdate(filters["to_date"])
-
 	for d in sle:
 		iwb_map.setdefault(d.item_code, {})\
 			.setdefault(d.batch_no, frappe._dict({
@@ -224,6 +230,7 @@ def get_item_warehouse_batch_map(filters, float_precision):
 		qty_dict.tile_quality = d.tile_quality
 		qty_dict.item_design = d.item_design
 		qty_dict.packing_type = d.packing_type
+		qty_dict.image = d.image
 	return iwb_map
 
 

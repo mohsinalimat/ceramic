@@ -659,16 +659,17 @@ class ReceivablePayableReport(object):
 		order_by = self.get_order_by_condition()
 
 		if self.filters.get(scrub(self.party_type)):
-			select_fields = "debit_in_account_currency as debit, credit_in_account_currency as credit"
+			select_fields = "gle.debit_in_account_currency as debit, gle.credit_in_account_currency as credit"
 		else:
-			select_fields = "debit, credit"
+			select_fields = "gle.debit, gle.credit"
 
 		self.gl_entries = frappe.db.sql("""
 			select
-				name, posting_date, account, party_type, party, voucher_type, voucher_no,
-				against_voucher_type, against_voucher, account_currency, remarks, company, {0}
+				gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, gle.voucher_type, gle.voucher_no,
+				gle.against_voucher_type, gle.against_voucher, gle.account_currency, gle.remarks, gle.company, {0},
+				si.primary_customer, si.si_ref
 			from
-				`tabGL Entry`
+				`tabGL Entry` as gle
 			where
 				docstatus < 2
 				and party_type=%s

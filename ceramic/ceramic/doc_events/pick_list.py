@@ -517,8 +517,8 @@ def get_items(filters):
 			AND pl.docstatus = 1
 		""")
 		
-		item['picked_qty'] = pick_list_available[0][0] or 0.0
-		item['available_qty'] = item['actual_qty'] - (pick_list_available[0][0] or 0.0)
+		item['picked_qty'] = flt(pick_list_available[0][0] or 0.0)
+		item['available_qty'] = flt(item['actual_qty'] - (pick_list_available[0][0] or 0.0))
 		item['to_pick_qty'] = str(min(item['available_qty'], filters['to_pick_qty']))
 		if item['available_qty'] <= 0.0:
 			item = None

@@ -62,7 +62,13 @@ frappe.query_reports["Lot-Wise Balance"] = {
 					}
 				}
 			}
-		}
+		},
+		{
+			"fieldname":"print_with_picked_qty",
+			"label": __("Print With Picked Qty"),
+			"fieldtype": "Check",
+			"options": "Tile Quality",
+		},
 	]
 }
 
