@@ -10,6 +10,9 @@ from frappe.utils import cint, flt, getdate
 
 def execute(filters=None):
 	if not filters: filters = {}
+	
+	if filters.get("item_group"):
+		filters.item_group = tuple(filters.get("item_group"))
 
 	float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
@@ -174,7 +177,7 @@ def get_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and i.item_group = '%s'" % filters["item_group"]
+		conditions += " and i.item_group in %s" % filters["item_group"]
 	
 	if filters.get("item_code"):
 		conditions += " and sle.item_code = '%s'" % filters["item_code"]
@@ -272,7 +275,7 @@ def get_picked_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and pli.item_group = '%s'" % filters["item_group"]
+		conditions += " and pli.item_group in %s" % filters["item_group"]
 	
 	if filters.get("item_code"):
 		conditions += " and pli.item_code = '%s'" % filters["item_code"]
@@ -283,4 +286,5 @@ def get_picked_conditions(filters):
 	if filters.get("company"):
 		conditions += " and pl.company = '%s'" % filters["company"]
 
+	frappe.msgprint(conditions)
 	return conditions

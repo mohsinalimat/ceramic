@@ -235,6 +235,7 @@ doc_events = {
 		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
+		"before_update_after_submit": "ceramic.ceramic.doc_events.pick_list.before_update_after_submit"
 	},
 	"Delivery Note": {
 		"before_naming": "ceramic.api.before_naming",

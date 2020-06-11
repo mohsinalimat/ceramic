@@ -57,7 +57,7 @@ def calculate_totals(self):
 	self.total_net_weight = sum([row.total_weight for row in self.items])
 
 def on_submit(self, method):
-	checking_rate(self)
+	#checking_rate(self)
 	checking_real_qty(self)
 	update_picked_percent(self)
 	check_qty_rate(self)
@@ -94,7 +94,8 @@ def before_update_after_submit(self, method):
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)
-
+	checking_rate(self)
+	
 def on_cancel(self, method):
 	remove_pick_list(self)
 	update_picked_percent(self)
@@ -129,12 +130,12 @@ def update_discounted_amount(self):
 		item.discounted_net_amount = item.discounted_amount
 
 def checking_rate(self):
-	pass
+	#pass
 	# flag = False
-	# for row in self.items:
-	# 	if not row.rate:
-	# 		flag = True
-	# 		frappe.msgprint(_(f"Row {row.idx}: Rate cannot be 0."))
+	if self.workflow_state == 'Approved':
+		for row in self.items:
+			if not row.rate:
+				frappe.throw(_(f"Row {row.idx}: Rate cannot be 0."))
 
 	# 	if not row.discounted_rate and row.real_qty:
 	# 		flag = True

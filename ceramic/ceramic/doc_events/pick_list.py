@@ -27,6 +27,9 @@ def on_submit(self, method):
 	update_sales_order(self, "submit")
 	update_status_sales_order(self)
 
+def before_update_after_submit(self,method):
+	validate_item_qty(self)
+
 from ceramic.update_item import update_child_qty_rate
 import json
 def update_item_so_qty(self):
@@ -67,6 +70,11 @@ def check_item_qty(self):
 	for item in self.available_qty:
 		if item.remaining < 0:
 			frappe.throw(f"Row {item.idx}: Remaining Qty Less than 0")
+
+def validate_item_qty(self):
+	for row in self.locations:
+		if row.qty < flt(row.delivered_qty + row.wastage_qty):
+			frappe.throw(f"Row {row.idx}: Qty can not be Less than delivered qty")
 
 def remove_items_without_batch_no(self):
 	if self.locations:

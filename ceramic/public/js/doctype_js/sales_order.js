@@ -503,6 +503,11 @@ frappe.ui.form.on('Sales Order', {
 	},
 	onload: function (frm) {
 		frm.trigger('naming_series');
+		if (frm.doc.per_delivered > 0) {
+			cur_frm.set_df_property("tax_category", "allow_on_submit", 0);
+			cur_frm.set_df_property("tax_paid", "allow_on_submit", 0);
+			cur_frm.set_df_property("taxes_and_charges", "allow_on_submit", 0);
+		}
 		if (frm.doc.docstatus == 1) {
 			frm.add_custom_button(__("Change Customer"), function () {
 				let me = this;
