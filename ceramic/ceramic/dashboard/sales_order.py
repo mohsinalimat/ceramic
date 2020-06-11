@@ -5,6 +5,7 @@ def get_data(data):
 	data['non_standard_fieldnames'] = {
 		'Delivery Note': 'against_sales_order',
 		'Auto Repeat': 'reference_document',
+		'Pick List': 'sales_order'
 	}
 
 	data['transactions'] = [

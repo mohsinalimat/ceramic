@@ -151,7 +151,9 @@ class ReceivablePayableReport(object):
 					credit_note = 0.0,
 					outstanding = 0.0,
 					company = gle.company,
-					primary_customer = gle.primary_customer
+					primary_customer = gle.primary_customer,
+					vehicle_no = gle.vehicle_no,
+					reference_doc = gle.reference_doc
 				)
 			self.get_invoices(gle)
 
@@ -256,26 +258,25 @@ class ReceivablePayableReport(object):
 			row.outstanding = flt(row.invoiced - row.paid - row.credit_note, self.currency_precision)
 			row.invoice_grand_total = row.invoiced
 
-			if abs(row.outstanding) > 1.0/10 ** self.currency_precision:
-				# non-zero oustanding, we must consider this row
+			# non-zero oustanding, we must consider this row
 
-				if self.is_invoice(row) and self.filters.based_on_payment_terms:
-					# is an invoice, allocate based on fifo
-					# adds a list `payment_terms` which contains new rows for each term
-					self.allocate_outstanding_based_on_payment_terms(row)
+			if self.is_invoice(row) and self.filters.based_on_payment_terms:
+				# is an invoice, allocate based on fifo
+				# adds a list `payment_terms` which contains new rows for each term
+				self.allocate_outstanding_based_on_payment_terms(row)
 
-					if row.payment_terms:
-						# make separate rows for each payment term
-						for d in row.payment_terms:
-							if d.outstanding > 0:
-								self.append_row(d)
+				if row.payment_terms:
+					# make separate rows for each payment term
+					for d in row.payment_terms:
+						# if d.outstanding > 0:
+						self.append_row(d)
 
-						# if there is overpayment, add another row
-						self.allocate_extra_payments_or_credits(row)
-					else:
-						self.append_row(row)
+					# if there is overpayment, add another row
+					self.allocate_extra_payments_or_credits(row)
 				else:
 					self.append_row(row)
+			else:
+				self.append_row(row)
 
 		if self.filters.get('group_by_party'):
 			self.append_subtotal_row(self.previous_party)
@@ -620,7 +621,7 @@ class ReceivablePayableReport(object):
 				gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, gle.voucher_type, gle.voucher_no,
 				gle.against_voucher_type, gle.against_voucher, gle.account_currency, gle.remarks, gle.company, {0},
 				IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
-				IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc
+				IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc, IFNULL(si.vehicle_no, pi.vehicle_no) as vehicle_no
 			from
 				`tabGL Entry` as gle
 				LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
@@ -835,6 +836,7 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_('Supplier Group'), fieldname='supplier_group', fieldtype='Link',
 				options='Supplier Group')
 
+		self.add_column(label=_('Vehicle No'), fieldname='vehicle_no', fieldtype='Text', width=100)
 		self.add_column(label=_('Remarks'), fieldname='remarks', fieldtype='Text', width=200)
 		self.add_column(label=_('Reference Document'), fieldname='reference_doc', fieldtype='Dynamic Link',
 			options='voucher_type', width=180)
