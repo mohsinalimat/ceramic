@@ -188,6 +188,7 @@ def get_conditions(filters):
 	if filters.get("company"):
 		conditions += " and sle.company = '%s'" % filters["company"]
 
+	frappe.msgprint(f'Get condition: {conditions}')
 	return conditions
 
 
