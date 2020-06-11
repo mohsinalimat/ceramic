@@ -29,14 +29,8 @@ frappe.query_reports["Lot-Wise Balance"] = {
 		{
 			"fieldname":"item_group",
 			"label": __("Item Group"),
-			"fieldtype": "MultiSelectList",
-			"get_data": function(text){
-				if (!frappe.query_report.item_group) return;
-				return frappe.db.get_link_options('Item Group',text)
-			},
-			"change": function(){
-				frappe.query_report.refresh();
-			}
+			"fieldtype": "Link",
+			"options": "Item Group",
 		},
 		{
 			"fieldname":"tile_quality",
@@ -154,4 +148,3 @@ function remove_picked_item_lot_wise(sales_order, sales_order_item, pick_list, p
 		}
 	})
 }
-
