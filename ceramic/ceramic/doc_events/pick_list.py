@@ -517,7 +517,7 @@ def get_items(filters):
 		item['item_name'] = item_name
 		
 		pick_list_available = frappe.db.sql(f"""
-			SELECT SUM(pli.qty - pli.delivered_qty) FROM `tabPick List Item` as pli
+			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
 			JOIN `tabPick List` AS pl ON pl.name = pli.parent
 			WHERE `item_code` = '{filters['item_code']}'
 			AND pli.warehouse = '{item['warehouse']}'

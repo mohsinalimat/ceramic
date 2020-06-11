@@ -153,6 +153,7 @@ class ReceivablePayableReport(object):
 					company = gle.company,
 					primary_customer = gle.primary_customer,
 					vehicle_no = gle.vehicle_no,
+					reference_doc = gle.reference_doc
 				)
 			self.get_invoices(gle)
 
