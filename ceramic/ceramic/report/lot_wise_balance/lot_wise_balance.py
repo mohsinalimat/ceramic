@@ -177,7 +177,7 @@ def get_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and i.item_group in %s" % filters["item_group"]
+		conditions += " and i.item_group = '%s'" % filters['item_group']
 	
 	if filters.get("item_code"):
 		conditions += " and sle.item_code = '%s'" % filters["item_code"]
@@ -275,7 +275,7 @@ def get_picked_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and pli.item_group in %s" % filters["item_group"]
+		conditions += " and pli.item_group in '%s'" % filters["item_group"]
 	
 	if filters.get("item_code"):
 		conditions += " and pli.item_code = '%s'" % filters["item_code"]

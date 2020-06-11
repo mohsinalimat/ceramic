@@ -31,7 +31,7 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"label": __("Item Group"),
 			"fieldtype": "MultiSelectList",
 			"get_data": function(text){
-				if (!frappe.query_report.item_group) return;
+				//if (!frappe.query_report.item_group) return;
 				return frappe.db.get_link_options('Item Group',text)
 			},
 			"change": function(){

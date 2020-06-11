@@ -91,6 +91,7 @@ def before_update_after_submit(self, method):
 	# check_qty_rate(self)
 	update_discounted_net_total(self)
 	# check_rate_qty(self)
+	self.calculate_taxes_and_totals()
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)
