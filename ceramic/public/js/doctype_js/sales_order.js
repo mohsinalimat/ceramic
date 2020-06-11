@@ -538,6 +538,7 @@ frappe.ui.form.on('Sales Order', {
 		}
 	},
 	customer: function (frm) {
+		frm.set_value("primary_customer",'')
 		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
 		    frm.set_value("primary_customer", r.message.primary_customer)
 		})
