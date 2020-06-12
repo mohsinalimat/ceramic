@@ -242,7 +242,7 @@ frappe.ui.form.on('Delivery Note', {
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
 			total_real_qty += flt(d.real_qty);
-			d.wastage_qty = flt(d.picked_qty - d.qty)
+			//d.wastage_qty = flt(d.picked_qty - d.qty)
 		});
 
 		frm.set_value("total_qty", total_qty);

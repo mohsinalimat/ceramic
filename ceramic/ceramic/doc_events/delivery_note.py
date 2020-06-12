@@ -33,9 +33,13 @@ def validate(self, method):
 
 def validate_item_from_so(self):
 	for row in self.items:
-		so_item = frappe.db.get_value("Sales Order Item",row.so_detail,"item_code")
-		if row.item_code != so_item:
-			frappe.throw(_(f"Row: {row.idx}: Not allowed to change item {frappe.bold(row.item_code)}."))
+		if frappe.db.exists("Sales Order Item",row.so_detail):
+			so_item = frappe.db.get_value("Sales Order Item",row.so_detail,"item_code")
+			if row.item_code != so_item:
+				frappe.throw(_(f"Row: {row.idx}: Not allowed to change item {frappe.bold(row.item_code)}."))
+		else:
+			frappe.throw(_(f"Row: {row.idx}: Sales Order reference Not found against item {frappe.bold(row.item_code)}, please delivery note again"))
+
 
 def validate_item_from_picklist(self):
 	for row in self.items:

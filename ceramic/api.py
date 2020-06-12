@@ -488,14 +488,17 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 
 	picked_item = frappe.db.sql(f"""
 		SELECT pli.date, pli.customer, pli.sales_order, pli.sales_order_item, pl.name as pick_list, pli.name as pick_list_item, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
-		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date < '{to_date}'
+		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date <= '{to_date}'
 		HAVING remaining_qty > 0
 	""", as_dict = 1)
 	
 	for item in picked_item:
 		url = get_url_to_form("Sales Order", item.sales_order)
 		sales_order_link = "<a href='{url}'>{name}</a>".format(url=url, name=item.sales_order)
+		pickurl = get_url_to_form("Pick List", item.pick_list)
+		pick_list_link = "<a href='{pickurl}'>{name}</a>".format(pickurl=pickurl, name=item.pick_list)		
 		item.sales_order_link = sales_order_link
+		item.pick_list_link = pick_list_link
 		item.bal_qty = bal_qty
 		item.total_picked_qty = total_picked_qty
 		item.total_remaining_qty = total_remaining_qty
@@ -626,5 +629,21 @@ def update_po():
 		
 		if per_billed >= 100:
 			po_doc.db_set('status', 'Completed')
+	
+	frappe.db.commit()
+
+# console patches
+def update_so_wastage_qty():
+	sales_order_item_list = frappe.get_list("Sales Order Item", {'docstatus': 1})
+
+	for i in sales_order_item_list:
+		doc = frappe.get_doc("Sales Order Item", i.name)
+
+		wastage_qty, picked_qty = frappe.db.get_value("Pick List Item", {'docstatus': 1, 'sales_order_item': i.name}, ['sum(wastage_qty)', 'sum(qty)'])
+
+		if wastage_qty or picked_qty:
+			print(doc.parent)
+			doc.db_set('wastage_qty', wastage_qty or 0.0, update_modified = False)
+			doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
 	
 	frappe.db.commit()

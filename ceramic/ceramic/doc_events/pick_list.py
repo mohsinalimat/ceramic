@@ -74,7 +74,9 @@ def check_item_qty(self):
 def validate_item_qty(self):
 	for row in self.locations:
 		if row.qty < flt(row.delivered_qty + row.wastage_qty):
-			frappe.throw(f"Row {row.idx}: Qty can not be Less than delivered qty")
+			frappe.throw(f"Row {row.idx}: Qty can not be Less than delivered qty {flt(row.delivered_qty + row.wastage_qty)}")
+		if row.qty > row.so_qty:
+			frappe.throw(f"Row {row.idx}: Qty can not be greater than sales order qty {row.so_qty}")
 
 def remove_items_without_batch_no(self):
 	if self.locations:
@@ -419,6 +421,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 	
 	return pick_list_list
 from ceramic.ceramic.doc_events.sales_order import update_picked_percent
+
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None):
 	if pick_list_item and pick_list:

@@ -14,7 +14,6 @@ def execute(filters=None):
 	float_precision = cint(frappe.db.get_default("float_precision")) or 3
 
 	columns = get_columns(filters)
-	item_map = get_item_details(filters)
 	item_pick_map = get_picked_qty(filters,float_precision)
 	iwb_map = get_item_warehouse_batch_map(filters, float_precision)
 	conditions = ''
@@ -234,12 +233,6 @@ def get_item_warehouse_batch_map(filters, float_precision):
 		qty_dict.image = d.image
 	return iwb_map
 
-
-def get_item_details(filters):
-	item_map = {}
-	for d in frappe.db.sql("select name, item_group, item_name, description, stock_uom from tabItem", as_dict=1):
-		item_map.setdefault(d.name, d)
-	return item_map
 
 def get_picked_qty(filters,float_precision):
 	picked = get_picked_items(filters)
