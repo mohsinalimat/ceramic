@@ -20,7 +20,6 @@ cur_frm.set_query("customer_address", function () {
 });
 erpnext.utils.update_child_items = function (opts) {
 	const frm = opts.frm;
-	// console.log(opts)
 	const cannot_add_row = (typeof opts.cannot_add_row === 'undefined') ? true : opts.cannot_add_row;
 	const child_docname = (typeof opts.cannot_add_row === 'undefined') ? "items" : opts.child_docname;
 	this.data = [];
@@ -543,31 +542,33 @@ frappe.ui.form.on('Sales Order', {
 		}
 	},
 	customer: function (frm) {
-		frm.set_value("primary_customer",'')
-		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
-		    frm.set_value("primary_customer", r.message.primary_customer)
-		})
-		if (!frm.doc.primary_customer){
-			setTimeout(function () { 
-				frm.doc.sales_team = []
-				frappe.model.with_doc("Customer", frm.doc.customer, function () {
-					var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
-					$.each(cus_doc.sales_team, function (index, row) {
-						let st = frm.add_child("sales_team");
-						st.sales_person = row.sales_person
-						st.contact_no = row.contact_no
-						st.allocated_percentage = row.allocated_percentage
-						st.allocated_amount = row.allocated_amount
-						st.commission_rate = row.commission_rate
-						st.incentives = row.incentives
-						st.company = row.company
-						st.regional_sales_manager = row.regional_sales_manager
-						st.sales_manager = row.sales_manager
-					})
+		if (frm.doc.customer){
+			frm.set_value("primary_customer",'')
+			frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+				frm.set_value("primary_customer", r.message.primary_customer)
+			})
+			if (!frm.doc.primary_customer){
+				setTimeout(function () { 
+					frm.doc.sales_team = []
+					frappe.model.with_doc("Customer", frm.doc.customer, function () {
+						var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
+						$.each(cus_doc.sales_team, function (index, row) {
+							let st = frm.add_child("sales_team");
+							st.sales_person = row.sales_person
+							st.contact_no = row.contact_no
+							st.allocated_percentage = row.allocated_percentage
+							st.allocated_amount = row.allocated_amount
+							st.commission_rate = row.commission_rate
+							st.incentives = row.incentives
+							st.company = row.company
+							st.regional_sales_manager = row.regional_sales_manager
+							st.sales_manager = row.sales_manager
+						})
 
-					frm.refresh_field("sales_team");
-				});
-			}, 1000);
+						frm.refresh_field("sales_team");
+					});
+				}, 1000);
+			}
 		}
 	},
 	primary_customer: function (frm) {
@@ -607,7 +608,6 @@ frappe.ui.form.on('Sales Order', {
 					'date': frm.doc.transaction_date,
 				},
 				callback: function (e) {
-					console.log(e.message)
 					frm.set_value("series_value", e.message);
 				}
 			});
