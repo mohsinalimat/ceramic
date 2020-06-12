@@ -60,38 +60,61 @@ class ReceivablePayableReport(object):
 		data = self.data
 		self.data = []
 
+		covered_vouchers = []
+		uncovered_voucher = []
+
 		for row in data:
-			if row.company != self.filters.company or (row.company == self.filters.company and not row.reference_doc):
-				if row.company != self.filters.company:
-					row.billed_amount = row.invoiced
-					row.bank_paid = row.paid
-					row.bank_outstanding = row.outstanding
-					
-						
+			if row.company != self.filters.company:
+				row.billed_amount = row.invoiced
+				row.bank_paid = row.paid
+				row.bank_outstanding = row.outstanding
 
-					if row.reference_doc:
-						row_data = self.data_map[row.reference_doc][row.party]
+				if row.reference_doc:
 					
-						row.invoiced = row_data.invoiced
-						row.paid = row_data.paid
-						row.outstanding = row_data.outstanding
-					else:
-						row.invoiced = 0
-						row.paid = 0
-						row.outstanding = 0
-					
-					row.cash_amount = flt(row.amount) - flt(row.billed_amount)
-					row.cash_paid = flt(row.paid) - flt(row.bank_paid)
-					row.cash_outstanding = flt(row.outstanding) - flt(row.bank_outstanding)						
+					row_data = self.data_map[row.reference_doc][row.party]
+				
+					row.invoiced = row_data.invoiced
+					row.paid = row_data.paid
+					row.outstanding = row_data.outstanding
+					covered_vouchers.append(row.reference_doc)
 				else:
-					row.cash_amount = row.invoiced
-					row.cash_paid = row.paid
-					row.cash_outstanding = row.outstanding
+					row.invoiced = 0
+					row.paid = 0
+					row.outstanding = 0
+				
+				row.cash_amount = flt(row.invoiced) - flt(row.billed_amount)
+				row.cash_paid = flt(row.paid) - flt(row.bank_paid)
+				row.cash_outstanding = flt(row.outstanding) - flt(row.bank_outstanding)
 
-					row.billed_amount = 0
-					row.bank_paid = 0
-					row.bank_outstanding = 0
+				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
+					self.data.append(row)
+			elif row.company == self.filters.company and not row.reference_doc:
+				row.cash_amount = row.invoiced
+				row.cash_paid = row.paid
+				row.cash_outstanding = row.outstanding
+
+				row.billed_amount = 0
+				row.bank_paid = 0
+				row.bank_outstanding = 0
+				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
+					self.data.append(row)
+			else:
+				uncovered_voucher.append(row.voucher_no)
+
+		for item in self.difference(uncovered_voucher, covered_vouchers):
+			rows = self.data_map[item]
+			for key, row in rows.items():
+				row.cash_amount = row.invoiced
+				row.cash_paid = row.paid
+				row.cash_outstanding = row.outstanding
+
+				row.billed_amount = 0
+				row.bank_paid = 0
+				row.bank_outstanding = 0
 				self.data.append(row)
+		
+	def difference(self, lst1, lst2): 
+		return (list(set(lst1) - set(lst2))) 
 
 	def set_defaults(self):
 		if not self.filters.get("company"):
@@ -112,6 +135,7 @@ class ReceivablePayableReport(object):
 	def get_data(self):
 		self.get_gl_entries()
 		self.get_sales_invoices_or_customers_based_on_sales_person()
+		self.get_sales_invoices_or_customers_based_on_regional_sales_manager()
 		self.voucher_balance = OrderedDict()
 		self.init_voucher_balance() # invoiced, paid, credit_note, outstanding
 
@@ -165,11 +189,20 @@ class ReceivablePayableReport(object):
 
 	def get_invoices(self, gle):
 		if gle.voucher_type in ('Sales Invoice', 'Purchase Invoice'):
+			flag = False
 			if self.filters.get("sales_person"):
 				if gle.voucher_no in self.sales_person_records.get("Sales Invoice", []) \
 					or gle.party in self.sales_person_records.get("Customer", []):
 						self.invoices.add(gle.voucher_no)
-			else:
+						flag = True
+			
+			if self.filters.get("regional_sales_manager"):
+				if gle.voucher_no in self.regional_sales_manager_records.get("Sales Invoice", []) \
+					or gle.party in self.regional_sales_manager_records.get("Customer", []):
+						self.invoices.add(gle.voucher_no)
+						flag = True
+
+			if flag == False:
 				self.invoices.add(gle.voucher_no)
 
 	def init_subtotal_row(self, party):
@@ -227,6 +260,12 @@ class ReceivablePayableReport(object):
 			against_voucher = gle.against_voucher or gle.voucher_no
 			if not (gle.party in self.sales_person_records.get("Customer", []) or \
 				against_voucher in self.sales_person_records.get("Sales Invoice", [])):
+					return
+		
+		if self.filters.get("regional_sales_manager"):
+			against_voucher = gle.against_voucher or gle.voucher_no
+			if not (gle.party in self.regional_sales_manager_records.get("Customer", []) or \
+				against_voucher in self.regional_sales_manager_records.get("Sales Invoice", [])):
 					return
 
 		voucher_balance = None
@@ -619,7 +658,7 @@ class ReceivablePayableReport(object):
 		self.gl_entries = frappe.db.sql("""
 			select
 				gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, gle.voucher_type, gle.voucher_no,
-				gle.against_voucher_type, gle.against_voucher, gle.account_currency, gle.remarks, gle.company, {0},
+				gle.against_voucher_type, gle.against_voucher, gle.account_currency, IFNULL(pe.reference_no, gle.remarks) as remarks, gle.company, {0},
 				IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 				IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc, IFNULL(si.vehicle_no, pi.vehicle_no) as vehicle_no
 			from
@@ -651,6 +690,22 @@ class ReceivablePayableReport(object):
 			self.sales_person_records = frappe._dict()
 			for d in records:
 				self.sales_person_records.setdefault(d.parenttype, set()).add(d.parent)
+	# FinByz Changes
+	def get_sales_invoices_or_customers_based_on_regional_sales_manager(self):
+		if self.filters.get("regional_sales_manager"):
+			lft, rgt = frappe.db.get_value("Sales Person",
+				self.filters.get("regional_sales_manager"), ["lft", "rgt"])
+
+			records = frappe.db.sql("""
+				select distinct parent, parenttype
+				from `tabSales Team` steam
+				where parenttype in ('Customer', 'Sales Invoice')
+					and exists(select name from `tabSales Person` where lft >= %s and rgt <= %s and name = steam.regional_sales_manager)
+			""", (lft, rgt), as_dict=1)
+
+			self.regional_sales_manager_records = frappe._dict()
+			for d in records:
+				self.regional_sales_manager_records.setdefault(d.parenttype, set()).add(d.parent)
 
 	def prepare_conditions(self):
 		conditions = [""]
@@ -670,9 +725,9 @@ class ReceivablePayableReport(object):
 
 	def get_order_by_condition(self):
 		if self.filters.get('group_by_party'):
-			return "order by party, posting_date"
+			return "order by gle.party, gle.posting_date"
 		else:
-			return "order by posting_date, party"
+			return "order by gle.posting_date, gle.party"
 
 	def add_common_filters(self, conditions, values, party_type_field):
 		if self.filters.company:
@@ -684,7 +739,7 @@ class ReceivablePayableReport(object):
 			values.append(self.filters.finance_book)
 
 		if self.filters.get(party_type_field):
-			conditions.append("party=%s")
+			conditions.append("gle.party=%s")
 			values.append(self.filters.get(party_type_field))
 	
 
