@@ -487,7 +487,7 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
 
 	picked_item = frappe.db.sql(f"""
-		SELECT pli.date, pli.customer, pli.sales_order, pli.sales_order_item, pl.name as pick_list, pli.name as pick_list_item, pli.item_code, pli.item_name, pli.qty as picked_qty, pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
+		SELECT pli.date, pli.customer, pli.sales_order, pli.sales_order_item, pl.name as pick_list, pli.name as pick_list_item, pli.item_code, pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty, pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date <= '{to_date}'
 		HAVING remaining_qty > 0
 	""", as_dict = 1)
