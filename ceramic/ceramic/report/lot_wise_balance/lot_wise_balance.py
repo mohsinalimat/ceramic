@@ -173,13 +173,16 @@ def get_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and i.item_group = '%s'" % filters["item_group"]
+		group_placeholder = ', '.join(f"'{i}'" for i in filters["item_group"])
+		conditions += " and i.item_group in (%s)" % group_placeholder
 	
 	if filters.get("item_code"):
-		conditions += " and sle.item_code = '%s'" % filters["item_code"]
+		item_placeholder= ', '.join(f"'{i}'" for i in filters["item_code"])
+		conditions += " and sle.item_code in (%s)" % item_placeholder
 	
 	if filters.get("tile_quality"):
-		conditions += " and i.tile_quality = '%s'" % filters["tile_quality"]
+		tile_quality_placeholder = ', '.join(f"'{i}'" for i in filters["tile_quality"])
+		conditions += " and i.tile_quality in (%s)" % tile_quality_placeholder
 	
 	if filters.get("company"):
 		conditions += " and sle.company = '%s'" % filters["company"]
@@ -266,13 +269,16 @@ def get_picked_conditions(filters):
 		frappe.throw(_("'To Date' is required"))
 	
 	if filters.get("item_group"):
-		conditions += " and pli.item_group = '%s'" % filters["item_group"]
+		group_placeholder= ', '.join(f"'{i}'" for i in filters["item_group"])
+		conditions += " and pli.item_group in (%s)" % group_placeholder
 	
 	if filters.get("item_code"):
-		conditions += " and pli.item_code = '%s'" % filters["item_code"]
+		item_placeholder= ', '.join(f"'{i}'" for i in filters["item_code"])
+		conditions += " and pli.item_code in (%s)" % item_placeholder
 	
 	if filters.get("tile_quality"):
-		conditions += " and i.tile_quality = '%s'" % filters["tile_quality"]
+		tile_quality_placeholder = ', '.join(f"'{i}'" for i in filters["tile_quality"])
+		conditions += " and i.tile_quality in (%s)" % tile_quality_placeholder
 	
 	if filters.get("company"):
 		conditions += " and pl.company = '%s'" % filters["company"]

@@ -41,15 +41,27 @@ frappe.query_reports["Lot-Wise Balance"] = {
 		{
 			"fieldname":"tile_quality",
 			"label": __("Tile Qulaity"),
-			"fieldtype": "Link",
-			"options": "Tile Quality",
+			"fieldtype": "MultiSelectList",
+			"get_data": function(text){
+				//if (!frappe.query_report.item_group) return;
+				return frappe.db.get_link_options('Tile Quality',text)
+			},
+			"change": function(){
+				frappe.query_report.refresh();
+			}
 		},
 		{
 			"fieldname":"item_code",
 			"label": __("Item Code"),
-			"fieldtype": "Link",
-			"options": "Item",
-			get_query: function() {
+			"fieldtype": "MultiSelectList",
+			"get_data": function(text){
+				//if (!frappe.query_report.item_group) return;
+				return frappe.db.get_link_options('Item',text)
+			},
+			"change": function(){
+				frappe.query_report.refresh();
+			},
+			"get_query": function() {
 				var item_group = frappe.query_report.get_filter_value('item_group')
 				if (item_group){
 					return {
