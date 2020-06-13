@@ -95,7 +95,7 @@ def before_update_after_submit(self, method):
 
 def on_update_after_submit(self, method):
 	update_picked_percent(self)
-	checking_rate(self)
+	#checking_rate(self)
 	
 def on_cancel(self, method):
 	remove_pick_list(self)
@@ -136,7 +136,7 @@ def checking_rate(self):
 	if self.workflow_state == 'Approved':
 		for row in self.items:
 			if not row.rate:
-				frappe.throw(_(f"Row {row.idx}: Rate cannot be 0."))
+				frappe.throw(_(f"Row {row.idx}: {row.item_code} Rate cannot be 0 in Approved Sales Order {self.name}."))
 
 	# 	if not row.discounted_rate and row.real_qty:
 	# 		flag = True

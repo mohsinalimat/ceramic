@@ -3,7 +3,8 @@
 		"public/css/restricted.css"
 	],
 	"js/ceramic.min.js": [
-		"public/js/restrict_access.js",
-		"public/js/control.js"
+		// "public/js/restrict_access.js",
+		// "public/js/control.js"
+		"public/js/restrict_access.js"
 	]
 }
