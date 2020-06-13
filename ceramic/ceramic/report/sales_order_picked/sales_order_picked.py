@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.utils import flt
 
 def execute(filters=None):
 	columns, data = [], []
@@ -39,6 +40,32 @@ def get_conditions(filters):
 
 	return conditions
 
+def get_pick_conditions(filters):
+	conditions = ""
+
+	#conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed', 'To Bill')"
+
+	if filters.get('company'):
+		conditions += " AND pl.company = '%s'" % filters.get('company')
+
+	if filters.get('sales_order'):
+		conditions += " AND pli.sales_order = '%s'" % filters.get('sales_order')
+
+
+	if filters.get('item_code'):
+		conditions += " AND pli.item_code = '%s'" % filters.get('item_code')
+
+	if filters.get('from_date'):
+		conditions += " AND pl.posting_date >= '%s'" % filters.get('from_date')
+	
+	if filters.get('to_date'):
+		conditions += " AND pl.posting_date <= '%s'" % filters.get('to_date')
+	
+	if filters.get('item_group'):
+		conditions += "AND pli.item_group = '%s'" % filters.get('item_group')
+
+	return conditions
+
 
 def get_data(filters):
 
@@ -49,7 +76,8 @@ def get_data(filters):
 			so.name as sales_order, so.transaction_date, so.customer, \
 				soi.item_code, soi.qty, soi.picked_qty as picked_total, soi.delivered_qty as delivered, (soi.qty - soi.delivered_qty) as pending,\
 				(soi.picked_qty - soi.delivered_qty - soi.wastage_qty) as picked_total, ((soi.qty- soi.delivered_qty) - (soi.picked_qty - soi.delivered_qty)) as to_pick, soi.base_rate, soi.base_amount, soi.name as sales_order_item, soi.item_group, \
-				pni.name as plr_name, pni.parent as pick_list, pni.lot_no as picked_lot_no, pni.warehouse as picked_warehouse, pl.posting_date, (pni.qty -pni.delivered_qty - pni.wastage_qty) as picked_qty
+				pni.name as plr_name, pni.parent as pick_list, pni.lot_no as picked_lot_no, pni.warehouse as picked_warehouse, pl.posting_date, (pni.qty -pni.delivered_qty - pni.wastage_qty) as picked_qty,
+				pni.batch_no, pni.warehouse
 		FROM 
 			`tabSales Order Item` as soi 
 		JOIN 
@@ -66,7 +94,33 @@ def get_data(filters):
 			so.transaction_date, so.name, soi.name
 		""" % conditions, as_dict = True)
 
+	picked_qty_data = frappe.db.sql(f"""
+		SELECT pli.item_code, pli.batch_no, pli.warehouse, sum(pli.qty - (pli.wastage_qty + pli.delivered_qty)) as pickedqty
+		FROM `tabPick List Item` as pli
+		JOIN `tabPick List` as pl on pli.parent = pl.name 
+		JOIN `tabItem` as i on i.item_code = pli.item_code
+		WHERE pl.docstatus = 1 {get_pick_conditions(filters)}
+		GROUP BY pli.item_code, pli.batch_no, pli.warehouse
+	""", as_dict=1)
+
+	picked_map = {}
+	for d in picked_qty_data:
+		picked_map[(d.item_code, d.batch_no, d.warehouse)] = d.pickedqty
+	
+	actual_qty_data = frappe.db.sql(f"""
+		SELECT sle.item_code, sle.warehouse, sle.batch_no, sum(actual_qty) as actual_qty
+		from `tabStock Ledger Entry` as sle
+		WHERE sle.company = '{filters.company}'
+		group by item_code, batch_no, warehouse
+	""", as_dict = 1)
+
+	actual_qty_map = {}
+	for d in actual_qty_data:
+		actual_qty_map[(d.item_code, d.batch_no, d.warehouse)] = d.actual_qty
+
 	for idx in reversed(range(0, len(data))):
+		data[idx].picked_qty = picked_map.get((data[idx].item_code, data[idx].batch_no, data[idx].warehouse)) or 0
+		data[idx].available_qty = (actual_qty_map.get((data[idx].item_code, data[idx].batch_no, data[idx].warehouse)) or 0) - data[idx].picked_qty
 		if idx != 0:
 			if data[idx].sales_order == data[idx-1].sales_order:
 				#data[idx].sales_order = None
@@ -86,6 +140,7 @@ def get_data(filters):
 	# 	idx = insert_pick_list(data, row, idx + 1)
 
 	return data
+
 
 
 def get_columns():
@@ -155,6 +210,18 @@ def get_columns():
 			"width": 80
 		},	
 		{
+			"fieldname": "picked_qty",
+			"label": _("Picked Qtyk"),
+			"fieldtype": "Float",
+			"width": 80
+		},	
+		{
+			"fieldname": "available_qty",
+			"label": _("Available Qty"),
+			"fieldtype": "Float",
+			"width": 80
+		},	
+		{
 			"fieldname": "pick_list",
 			"label": _("Pick List"),
 			"fieldtype": "Link",
@@ -189,6 +256,12 @@ def get_columns():
 		{
 			"fieldname": "plr_name",
 			"label": _("Picked Row"),
+			"fieldtype": "data",
+			"width": 80
+		},
+		{
+			"fieldname": "batch_no",
+			"label": _("Batch No"),
 			"fieldtype": "data",
 			"width": 80
 		}		
