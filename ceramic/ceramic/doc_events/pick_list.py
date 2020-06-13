@@ -92,9 +92,11 @@ def update_delivered_percent(self):
 			delivered_qty += item.delivered_qty
 
 			item.db_set('idx', index + 1)
-	
-		self.db_set('per_delivered', (delivered_qty / qty) * 100)
 
+		try:
+			self.db_set('per_delivered', (delivered_qty / qty) * 100)
+		except:
+			self.db_set('per_delivered', 0)
 
 def update_available_qty(self):
 	self.available_qty = []
