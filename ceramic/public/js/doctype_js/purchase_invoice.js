@@ -22,7 +22,7 @@ this.frm.cscript.onload = function (frm) {
 frappe.ui.form.on('Purchase Invoice', {
 	refresh: function(frm){
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
-			frm.set_value("ref_invoice", "");
+			frm.set_value("pi_ref", null);
 		}
 		if (cur_frm.doc.company){
 			frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {
@@ -51,7 +51,17 @@ frappe.ui.form.on('Purchase Invoice', {
 	company: function(frm){
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
+			frm.trigger('set_cost_center');
 		}
+	},
+	set_cost_center: function (frm) {
+		frappe.db.get_value("Company", frm.doc.company, 'cost_center', function (r) {
+			if (r.cost_center) {
+				frm.doc.items.forEach(function (d) {
+					frappe.model.set_value(d.doctype,d.name,'cost_center',r.cost_center)
+				})
+			}
+		})
 	},
 	company_series: function(frm){
 		if (frm.doc.__islocal){
