@@ -394,11 +394,27 @@ def calculate_order_item_priority():
 
 @frappe.whitelist()
 def change_customer(customer,doc):
+	from erpnext.accounts.party import get_party_details
+
 	so = frappe.get_doc("Sales Order",doc)
 	so.db_set('customer',customer)
 	so.db_set('title',customer)
 	so.db_set('customer_name',frappe.db.get_value("Customer",customer,'customer_name'))
 	so.db_set('order_priority',frappe.db.get_value("Customer",customer,'customer_priority'))
+	
+	data = get_party_details(customer,"Customer")
+	
+	so.db_set('customer_address',data['customer_address'])
+	so.db_set('address_display',data['address_display'])
+	so.db_set('shipping_address_name',data['shipping_address_name'])
+	so.db_set('shipping_address',data['shipping_address'])
+	so.db_set('contact_person',data['contact_person'])
+	so.db_set('contact_display',data['contact_display'])
+	so.db_set('contact_email',data['contact_email'])
+	so.db_set('contact_mobile',data['contact_mobile'])
+	so.db_set('contact_phone',data['contact_phone'])
+	so.db_set('customer_group',data['customer_group'])
+
 	return "Customer changed successfully"
 
 def get_sales_team_detail(self):

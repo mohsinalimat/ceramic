@@ -121,9 +121,7 @@ def update_work_order(self):
 
 @frappe.whitelist()
 def get_product_price(item_code):
-	frappe.msgprint(str(item_code))
 	item_group = frappe.db.get_value("Item", item_code,'item_group')
-	frappe.msgprint(str(item_group))
 	rate = frappe.db.get_value("Item Group",item_group,'production_price')
 	if not rate:
 		frappe.throw(_("Price not found for item <b>{}</b> in item group <b>{}/b>").format(item_code,item_group))

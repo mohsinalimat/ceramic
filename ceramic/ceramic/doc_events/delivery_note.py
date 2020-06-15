@@ -314,7 +314,8 @@ def create_invoice(source_name, target_doc=None):
 				"batch_no",
 				"lot_no",
 				"discounted_rate",
-				"real_qty"
+				"real_qty",
+				"authority"
 			],
 			"postprocess": update_item,
 			"condition": lambda doc: abs(doc.real_qty) > 0 and abs(doc.discounted_rate) != 0,

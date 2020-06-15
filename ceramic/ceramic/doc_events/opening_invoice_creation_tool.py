@@ -68,6 +68,7 @@ def make_invoices(self):
 				doc2.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
 				doc2.company = alternate_company
 				doc2.is_opening = 'Yes'
+				doc2.authority = frappe.get_value("Company", doc2.company, "authority")
 				if self.invoice_type == 'Sales':
 					doc2.append('accounts', {
 						'account': frappe.get_value("Company", doc2.company, 'default_receivable_account'),
@@ -118,6 +119,7 @@ def make_invoices(self):
 			args['company'] = frappe.db.get_value("Company", self.company, 'alternate_company')
 			doc = frappe.get_doc(args).insert()
 			doc.primary_customer = row.primary_customer
+			doc.authority = frappe.get_value("Company", doc.company, "authority")
 			for item in doc.items:
 				item.rate = flt(row.full_amount) / flt(item.qty)
 				item.cost_center = item.cost_center.replace(source_abbr, target_abbr)
@@ -143,6 +145,7 @@ def make_invoices(self):
 			doc.sales_partner = row.sales_partner if self.invoice_type == 'Sales' else None
 			doc.company = self.company
 			doc.is_opening = 'Yes'
+			doc.authority = frappe.get_value("Company", doc.company, "authority")
 			if self.invoice_type == 'Sales':
 				doc.append('accounts', {
 					'account': frappe.get_value("Company", doc.company, 'default_receivable_account'),
@@ -190,6 +193,7 @@ def make_invoices(self):
 			doc.primary_customer = row.primary_customer
 			doc.company = alternate_company
 			doc.is_opening = 'Yes'
+			doc.authority = frappe.get_value("Company", doc.company, "authority")
 			if self.invoice_type == 'Sales':
 				doc.append('accounts', {
 					'account': frappe.get_value("Company", doc.company, 'default_receivable_account'),
