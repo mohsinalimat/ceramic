@@ -183,19 +183,14 @@ def before_naming(self, method):
 
 # Cancel Invoice on Cancel
 def cancel_main_purchase_invoice(self):
+	pi = None
 	if self.pi_ref:
 		pi = frappe.get_doc("Purchase Invoice", {'pi_ref':self.name})
-	else:
-		pi = None
 	
 	if pi:
+		pi.flags.ignore_permissions = True
 		if pi.docstatus == 1:
-			pi.flags.ignore_permissions = True
-			try:
-				pi.cancel()
-			except Exception as e:
-				frappe.db.rollback()
-				frappe.throw(e)
+			pi.cancel()
 
 
 def delete_purchase_invoice(self):

@@ -87,9 +87,11 @@ def before_submit(self, method):
 
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
+			wastage_qty = item.wastage_qty + sales_order_item.wastage_qty
 			delivered_real_qty = item.real_qty + sales_order_item.delivered_real_qty
 
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
+			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 		
 		if item.pl_detail:
 			pick_list_batch_no = frappe.db.get_value("Pick List Item", item.pl_detail, 'batch_no')
@@ -152,8 +154,9 @@ def on_cancel(self, method):
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			delivered_real_qty = sales_order_item.delivered_real_qty - item.real_qty
-
+			wastage_qty = sales_order_item.wastage_qty - item.wastage_qty
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
+			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			
 	update_status_pick_list(self)
 	cancel_wastage_entry(self)
@@ -188,6 +191,7 @@ def create_invoice(source_name, target_doc=None):
 
 		if alternate_company:
 			target.company = alternate_company
+			target.authority = frappe.db.get_value("Company",alternate_company,'authority')
 
 		if len(target.get("items")) == 0:
 			frappe.throw(_(f"You can not create invoice in company {target.company}"))

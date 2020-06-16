@@ -41,20 +41,32 @@ def get_columns():
 			"width": 120
 		},
 		{
+			"fieldname": "delivered_qty",
+			"label": _("Delivered Qty"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
+			"fieldname": "pending_qty",
+			"label": _("Pending Qty"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
+			"fieldname": "to_pick",
+			"label": _("To Pick Qty"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
+			"fieldname": "picked_total",
+			"label": _("Picked Total"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
 			"fieldname": "actual_qty",
 			"label": _("Actual Qty"),
-			"fieldtype": "Float",
-			"width": 120
-		},
-		{
-			"fieldname": "picked_qty",
-			"label": _("Picked Qty"),
-			"fieldtype": "Float",
-			"width": 120
-		},
-		{
-			"fieldname": "to_picked_qty",
-			"label": _("TO Picked Qty"),
 			"fieldtype": "Float",
 			"width": 120
 		},
@@ -73,14 +85,17 @@ def get_data(filters):
 
 	data = frappe.db.sql(f"""
 		SELECT
-			soi.`item_code`, soi.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, 
-			SUM(soi.`picked_qty`) as `picked_qty`, SUM(soi.`qty`) - SUM(soi.`picked_qty`) as `to_picked_qty`
+			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, soi.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
+			SUM(soi.picked_qty - soi.delivered_qty - soi.wastage_qty) as picked_total, SUM(soi.qty - soi.picked_qty) as to_pick,
+			SUM(soi.`picked_qty`) as `picked_qty`
 		FROM
 			`tabSales Order Item` as soi JOIN
 			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1 JOIN
 			`tabItem` as i on i.`name` = soi.`item_code`
 		WHERE
 			{conditions}
+			AND so.docstatus = 1
+			AND soi.`qty` != soi.delivered_qty
 		GROUP BY
 			soi.`item_code`
 	""", as_dict = True)
@@ -97,7 +112,7 @@ def get_data(filters):
 		""")
 
 		item['actual_qty'] = actual_qty[0][0] or 0.0
-		item['to_manufacture'] = item['to_picked_qty'] - item['actual_qty'] if item['to_picked_qty'] > item['actual_qty'] else 0
+		item['to_manufacture'] = item['to_pick'] - item['actual_qty'] if item['to_pick'] > item['actual_qty'] else 0
 
 	return data
 

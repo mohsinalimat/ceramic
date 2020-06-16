@@ -428,56 +428,65 @@ from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None):
 	if pick_list_item and pick_list:
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
+		diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
+		doc.db_set('qty', doc.qty - diff_qty)
 
-		if doc.delivered_qty:
+		if diff_qty == 0:
 			frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
 		picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-		frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', ((picked_qty or 0)- (doc.qty or 0)))
+		frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', (flt(picked_qty)- flt(diff_qty)))
 		
-		doc.cancel()
-		doc.delete()
+		if not doc.delivered_qty and not doc.wastage_qty:
+			doc.cancel()
+			doc.delete()
 
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+		update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
 		return "Pick List to this Sales Order Have Been Deleted."
 	elif sales_order and sales_order_item:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'delivered_qty': 0, 'wastage_qty': 0}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item}, ['name'])
 		
 		for pl in data:
+			
 			doc = frappe.get_doc("Pick List Item", pl.name)
-
-			if doc.delivered_qty:
-				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
+			diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
+			doc.db_set('qty', doc.qty - diff_qty)
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))
+			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 			
-			if doc.docstatus == 1:
-				doc.cancel()
-			doc.delete()
+			if not doc.delivered_qty and not doc.wastage_qty:
+				if doc.docstatus == 1:
+					doc.cancel()
+				doc.delete()
+			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
-		frappe.db.set_value("Sales Order Item", sales_order_item, 'picked_qty', 0)
+			update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
+		
 		return "Pick List to this Sales Order Have Been Deleted."
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'delivered_qty': 0, 'wastage_qty': 0}, ['name'])
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
-
-			if doc.delivered_qty:
-				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
+			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
+			doc.db_set('qty', doc.qty - diff_qty)
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(doc.qty))
+			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 
-			if doc.docstatus == 1:
-				doc.cancel()
-			
-			doc.delete()
+			if not doc.delivered_qty:
+				if doc.docstatus == 1:
+					doc.cancel()
+				
+				doc.delete()
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+		
 		update_picked_percent(frappe.get_doc("Sales Order", sales_order))
 		return "Pick List to this Sales Order Have Been Deleted."
+
 
 @frappe.whitelist()
 def get_items(filters):

@@ -191,6 +191,7 @@ def update_picked_percent(self):
 			qty += item.qty
 
 	self.db_set('per_picked', (picked_qty / qty) * 100)
+	self.db_set('total_picked_qty', flt(picked_qty))
 
 def update_idx(self):
 	for idx, item in enumerate(self.items):

@@ -633,6 +633,7 @@ def update_po():
 	frappe.db.commit()
 
 # console patches
+from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 def update_so_wastage_qty():
 	sales_order_item_list = frappe.get_list("Sales Order Item", {'docstatus': 1})
 
@@ -643,7 +644,9 @@ def update_so_wastage_qty():
 
 		if wastage_qty or picked_qty:
 			print(doc.parent)
-			doc.db_set('wastage_qty', wastage_qty or 0.0, update_modified = False)
-			doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
+			if wastage_qty != doc.wastage_qty:
+				doc.db_set('wastage_qty', wastage_qty or 0.0, update_modified = False)
+			if picked_qty != doc.picked_qty:
+				doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
 	
 	frappe.db.commit()

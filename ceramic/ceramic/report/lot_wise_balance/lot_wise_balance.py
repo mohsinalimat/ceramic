@@ -179,11 +179,19 @@ def get_conditions(filters):
 	if filters.get("item_code"):
 		item_placeholder= ', '.join(f"'{i}'" for i in filters["item_code"])
 		conditions += " and sle.item_code in (%s)" % item_placeholder
+
+	if filters.get("not_in_item_code"):
+		not_in_item_placeholder= ', '.join(f"'{i}'" for i in filters["not_in_item_code"])
+		conditions += " and sle.item_code not in (%s)" % not_in_item_placeholder
 	
 	if filters.get("tile_quality"):
 		tile_quality_placeholder = ', '.join(f"'{i}'" for i in filters["tile_quality"])
 		conditions += " and i.tile_quality in (%s)" % tile_quality_placeholder
 	
+	if filters.get("packing_type"):
+		packing_type_placeholder = ', '.join(f"'{i}'" for i in filters["packing_type"])
+		conditions += " and batch.packing_type in (%s)" % packing_type_placeholder
+
 	if filters.get("company"):
 		conditions += " and sle.company = '%s'" % filters["company"]
 
@@ -275,6 +283,11 @@ def get_picked_conditions(filters):
 	if filters.get("item_code"):
 		item_placeholder= ', '.join(f"'{i}'" for i in filters["item_code"])
 		conditions += " and pli.item_code in (%s)" % item_placeholder
+	
+	if filters.get("not_in_item_code"):
+		not_in_item_placeholder= ', '.join(f"'{i}'" for i in filters["not_in_item_code"])
+		conditions += " and pli.item_code not in (%s)" % not_in_item_placeholder
+	
 	
 	if filters.get("tile_quality"):
 		tile_quality_placeholder = ', '.join(f"'{i}'" for i in filters["tile_quality"])
