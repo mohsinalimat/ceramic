@@ -20,10 +20,11 @@ erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
-from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices
+from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices, get_opening_invoice_summary
 from ceramic.override_default_class_method import get_transactions
 NamingSeries.get_transactions = get_transactions
 OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
+OpeningInvoiceCreationTool.get_opening_invoice_summary = get_opening_invoice_summary
 OpeningInvoiceCreationTool.make_invoices = make_invoices
 
 # # override default class method
@@ -148,7 +149,7 @@ doctype_list_js = {"Pick List" : "public/js/doctype_js/pick_list_list.js"}
 
 scheduler_events = {
 	"daily": [
-		"ceramic.ceramic.doc_events.sales_order.calculate_order_item_priority"
+		"ceramic.ceramic.doc_events.sales_order.shedule_so"
 	]
 }
 
@@ -160,9 +161,9 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "ceramic.event.get_events"
-# }
+override_whitelisted_methods = {
+	"frappe.desk.notifications.get_open_count": "ceramic.api.get_open_count",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

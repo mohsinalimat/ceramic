@@ -3,6 +3,50 @@ from frappe import _
 from frappe.utils import flt,nowdate
 from frappe import _, scrub
 
+def get_opening_invoice_summary(self):
+	def prepare_invoice_summary(doctype, invoices):
+		# add company wise sales / purchase invoice summary
+		paid_amount = []
+		outstanding_amount = []
+		for invoice in invoices:
+			company = invoice.pop("company")
+			_summary = invoices_summary.get(company, {})
+			_summary.update({
+				"currency": company_wise_currency.get(company),
+				doctype: invoice
+			})
+			invoices_summary.update({company: _summary})
+
+			if invoice.paid_amount:
+				paid_amount.append(invoice.paid_amount)
+			if invoice.outstanding_amount:
+				outstanding_amount.append(invoice.outstanding_amount)
+
+		if paid_amount or outstanding_amount:
+			max_count.update({
+				doctype: {
+					"max_paid": max(paid_amount) if paid_amount else 0.0,
+					"max_due": max(outstanding_amount) if outstanding_amount else 0.0
+				}
+			})
+
+	invoices_summary = {}
+	max_count = {}
+	fields = [
+		"company", "count(name) as total_invoices", "sum(outstanding_amount) as outstanding_amount"
+	]
+	companies = frappe.get_all("Company", fields=["name as company", "default_currency as currency"])
+	if not companies:
+		return None, None
+
+	company_wise_currency = {row.company: row.currency for row in companies}
+	for doctype in ["Sales Invoice", "Purchase Invoice"]:
+		invoices = frappe.get_list(doctype, filters=dict(is_opening="Yes", docstatus=1),
+			fields=fields, group_by="company")
+		prepare_invoice_summary(doctype, invoices)
+
+	return invoices_summary, max_count
+
 
 def make_invoices(self):
 	names = []

@@ -42,6 +42,11 @@ frappe.query_reports["Production Planning Summary"] = {
 					}
 				}
 			}
+		},
+		{
+			fieldname:"order_priority",
+			label: __("Order Priority"),
+			fieldtype: "Int",
 		}
 	]
 };

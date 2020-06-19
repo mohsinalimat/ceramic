@@ -98,30 +98,44 @@ def get_data(filters):
 		JOIN `tabPick List` as pl on pli.parent = pl.name 
 		JOIN `tabItem` as i on i.item_code = pli.item_code
 		WHERE pl.docstatus = 1 AND pli.qty != (pli.delivered_qty + pli.wastage_qty) {get_pick_conditions(filters)}
-		GROUP BY pli.item_code, pli.batch_no, pli.warehouse
+		GROUP BY pli.item_code, pli.batch_no
 	""", as_dict=1)
 
 	# so_item = []
 	picked_map = {}
+	picked_item_map = {}
 	for d in picked_qty_data:
 		# so_item.append(d.sales_order_item)
-		picked_map[(d.item_code, d.batch_no, d.warehouse)] = d.pickedqty
+		picked_map[(d.item_code, d.batch_no)] = d.pickedqty
+		if not picked_item_map.get(d.item_code):
+			picked_item_map[d.item_code] = d.pickedqty
+		else:
+			picked_item_map[d.item_code] += d.pickedqty
 	# so_item = list(set(so_item))
 	
 	actual_qty_data = frappe.db.sql(f"""
 		SELECT sle.item_code, sle.warehouse, sle.batch_no, sum(actual_qty) as actual_qty
 		from `tabStock Ledger Entry` as sle
 		WHERE sle.company = '{filters.company}'
-		group by item_code, batch_no, warehouse
+		group by item_code, batch_no
 	""", as_dict = 1)
 
 	actual_qty_map = {}
+	actual_item_qty_map = {}
 	for d in actual_qty_data:
-		actual_qty_map[(d.item_code, d.batch_no, d.warehouse)] = d.actual_qty
+		actual_qty_map[(d.item_code, d.batch_no)] = d.actual_qty
+		if not actual_item_qty_map.get(d.item_code):
+			actual_item_qty_map[d.item_code] = d.actual_qty
+		else:
+			actual_item_qty_map[d.item_code] += d.actual_qty
 	for idx in reversed(range(0, len(data))):
-		data[idx].picked_qty = picked_map.get((data[idx].item_code, data[idx].batch_no, data[idx].warehouse)) or 0
-		data[idx].available_qty = (actual_qty_map.get((data[idx].item_code, data[idx].batch_no, data[idx].warehouse)) or 0) - data[idx].picked_qty
-		
+		data[idx].picked_qty_PL = picked_map.get((data[idx].item_code, data[idx].batch_no)) or 0
+		data[idx].available_qty = (actual_qty_map.get((data[idx].item_code, data[idx].batch_no)) or 0) - data[idx].picked_qty_PL
+		data[idx].balance_qty = data[idx].picked_qty_PL + data[idx].available_qty
+
+		data[idx].item_picked_qty_PL = picked_item_map.get((data[idx].item_code)) or 0
+		data[idx].item_available_qty = (actual_item_qty_map.get((data[idx].item_code)) or 0) - data[idx].item_picked_qty_PL
+		data[idx].item_balance_qty = data[idx].item_picked_qty_PL + data[idx].item_available_qty
 		# if data[idx].sales_order_item in so_item:
 			# frappe.msgprint(data[idx].sales_order_item)
 			# so_item.remove(data[idx].sales_order_item)
@@ -235,18 +249,18 @@ def get_columns():
 			"fieldtype": "Data",
 			"width": 80
 		},
-		{
-			"fieldname": "posting_date",
-			"label": _("Picked Date"),
-			"fieldtype": "Date",
-			"width": 90
-		},
-		{
-			"fieldname": "plr_name",
-			"label": _("Picked Row"),
-			"fieldtype": "data",
-			"width": 80
-		},
+		# {
+		# 	"fieldname": "posting_date",
+		# 	"label": _("Picked Date"),
+		# 	"fieldtype": "Date",
+		# 	"width": 90
+		# },
+		# {
+		# 	"fieldname": "plr_name",
+		# 	"label": _("Picked Row"),
+		# 	"fieldtype": "data",
+		# 	"width": 80
+		# },
 		{
 			"fieldname": "batch_no",
 			"label": _("Batch No"),
@@ -259,6 +273,24 @@ def get_columns():
 			"fieldtype": "Float",
 			"width": 80
 		},
+		{
+			"fieldname": "item_balance_qty",
+			"label": _("Item Balance Qty"),
+			"fieldtype": "Float",
+			"width": 80
+		},	
+		{
+			"fieldname": "item_picked_qty_PL",
+			"label": _("Item Picked Qty"),
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"fieldname": "item_available_qty",
+			"label": _("Item Available Qty"),
+			"fieldtype": "Float",
+			"width": 80
+		},	
 		{
 			"fieldname": "balance_qty",
 			"label": _("Balance Qty"),

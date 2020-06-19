@@ -337,7 +337,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 	for item in item_codes:
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
-				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date,
+				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type,
 				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
@@ -425,21 +425,31 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 
 @frappe.whitelist()
-def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None):
+def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):
 	if pick_list_item and pick_list:
+		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
-		diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
-		doc.db_set('qty', doc.qty - diff_qty)
+		if not unpick_qty:
+			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
+			doc.db_set('qty', doc.qty - diff_qty)
 
-		if diff_qty == 0:
-			frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
+			if diff_qty == 0:
+				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
-		picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-		frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', (flt(picked_qty)- flt(diff_qty)))
+			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', (flt(picked_qty)- flt(diff_qty)))
 		
-		if not doc.delivered_qty and not doc.wastage_qty:
-			doc.cancel()
-			doc.delete()
+			if not doc.delivered_qty and not doc.wastage_qty:
+				doc.cancel()
+				doc.delete()
+		else:
+			if unpick_qty > doc.qty - doc.wastage_qty - doc.delivered_qty:
+				frappe.throw(f"You can not unpick qty {unpick_qty} higher than remaining pick qty { doc.qty - doc.wastage_qty - doc.delivered_qty }")
+			else:
+				doc.db_set('qty', doc.qty - unpick_qty)
+
+				soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
+				soi_doc.db_set('picked_qty', soi_doc.picked_qty - unpick_qty)
 
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
@@ -456,10 +466,11 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
 			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 			
-			if not doc.delivered_qty and not doc.wastage_qty:
-				if doc.docstatus == 1:
-					doc.cancel()
-				doc.delete()
+			if not unpick_qty:
+				if not doc.delivered_qty and not doc.wastage_qty:
+					if doc.docstatus == 1:
+						doc.cancel()
+					doc.delete()
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 			update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
@@ -476,11 +487,12 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
 			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 
-			if not doc.delivered_qty:
-				if doc.docstatus == 1:
-					doc.cancel()
-				
-				doc.delete()
+			if not unpick_qty:
+				if not doc.delivered_qty:
+					if doc.docstatus == 1:
+						doc.cancel()
+					
+					doc.delete()
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		

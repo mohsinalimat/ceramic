@@ -60,15 +60,15 @@ def create_main_purchase_invoice(self):
 
 			doc = frappe.get_doc("Company", target_company)
 
-			target_doc.income_account = doc.default_income_account
-			target_doc.expense_account = doc.default_expense_account
-			target_doc.cost_center = doc.cost_center
-
-			if source_doc.warehouse:
-				target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
-			
-			if source_doc.rejected_warehouse:
-				target_doc.rejected_warehouse = source_doc.rejected_warehouse.replace(source_company_abbr, target_company_abbr)
+			# target_doc.income_account = doc.default_income_account
+			# if source_doc.income_account:
+			# 	target_doc.income_account = source_doc.income_account.replace(source_company_abbr, target_company_abbr)
+			if source_doc.expense_account:
+				target_doc.expense_account = source_doc.expense_account.replace(source_company_abbr, target_company_abbr)
+			if source_doc.deferred_expense_account:
+				target_doc.deferred_expense_account = source_doc.deferred_expense_account.replace(source_company_abbr, target_company_abbr)
+			if source_doc.cost_center:
+				target_doc.cost_center = source_doc.cost_center.replace(source_company_abbr, target_company_abbr)
 
 		fields = {
 			"Purchase Invoice": {

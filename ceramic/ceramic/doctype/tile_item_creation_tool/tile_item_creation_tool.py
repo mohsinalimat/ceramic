@@ -28,6 +28,7 @@ class TileItemCreationTool(Document):
 			tile_item.db_set('cover_image',self.cover_image)
 			tile_item.db_set('image',self.image)
 			tile_item.db_set('disabled',self.disabled)
+			tile_item.db_set('punch_no',self.punch_no)
 				
 			if self.item_defaults:
 				item = frappe.get_doc("Item", {'item_name': tile.item_name})
@@ -112,6 +113,7 @@ class TileItemCreationTool(Document):
 				item.tile_shape = self.tile_shape
 				item.tile_price = self.tile_price
 				item.tile_thickness = self.tile_thickness
+				item.punch_no = self.punch_no
 				item.tile_anti_slip_properties = self.tile_anti_slip_properties
 				item.tile_quality = tile.tile_quality
 				item.cover_image = self.cover_image
@@ -168,6 +170,7 @@ class TileItemCreationTool(Document):
 			item.tile_color = self.tile_color
 			item.tile_shape = self.tile_shape
 			item.tile_price = self.tile_price
+			item.punch_no = self.punch_no
 			item.tile_thickness = self.tile_thickness
 			item.authority = "Authorized"
 			item.tile_anti_slip_properties = self.tile_anti_slip_properties

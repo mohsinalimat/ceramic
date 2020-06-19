@@ -66,7 +66,9 @@ def make_purchase_invoice(source_name, target_doc=None):
 			target.set_warehouse = source.set_warehouse.replace(source_company_abbr, target_company_abbr)
 		
 		if source.taxes_and_charges:
-			target.taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+			taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
+			if frappe.db.exists("Purchase Taxes and Charges", taxes_and_charges):
+				target.taxes_and_charges = taxes_and_charges
 		target.taxes = source.taxes
 		if source.taxes:
 			for index, value in enumerate(source.taxes):
@@ -74,7 +76,7 @@ def make_purchase_invoice(source_name, target_doc=None):
 				# frappe.throw(source_company_abbr + target_company_abbr)
 				if source.taxes[index].cost_center:
 					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
-		
+		target.credit_to = frappe.db.get_value("Company", alternate_company, 'default_payable_account')
 		doc.run_method("calculate_taxes_and_totals")
 
 	def update_item(source_doc, target_doc, source_parent):

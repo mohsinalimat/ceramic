@@ -109,7 +109,6 @@ frappe.ui.form.on('Pick List', {
 			callback: function(r){
 				if (r.message){
 
-					console.log(r.message)
 					r.message.forEach(function(item, index){
 						var d = frm.add_child('picked_sales_orders')
 						frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
@@ -154,7 +153,6 @@ frappe.ui.form.on('Pick List', {
 			},
 			callback: function(r){
 				if (r.message){
-					// console.log(r.message)
 					r.message.forEach(function(item, index){
 						if ((item.qty - item.picked_qty) > 0.0){
 							var d = frm.add_child('locations')
@@ -170,6 +168,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
 							frappe.model.set_value(d.doctype, d.name, 'so_real_qty', item.real_qty);
+							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 						}
 					});
 					frm.refresh_field('locations');
@@ -207,7 +206,6 @@ frappe.ui.form.on('Pick List', {
 			},
 			callback: function(r){
 				if (r.message){
-					// console.log(r.message)
 					r.message.forEach(function(item, index){
 						let d = frm.add_child('available_qty')
 						frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
@@ -301,7 +299,7 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, warehouse: d.warehouse, packaging_type: d.packaging_type});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, warehouse: d.warehouse, packaging_type: d.packing_type});
 	},
 });
 
@@ -321,7 +319,8 @@ frappe.ui.form.on('Picked Sales Orders', {
 				'sales_order': d.sales_order,
 				'sales_order_item': d.sales_order_item,
 				'pick_list': d.pick_list,
-				'pick_list_item': d.pick_list_item
+				'pick_list_item': d.pick_list_item,
+				'unpick_qty': d.unpick_qty || 0
 			},
 			callback: function(r){
 				frm.events.get_item_qty(frm);
@@ -363,7 +362,6 @@ frappe.ui.keys.add_shortcut({
 	shortcut: 'ctrl+m',
     action: function(e){ 
 		e.preventDefault();
-		console.log("ctrl+DOWN_ARROW called")
 		cur_dialog.cancel();
 		const current_doc = $('.data-row.editable-row').parent().attr("data-name");
 		var d = locals["Pick List Item"][current_doc];

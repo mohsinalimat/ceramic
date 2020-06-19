@@ -27,6 +27,7 @@
   "sales_order_item",
   "pick_list",
   "pick_list_item",
+  "unpick_qty",
   "unpick_item"
  ],
  "fields": [
@@ -46,6 +47,7 @@
    "read_only": 1
   },
   {
+   "columns": 1,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -187,10 +189,18 @@
    "fieldtype": "Date",
    "label": "Delivery Date",
    "read_only": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "fieldname": "unpick_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Unpick Qty"
   }
  ],
  "istable": 1,
- "modified": "2020-05-13 17:33:01.457340",
+ "modified": "2020-06-18 15:56:54.737799",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Picked Sales Orders",

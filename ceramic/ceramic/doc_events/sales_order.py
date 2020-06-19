@@ -121,6 +121,9 @@ def calculate_order_priority(self):
 			days = ((datetime.date.today() - self.transaction_date) // datetime.timedelta(days = 1)) + 15
 		days = 1 if days <= 0 else days
 		item.order_item_priority = round(math.log(days, 1.1) * cint(self.order_priority))
+	
+	if self.items[0]:
+		self.order_item_priority = self.items[0].order_item_priority
 
 def update_discounted_amount(self):
 	for item in self.items:
@@ -373,6 +376,10 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 	target_doc = get_mapped_doc("Sales Order", source_name, mapper, target_doc, set_missing_values)
 	return target_doc
 
+def shedule_so():
+	calculate_order_item_priority()
+	calculate_order_item_priority_so()
+
 @frappe.whitelist()
 def calculate_order_item_priority():
 	data = frappe.db.sql(f"""
@@ -389,7 +396,30 @@ def calculate_order_item_priority():
 		days = ((datetime.date.today() - soi.transaction_date) // datetime.timedelta(1)) + 15
 		order_item_priority = round(math.log(days, 1.1) * cint(soi.order_priority))
 
-		frappe.db.set_value("Sales Order Item", soi.name, 'order_item_priority', order_item_priority)
+		frappe.db.set_value("Sales Order Item", soi.name, 'order_item_priority', order_item_priority, update_modified = True)
+
+	frappe.db.commit()
+
+@frappe.whitelist()
+def calculate_order_item_priority_so():
+	data = frappe.db.sql(f"""
+		SELECT
+			so.name as so_name From `tabSales Order` as so
+		WHERE
+			so.`per_delivered` < 100 AND
+			so.`docstatus` = 1
+	""", as_dict = 1)
+
+	for soi in data:
+		doc = frappe.get_doc("Sales Order", soi.so_name)
+		doc.db_set('order_item_priority', doc.items[0].order_item_priority, update_modified = False)
+
+	priority = frappe.db.sql("""
+		select name, row_number() over(order by order_item_priority desc, transaction_date desc) as rank from `tabSales Order` WHERE docstatus = 1 and status not in ('Closed', 'Stoped', 'Completed', 'Hold') and per_delivered < 100 order by order_item_priority desc;
+	""", as_dict = True)
+
+	for item in priority:
+		frappe.db.set_value("Sales Order", item.name, 'order_rank', item.rank, update_modified = False)
 
 	frappe.db.commit()
 

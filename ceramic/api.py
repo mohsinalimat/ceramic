@@ -7,6 +7,7 @@ from frappe.utils import getdate
 from erpnext.accounts.utils import get_fiscal_year
 from frappe.desk.notifications import get_filters_for
 from frappe.utils import get_url_to_form
+import json
 
 check_sub_string = lambda string, sub_string: not string.find(sub_string) == -1
 
@@ -650,3 +651,4 @@ def update_so_wastage_qty():
 				doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
 	
 	frappe.db.commit()
+

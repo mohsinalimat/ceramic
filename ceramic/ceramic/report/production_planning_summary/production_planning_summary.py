@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import today
+from frappe.utils import today, cint
 
 def execute(filters=None):
 	columns, data = [], []
@@ -112,7 +112,7 @@ def get_data(filters):
 		""")
 
 		item['actual_qty'] = actual_qty[0][0] or 0.0
-		item['to_manufacture'] = item['to_pick'] - item['actual_qty'] if item['to_pick'] > item['actual_qty'] else 0
+		item['to_manufacture'] = item['pending_qty'] - item['actual_qty'] if item['pending_qty'] > item['actual_qty'] else 0
 
 	return data
 
@@ -126,6 +126,9 @@ def get_conditions(filters):
 	
 	if filters.get('item_code'):
 		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
+	
+	if filters.get('order_priority'):
+		conditions += f" AND soi.`order_item_priority` >= '{cint(filters.get('order_priority'))}'"
 	
 	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
 	

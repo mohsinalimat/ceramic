@@ -209,7 +209,7 @@ frappe.ui.form.on('Delivery Note', {
 		});
 	},
 	naming_series: function(frm) {
-		if (frm.doc.company && !frm.doc.amended_from){
+		if (frm.doc.company && !frm.doc.amended_from && frm.doc.__islocal){
 			frappe.call({
 				method: "ceramic.api.check_counter_series",
 				args: {

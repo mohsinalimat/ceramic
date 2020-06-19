@@ -11,6 +11,7 @@ ItemSelector = Class.extend({
 	
 	make_dialog: function(){
 		let me = this;
+		console.log(me.packaging_type)
 		this.data = [];
 
 		let fields = 
@@ -170,8 +171,6 @@ ItemSelector = Class.extend({
 				'filters': filters,
 			},
 			callback: function(r){
-				// me.dialog.set_value('item_locations', )
-				// console.log(r.message)
 				item_locations.grid.df.data = []
 				r.message.forEach(value => {
 					me.frm.doc.available_qty.forEach(element => {
@@ -407,7 +406,7 @@ ItemSelector = Class.extend({
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order', sales_order);
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order_item', sales_order_item);
 			frappe.model.set_value(locations.doctype, locations.name, 'batch_no', d.batch_no);
-			frappe.model.set_value(locations.doctype, locations.name, 'packaging_type', d.packaging_type);
+			frappe.model.set_value(locations.doctype, locations.name, 'packing_type', d.packing_type);
 		})
 
 		me.frm.doc.locations.forEach(function(d, idx){

@@ -4,6 +4,21 @@ from frappe.utils import flt, cint
 import json
 from erpnext.controllers.accounts_controller import set_sales_order_defaults, set_purchase_order_defaults, check_and_delete_children
 
+def update_delivered_percent(self):
+	qty = 0
+	delivered_qty = 0
+	if self.locations:
+		for index, item in enumerate(self.locations):
+			qty += item.qty
+			delivered_qty += item.delivered_qty
+
+			item.db_set('idx', index + 1)
+
+		try:
+			self.db_set('per_delivered', (delivered_qty / qty) * 100)
+		except:
+			self.db_set('per_delivered', 0)
+
 @frappe.whitelist()
 def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, child_docname="items"):
 	data = json.loads(trans_items)
@@ -23,7 +38,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 				child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 		else:
 			child_item = frappe.get_doc(parent_doctype + ' Item', d.get("docname"))
-			if child_item.item_code == d.get("item_code") and flt(child_item.get("rate")) == flt(d.get("rate")) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
+			if child_item.item_code == d.get("item_code") and (not d.get("rate") or flt(child_item.get("rate")) == flt(d.get("rate"))) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
 				continue
 
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.delivered_qty):
@@ -41,8 +56,13 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if parent_doctype == "Sales Order" and d.get("item_code") != child_item.item_code and child_item.delivered_qty:
 			frappe.throw(_("Cannot change item as delivery note is already made"))
 
-		if parent_doctype == "Sales Order" and (flt(d.get("rate")) != child_item.rate or flt(d.get("discounted_rate")) != child_item.discounted_rate) and child_item.delivered_qty:
-			frappe.throw(_("Cannot change rate as delivery note is already made"))
+		if parent_doctype == "Sales Order" and (d.get("rate") or d.get("discounted_rate")):
+			if (
+				(d.get("rate") and flt(d.get("rate")) != child_item.rate and child_item.delivered_qty)
+				or 
+				(d.get("discounted_rate") and (flt(d.get("discounted_rate")) != child_item.discounted_rate) and child_item.delivered_qty)
+			):
+				frappe.throw(_("Cannot change rate as delivery note is already made"))
 		
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) != flt(child_item.qty) and child_item.delivered_qty:
 			frappe.throw(_("Cannot change qty as delivery note is already made"))
@@ -51,7 +71,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		child_item.real_qty = flt(d.get("real_qty"))
 		precision = child_item.precision("rate") or 2
 		
-		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) or d.get("item_code") != child_item.item_code):
+		if parent_doctype == "Sales Order" and d.get("item_code") != child_item.item_code:
 			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}):
 				pl = frappe.get_doc("Pick List Item", picked_item.name)
 
@@ -60,7 +80,28 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			
 			child_item.picked_qty = 0
 			frappe.msgprint(_(f"All Pick List For Item {child_item.item_code} has been deleted."))
-
+		
+		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) and d.get("item_code") == child_item.item_code):
+			diff_qty = pq = flt(child_item.picked_qty) - flt(d.get("qty"))
+			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}, order_by = 'qty'):
+				if not diff_qty:
+					break
+				pl = frappe.get_doc("Pick List Item", picked_item.name)
+				if diff_qty >= pl.qty:
+					diff_qty = diff_qty - pl.qty
+					pl.db_set('qty', 0)
+				else:
+					pl.db_set('qty', pl.qty - diff_qty)
+					diff_qty = 0
+				
+				update_delivered_percent(frappe.get_doc("Pick List", pl.parent))
+				
+			child_item.picked_qty = child_item.picked_qty - pq
+		
+		if not flt(d.get('rate')):
+			d['rate'] = child_item.rate
+		if not flt(d.get('discounted_rate')):
+			d['discounted_rate'] = child_item.discounted_rate
 		if flt(child_item.billed_amt, precision) > flt(flt(d.get("rate")) * flt(d.get("qty")), precision):
 			frappe.throw(_("Row #{0}: Cannot set Rate if amount is greater than billed amount for Item {1}.")
 						 .format(child_item.idx, child_item.item_code))
@@ -103,7 +144,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 	parent.reload()
 	parent.flags.ignore_validate_update_after_submit = True
-	parent.flags.ignore_permission = True
+	parent.flags.ignore_permissions = True
 	parent.set_qty_as_per_stock_uom()
 	parent.calculate_taxes_and_totals()
 	if parent_doctype == "Sales Order":
