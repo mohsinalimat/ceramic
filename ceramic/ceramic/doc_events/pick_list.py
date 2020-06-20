@@ -478,7 +478,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 		return "Pick List to this Sales Order Have Been Deleted."
 	else:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'delivered_qty': 0, 'wastage_qty': 0}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order}, ['name'])
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
@@ -489,7 +489,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 
 			if not unpick_qty:
-				if not doc.delivered_qty:
+				if not doc.delivered_qty and not doc.wastage_qty:
 					if doc.docstatus == 1:
 						doc.cancel()
 					

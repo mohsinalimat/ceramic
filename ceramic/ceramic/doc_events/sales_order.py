@@ -270,7 +270,8 @@ def make_pick_list(source_name, target_doc=None):
 		target.customer = source_parent.customer
 		target.date = source_parent.transaction_date
 		target.delivery_date = source.delivery_date
-		target.so_picked_percent = source.per_picked
+		target.so_picked_percent = source_parent.per_picked
+		target.warehouse = None
 
 	doc = get_mapped_doc('Sales Order', source_name, {
 		'Sales Order': {
@@ -299,84 +300,83 @@ def make_pick_list(source_name, target_doc=None):
 
 @frappe.whitelist()
 def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
-    frappe.throw("hahahha")
-	# def set_missing_values(source, target):
-	# 	target.ignore_pricing_rule = 1
-	# 	target.run_method("set_missing_values")
-	# 	target.run_method("set_po_nos")
-	# 	target.run_method("calculate_taxes_and_totals")
+	def set_missing_values(source, target):
+		target.ignore_pricing_rule = 1
+		target.run_method("set_missing_values")
+		target.run_method("set_po_nos")
+		target.run_method("calculate_taxes_and_totals")
 
-	# 	if source.company_address:
-	# 		target.update({'company_address': source.company_address})
-	# 	else:
-	# 		# set company address
-	# 		target.update(get_company_address(target.company))
+		if source.company_address:
+			target.update({'company_address': source.company_address})
+		else:
+			# set company address
+			target.update(get_company_address(target.company))
 
-	# 	if target.company_address:
-	# 		target.update(get_fetch_values("Delivery Note", 'company_address', target.company_address))
+		if target.company_address:
+			target.update(get_fetch_values("Delivery Note", 'company_address', target.company_address))
 
-	# def update_item(source, target, source_parent):
-	# 	for i in source.items:
-	# 		if frappe.db.get_value("Item", i.item_code, 'is_stock_item'):
-	# 			real_delivered_qty = i.real_qty - i.delivered_real_qty
-	# 			for j in frappe.get_all("Pick List Item", filters={"sales_order": source.name, "sales_order_item": i.name, "docstatus": 1}):
-	# 				pick_doc = frappe.get_doc("Pick List Item", j.name)
+	def update_item(source, target, source_parent):
+		for i in source.items:
+			if frappe.db.get_value("Item", i.item_code, 'is_stock_item'):
+				real_delivered_qty = i.real_qty - i.delivered_real_qty
+				for j in frappe.get_all("Pick List Item", filters={"sales_order": source.name, "sales_order_item": i.name, "docstatus": 1}):
+					pick_doc = frappe.get_doc("Pick List Item", j.name)
 					
-	# 				if real_delivered_qty <= 0:
-	# 					real_delivered_qty = 0
+					if real_delivered_qty <= 0:
+						real_delivered_qty = 0
 					
-	# 				if pick_doc.qty - pick_doc.delivered_qty:
-	# 					target.append('items',{
-	# 						'item_code': pick_doc.item_code,
-	# 						'qty': pick_doc.qty - pick_doc.delivered_qty,
-	# 						'real_qty': real_delivered_qty,
-	# 						'rate': i.rate,
-	# 						'discounted_rate': i.discounted_rate,
-	# 						'against_sales_order': source.name,
-	# 						'so_detail': i.name,
-	# 						'against_pick_list': pick_doc.parent,
-	# 						'pl_detail': pick_doc.name,
-	# 						'warehouse': pick_doc.warehouse,
-	# 						'batch_no': pick_doc.batch_no,
-	# 						'lot_no': pick_doc.lot_no,
-	# 						'item_series': i.item_series,
-	# 						'picked_qty': pick_doc.qty - pick_doc.delivered_qty
-	# 					})
+					if pick_doc.qty - pick_doc.delivered_qty:
+						target.append('items',{
+							'item_code': pick_doc.item_code,
+							'qty': pick_doc.qty - pick_doc.delivered_qty,
+							'real_qty': real_delivered_qty,
+							'rate': i.rate,
+							'discounted_rate': i.discounted_rate,
+							'against_sales_order': source.name,
+							'so_detail': i.name,
+							'against_pick_list': pick_doc.parent,
+							'pl_detail': pick_doc.name,
+							'warehouse': pick_doc.warehouse,
+							'batch_no': pick_doc.batch_no,
+							'lot_no': pick_doc.lot_no,
+							'item_series': i.item_series,
+							'picked_qty': pick_doc.qty - pick_doc.delivered_qty
+						})
 
-	# 					real_delivered_qty = 0
-	# 		else:
-	# 			target.append('items',{
-	# 				'item_code': i.item_code,
-	# 				'qty': i.qty,
-	# 				'real_qty': i.qty,
-	# 				'rate': i.rate,
-	# 				'discounted_rate': i.discounted_rate,
-	# 				'against_sales_order': source.name,
-	# 				'so_detail': i.name,
-	# 				'warehouse': i.warehouse,
-	# 				'item_series': i.item_series
-	# 			})
+						real_delivered_qty = 0
+			else:
+				target.append('items',{
+					'item_code': i.item_code,
+					'qty': i.qty,
+					'real_qty': i.qty,
+					'rate': i.rate,
+					'discounted_rate': i.discounted_rate,
+					'against_sales_order': source.name,
+					'so_detail': i.name,
+					'warehouse': i.warehouse,
+					'item_series': i.item_series
+				})
 
-	# mapper = {
-	# 	"Sales Order": {
-	# 		"doctype": "Delivery Note",
-	# 		"validation": {
-	# 			"docstatus": ["=", 1]
-	# 		},
-	# 		"postprocess": update_item
-	# 	},
-	# 	"Sales Taxes and Charges": {
-	# 		"doctype": "Sales Taxes and Charges",
-	# 		"add_if_empty": True
-	# 	},
-	# 	"Sales Team": {
-	# 		"doctype": "Sales Team",
-	# 		"add_if_empty": True
-	# 	}
-	# }
+	mapper = {
+		"Sales Order": {
+			"doctype": "Delivery Note",
+			"validation": {
+				"docstatus": ["=", 1]
+			},
+			"postprocess": update_item
+		},
+		"Sales Taxes and Charges": {
+			"doctype": "Sales Taxes and Charges",
+			"add_if_empty": True
+		},
+		"Sales Team": {
+			"doctype": "Sales Team",
+			"add_if_empty": True
+		}
+	}
 
-	# target_doc = get_mapped_doc("Sales Order", source_name, mapper, target_doc, set_missing_values)
-	# return target_doc
+	target_doc = get_mapped_doc("Sales Order", source_name, mapper, target_doc, set_missing_values)
+	return target_doc
 
 def shedule_so():
 	calculate_order_item_priority()
