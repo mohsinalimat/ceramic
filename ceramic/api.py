@@ -633,6 +633,10 @@ def update_po():
 	
 	frappe.db.commit()
 
+@frappe.whitelist()
+def test():
+    return "hello"
+
 # console patches
 from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 def update_so_wastage_qty():

@@ -152,6 +152,7 @@ this.frm.cscript.onload = function (frm) {
 				query: "ceramic.query.get_batch_no",
 				filters: {
 					'item_code': d.item_code,
+					'company': doc.company,
 					'warehouse': d.warehouse
 				}
 			}
@@ -167,6 +168,17 @@ this.frm.cscript.onload = function (frm) {
 				['is_sales_item', '=', 1],
 				['authority', 'in', ['', doc.authority]]
 			]
+		}
+	});
+	this.frm.set_query("warehouse", "items", function (doc, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		console.log('tese')
+		return {
+			query: "ceramic.query.get_warehouse",
+			filters: {
+				'batch_no': d.batch_no,
+				'item_code': d.item_code
+			}
 		}
 	});
 	this.frm.set_query("customer", function (doc) {

@@ -174,11 +174,11 @@ ItemSelector = Class.extend({
 				item_locations.grid.df.data = []
 				r.message.forEach(value => {
 					me.frm.doc.available_qty.forEach(element => {
-						if (value.batch_no == element.batch_no && value.warehouse == element.warehouse){
+						if (value.batch_no == element.batch_no){
 							value.available_qty = value.available_qty - (element.picked_in_current || 0)
 						}
 					});
-					if (me.batch_no && value.batch_no == me.batch_no && value.warehouse == me.warehouse){
+					if (me.batch_no && value.batch_no == me.batch_no){
 						value.available_qty = value.available_qty + me.qty
 					}
 					value.to_pick_qty = Math.min(me.dialog.fields_dict.remaining_to_pick.value, value.available_qty)
@@ -214,15 +214,6 @@ ItemSelector = Class.extend({
 						'fieldtype': 'Data',
 						'fieldname': 'item_name',
 						'read_only': 1,
-					},
-					{
-						'label': 'Warehouse',
-						'fieldtype': 'Link',
-						'fieldname': 'warehouse',
-						'options': 'Warehouse',
-						'read_only': 1,
-						'in_list_view': 1,
-						'columns': 2,
 					},
 					{
 						'label': 'Batch No',
@@ -398,7 +389,6 @@ ItemSelector = Class.extend({
 			frappe.model.set_value(locations.doctype, locations.name, 'so_real_qty', me.values.so_real_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'delivery_date', me.delivery_date);
 			frappe.model.set_value(locations.doctype, locations.name, 'date', me.date);
-			frappe.model.set_value(locations.doctype, locations.name, 'warehouse', d.warehouse);
 			frappe.model.set_value(locations.doctype, locations.name, 'qty', d.to_pick_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'picked_qty', me.picked_qty || 0);
 			frappe.model.set_value(locations.doctype, locations.name, 'available_qty', d.available_qty);

@@ -20,19 +20,6 @@ frappe.ui.form.on('Pick List', {
 				}
 			}
 		});
-		frm.set_query("warehouse", "locations", function (doc, cdt, cdn) {
-			let d = locals[cdt][cdn];
-			if (!frm.doc.company) {
-				frappe.msgprint(__("Please select Item Code"));
-			}
-			else {
-				return {
-					filters: {
-						'company': frm.doc.company
-					}
-				}
-			}
-		});
 		frm.set_query("batch_no", "locations", function (doc, cdt, cdn) {
 			let d = locals[cdt][cdn];
 			if (!d.item_code) {
@@ -43,7 +30,6 @@ frappe.ui.form.on('Pick List', {
 					query: "ceramic.query.get_batch_no",
 					filters: {
 						'item_code': d.item_code,
-						'warehouse': d.warehouse,
 						'company': frm.doc.company
 					}
 				}
@@ -112,7 +98,6 @@ frappe.ui.form.on('Pick List', {
 					r.message.forEach(function(item, index){
 						var d = frm.add_child('picked_sales_orders')
 						frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
-						frappe.model.set_value(d.doctype, d.name, 'warehouse', item.warehouse);
 						frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
 						frappe.model.set_value(d.doctype, d.name, 'lot_no', item.lot_no);
 						frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
@@ -159,7 +144,6 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.qty)
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
-							frappe.model.set_value(d.doctype, d.name, 'warehouse', frm.doc.warehouse);
 							frappe.model.set_value(d.doctype, d.name, 'date', item.transaction_date);
 							frappe.model.set_value(d.doctype, d.name, 'delivery_date', item.delivery_date);
 							frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
@@ -209,7 +193,6 @@ frappe.ui.form.on('Pick List', {
 					r.message.forEach(function(item, index){
 						let d = frm.add_child('available_qty')
 						frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
-						frappe.model.set_value(d.doctype, d.name, 'warehouse', item.warehouse);
 						frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
 						frappe.model.set_value(d.doctype, d.name, 'lot_no', item.lot_no);
 						frappe.model.set_value(d.doctype, d.name, 'total_qty', item.total_qty);
@@ -234,7 +217,7 @@ frappe.ui.form.on('Pick List', {
 		frm.doc.available_qty.forEach(function(item, index){
 			let qty = 0;
 			(frm.doc.locations || []).forEach(function(value, key){
-				if (value.item_code == item.item_code && value.batch_no == item.batch_no && value.warehouse === item.warehouse){
+				if (value.item_code == item.item_code && value.batch_no == item.batch_no){
 					qty += value.qty;
 				}
 			});
@@ -247,16 +230,10 @@ frappe.ui.form.on('Pick List', {
 			} 
 		})
 	},
-	warehouse: function(frm){
-		(frm.doc.locations || []).forEach(function(item, index){
-			frappe.model.set_value(item.doctype, item.name, 'warehouse', frm.doc.warehouse)
-		});
-	},
 	company: function(frm) {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
-		frm.set_value('warehouse', null);
 	},
 });
 
@@ -277,29 +254,11 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	batch_no: function(frm ,cdt, cdn){
 		let d = locals[cdt][cdn];
-		if(!d.warehouse){
-			frappe.db.get_value("Stock Ledger Entry", {"batch_no": d.batch_no}, 'warehouse').then(r => {
-				if(r.message){
-					frappe.model.set_value(cdt, cdn, 'warehouse', r.message.warehouse)
-				}
-			});
-		}
-		frm.events.check_qty(frm, cdt, cdn);
-	},
-	warehouse: function(frm, cdt, cdn){
-		let d = locals[cdt][cdn];
-		if(d.batch_no){
-			frappe.db.get_value("Stock Ledger Entry", {"batch_no": d.batch_no, "warehouse": d.warehouse, 'company': frm.doc.company}, 'name').then(r => {
-				if(!r.message){
-					frappe.model.set_value(cdt, cdn, 'batch_no', null);
-				}
-			});
-		}
 		frm.events.check_qty(frm, cdt, cdn);
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, warehouse: d.warehouse, packaging_type: d.packing_type});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, packaging_type: d.packing_type});
 	},
 });
 
@@ -349,7 +308,6 @@ frappe.ui.keys.add_shortcut({
 			remaining_to_pick: (d.so_qty - d.picked_qty), 
 			batch_no: d.batch_no, 
 			qty: d.qty, 
-			warehouse: d.warehouse, 
 			packaging_type: d.packaging_type
 		});
 	},
@@ -382,7 +340,6 @@ frappe.ui.keys.add_shortcut({
 			remaining_to_pick: (d.so_qty - d.picked_qty), 
 			batch_no: d.batch_no, 
 			qty: d.qty, 
-			warehouse: d.warehouse, 
 			packaging_type: d.packaging_type
 		});
 	},

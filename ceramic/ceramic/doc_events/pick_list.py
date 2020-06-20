@@ -104,7 +104,6 @@ def update_available_qty(self):
 	for item in data:
 		self.append('available_qty',{
 			'item_code': item.item_code,
-			'warehouse': item.warehouse,
 			'batch_no': item.batch_no,
 			'lot_no': item.lot_no,
 			'total_qty': item.total_qty,
@@ -117,7 +116,7 @@ def update_available_qty(self):
 	for i in self.available_qty:
 		qty = 0
 		for j in self.locations:
-			if i.item_code == j.item_code and i.batch_no == j.batch_no and i.warehouse == j.warehouse:
+			if i.item_code == j.item_code and i.batch_no == j.batch_no:
 				qty += j.qty
 		i.picked_in_current = qty
 		i.remaining = i.total_qty - qty
@@ -243,7 +242,6 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 		batch_locations += frappe.db.sql("""
 			SELECT
 				sle.`item_code`,
-				sle.`warehouse`,
 				sle.`batch_no`,
 				batch.`lot_no`,
 				SUM(sle.`actual_qty`) AS `actual_qty`
@@ -255,7 +253,6 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 				and sle.`company` = '{company}'
 				and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
 			GROUP BY
-				`warehouse`,
 				`batch_no`,
 				`item_code`
 			HAVING `actual_qty` > 0
@@ -272,7 +269,6 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
 			JOIN `tabPick List` AS pl ON pl.name = pli.parent
 			WHERE pli.`item_code` = '{item['item_code']}'
-			AND pli.`warehouse` = '{item['warehouse']}'
 			AND pli.`batch_no` = '{item['batch_no']}'
 			AND pl.`docstatus` = 1
 		""")
@@ -408,7 +404,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 			SELECT 
 				pli.sales_order, pli.sales_order_item, pli.customer,
 				pli.date, pli.item_code, pli.qty, pli.picked_qty,
-				pli.delivered_qty, pli.warehouse, pli.batch_no,
+				pli.delivered_qty, pli.batch_no,
 				pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
 				pli.conversion_factor, pli.name, pli.parent
 			FROM
@@ -507,12 +503,10 @@ def get_items(filters):
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
-		
-	warehouse_condition = ''
+
 	batch_locations = frappe.db.sql("""
 		SELECT
 			sle.`item_code`,
-			sle.`warehouse`,
 			sle.`batch_no`,
 			batch.lot_no,
 			batch.packing_type,
@@ -524,14 +518,12 @@ def get_items(filters):
 			and sle.`item_code`=%(item_code)s
 			and sle.`company` = '{company}'
 			and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
-			{warehouse_condition}
 		GROUP BY
-			`warehouse`,
 			`batch_no`,
 			`item_code`
 		HAVING `actual_qty` > 0
 		ORDER BY IFNULL(batch.`expiry_date`, '2200-01-01'), batch.`creation`
-	""".format(warehouse_condition=warehouse_condition, company=filters['company']), { #nosec
+	""".format(company=filters['company']), { #nosec
 		'item_code': filters['item_code'],
 		'today': today(),
 	}, as_dict=1)
@@ -546,7 +538,6 @@ def get_items(filters):
 			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
 			JOIN `tabPick List` AS pl ON pl.name = pli.parent
 			WHERE `item_code` = '{filters['item_code']}'
-			AND pli.warehouse = '{item['warehouse']}'
 			AND batch_no = '{item['batch_no']}'
 			AND pl.docstatus = 1
 		""")
