@@ -270,6 +270,7 @@ def make_pick_list(source_name, target_doc=None):
 		target.customer = source_parent.customer
 		target.date = source_parent.transaction_date
 		target.delivery_date = source.delivery_date
+		target.so_picked_percent = source.per_picked
 
 	doc = get_mapped_doc('Sales Order', source_name, {
 		'Sales Order': {

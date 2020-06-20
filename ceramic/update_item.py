@@ -100,8 +100,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		
 		if not flt(d.get('rate')):
 			d['rate'] = child_item.rate
-		if not flt(d.get('discounted_rate')):
-			d['discounted_rate'] = child_item.discounted_rate
+		
 		if flt(child_item.billed_amt, precision) > flt(flt(d.get("rate")) * flt(d.get("qty")), precision):
 			frappe.throw(_("Row #{0}: Cannot set Rate if amount is greater than billed amount for Item {1}.")
 						 .format(child_item.idx, child_item.item_code))

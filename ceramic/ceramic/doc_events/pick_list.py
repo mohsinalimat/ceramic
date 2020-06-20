@@ -333,7 +333,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 	for item in item_codes:
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
-				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type,
+				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked,
 				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
@@ -365,7 +365,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 	if customer:
 		item_code_list = frappe.db.sql(f"""
 			SELECT 
-				DISTINCT soi.item_code
+				DISTINCT soi.item_code, so.per_picked
 			FROM 
 				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
 			WHERE
@@ -373,6 +373,8 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 				so.customer = '{customer}' AND
 				soi.qty != soi.picked_qty {where_cond} AND
 				so.status != 'Closed'
+			ORDER BY
+				soi.order_item_priority DESC
 		""")
 		item_codes = [item[0] for item in item_code_list]
 	
@@ -380,13 +382,15 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 	if sales_order and not customer:
 		item_code_list = frappe.db.sql(f"""
 			SELECT 
-				DISTINCT soi.item_code
+				DISTINCT soi.item_code, so.per_picked
 			FROM 
 				`tabSales Order Item` as soi JOIN `tabSales Order` as so ON so.name = soi.parent
 			WHERE
 				so.docstatus = 1 AND
 				soi.qty != soi.picked_qty {where_cond} AND
 				so.status != 'Closed'
+			ORDER BY
+				soi.order_item_priority DESC
 		""")
 		# where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
@@ -406,10 +410,11 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 				pli.date, pli.item_code, pli.qty, pli.picked_qty,
 				pli.delivered_qty, pli.batch_no,
 				pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
-				pli.conversion_factor, pli.name, pli.parent
+				pli.conversion_factor, pli.name, pli.parent, so.per_picked
 			FROM
 				`tabPick List Item` as pli JOIN 
-				`tabPick List`as pl ON pli.parent = pl.name 
+				`tabPick List`as pl ON pli.parent = pl.name JOIN
+				`tabSales Order` as so ON pli.sales_order = so.name
 			WHERE
 				pli.delivered_qty = 0 AND
 				pli.item_code = '{item}' AND
