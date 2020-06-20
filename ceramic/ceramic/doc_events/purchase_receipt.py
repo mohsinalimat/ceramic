@@ -69,6 +69,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 			taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
 			if frappe.db.exists("Purchase Taxes and Charges", taxes_and_charges):
 				target.taxes_and_charges = taxes_and_charges
+			else:
+				target.taxes_and_charges = None
 		target.taxes = source.taxes
 		if source.taxes:
 			for index, value in enumerate(source.taxes):
@@ -87,9 +89,10 @@ def make_purchase_invoice(source_name, target_doc=None):
 		target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 		source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
 
-		target_doc.income_account = doc.default_income_account
-		target_doc.expense_account = doc.default_expense_account
-		target_doc.cost_center = doc.cost_center
+		if source_doc.expense_account:
+			target_doc.expense_account = source_doc.expense_account.replace(source_company_abbr, target_company_abbr)
+		if source_doc.cost_center:
+			target_doc.cost_center = source_doc.cost_center.replace(source_company_abbr, target_company_abbr)
 
 		if source_doc.warehouse:
 			target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
