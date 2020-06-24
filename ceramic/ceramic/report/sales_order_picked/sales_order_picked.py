@@ -43,8 +43,6 @@ def get_conditions(filters):
 def get_pick_conditions(filters):
 	conditions = ""
 
-	#conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed', 'To Bill')"
-
 	if filters.get('company'):
 		conditions += " AND pl.company = '%s'" % filters.get('company')
 

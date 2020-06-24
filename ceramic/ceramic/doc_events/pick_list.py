@@ -15,6 +15,10 @@ def validate(self, method):
 	remove_items_without_batch_no(self)
 	update_remaining_qty(self)
 
+	for item in self.locations:
+		if item.qty < 0:
+			frappe.throw(f"Row: {item.idx} Quantity can not be negative.")
+
 def before_submit(self, method):
 	update_available_qty(self)
 	update_remaining_qty(self)
@@ -109,7 +113,7 @@ def update_available_qty(self):
 			'total_qty': item.total_qty,
 			'picked_qty': item.picked_qty,
 			'available_qty': item.available_qty,
-			'remaining_qty': item.qty,
+			'remaining': item.available_qty,
 			'picked_in_current': 0,
 		})
 	
@@ -119,8 +123,11 @@ def update_available_qty(self):
 			if i.item_code == j.item_code and i.batch_no == j.batch_no:
 				qty += j.qty
 		i.picked_in_current = qty
-		i.remaining = i.total_qty - qty
+		i.remaining -= qty
 
+		if i.remaining < 0:
+			frappe.throw(_(f"Remaining Qty Cannot be less than 0 ({i.remaining}) for item {i.item_code} and lot {i.lot_no}"))
+	
 def update_remaining_qty(self):
 	sales_order_item_list = list(set([row.sales_order_item for row in self.locations]))
 
@@ -456,7 +463,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
 		return "Pick List to this Sales Order Have Been Deleted."
 	elif sales_order and sales_order_item:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1}, ['name'])
 		
 		for pl in data:
 			
@@ -478,7 +485,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 		return "Pick List to this Sales Order Have Been Deleted."
 	else:
-		data = frappe.get_all("Pick List Item", {'sales_order': sales_order}, ['name'])
+		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'docstatus': 1}, ['name'])
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)

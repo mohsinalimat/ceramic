@@ -367,17 +367,22 @@ def actual_amt_check(self):
 			from `tabStock Ledger Entry`
 			where warehouse=%s and item_code=%s and batch_no=%s""",
 			(self.warehouse, self.item_code, self.batch_no))[0][0])
-		
-		picked_qty = flt(frappe.db.sql("""select sum(qty - (delivered_qty + wastage_qty))
-			from `tabPick List Item` as pli
-			JOIN `tabPick List` as pl on pl.name = pli.parent
-			where pli.warehouse=%s and pli.item_code=%s and pli.batch_no=%s and pl.docstatus = 1""",
-			(self.warehouse, self.item_code, self.batch_no))[0][0])
 
 		if batch_bal_after_transaction < 0:
 			frappe.throw(_("Stock balance in Batch {0} will become negative {1} for Item {2} at Warehouse {3}")
 				.format(self.batch_no, batch_bal_after_transaction, self.item_code, self.warehouse))
 
-		if batch_bal_after_transaction - picked_qty < 0:
-			frappe.throw(_("Stock balance (Picked Qty) in Batch {0} will become negative {1} for Item {2} at Warehouse {3}")
-				.format(self.batch_no, (batch_bal_after_transaction - picked_qty), self.item_code, self.warehouse))
+		batch_bal_after_transaction_without_warehouse = flt(frappe.db.sql("""select sum(actual_qty)
+			from `tabStock Ledger Entry`
+			where item_code=%s and batch_no=%s""",
+			(self.item_code, self.batch_no))[0][0])
+
+		picked_qty = flt(frappe.db.sql("""select sum(qty - (delivered_qty + wastage_qty))
+			from `tabPick List Item` as pli
+			JOIN `tabPick List` as pl on pl.name = pli.parent
+			where pli.item_code=%s and pli.batch_no=%s and pl.docstatus = 1""",
+			(self.item_code, self.batch_no))[0][0])
+
+		if batch_bal_after_transaction_without_warehouse - picked_qty < 0:
+			frappe.throw(_("Stock balance after Picked Qty in Batch {0} will become negative {1} for Item {2}")
+				.format(self.batch_no, (batch_bal_after_transaction - picked_qty), self.item_code))

@@ -102,10 +102,14 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 			});
 
 			if(!from_sales_invoice) {
+				if(doc.discounted_grand_total != 0){
 				this.frm.add_custom_button(__('Sales Invoice'), function() {me.make_sales_invoice()}, 
 					__('Create'));
+				}
+				else{	
 				this.frm.add_custom_button(__('Sales Invoice Test'), function() { me.make_sales_invoice_test() },
 					__('Create'));
+				}
 			}
 		}
 

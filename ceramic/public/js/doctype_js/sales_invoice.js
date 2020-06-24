@@ -197,7 +197,7 @@ frappe.ui.form.on('Sales Invoice', {
 		frm.set_value("total_qty", total_qty);
 		frm.set_value("total_net_weight", total_net_weight);
 	},
-	naming_series: function(frm) {
+	naming_series_: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
 			frappe.call({
 				method: "ceramic.api.check_counter_series",
@@ -211,9 +211,14 @@ frappe.ui.form.on('Sales Invoice', {
 			});
 		}
 	},
+	naming_series: function (frm) {
+		if (frm.doc.__islocal) {
+			frm.trigger('naming_series_');
+		}
+	},
 	company: function(frm){
 		if (frm.doc.__islocal){
-			frm.trigger('naming_series');
+			frm.trigger('naming_series_');
 		}
 	},
 	company_series: function(frm){

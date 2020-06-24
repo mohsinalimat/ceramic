@@ -39,20 +39,7 @@ def get_warehouse(doctype, txt, searchfield, start, page_len, filters):
 		"page_len": page_len
 	}
 
-	# frappe.throw("""select sle.warehouse, batch.lot_no, batch.packing_type, round(sum(sle.actual_qty),2), sle.stock_uom
-	# 	from `tabStock Ledger Entry` sle
-	# 		INNER JOIN `tabBatch` batch on sle.batch_no = batch.name
-	# 	where
-	# 		sle.item_code = %(item_code)s
-	# 		and batch.docstatus < 2
-	# 		and (sle.warehouse like %(txt)s or {searchfields})
-	# 		{0}
-	# 		{match_conditions}
-	# 	having sum(sle.actual_qty) > 0
-	# 	order by sle.batch_no desc
-	# 	limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), searchfields=searchfields), args)
-
-	warehouse_query = frappe.db.sql("""select sle.warehouse, batch.lot_no, batch.packing_type, round(sum(sle.actual_qty),2), sle.stock_uom
+	w_query = frappe.db.sql("""select sle.warehouse, batch.lot_no, batch.packing_type, round(sum(sle.actual_qty),2), sle.stock_uom
 		from `tabStock Ledger Entry` sle
 			INNER JOIN `tabBatch` batch on sle.batch_no = batch.name
 		where
@@ -60,12 +47,11 @@ def get_warehouse(doctype, txt, searchfield, start, page_len, filters):
 			and batch.docstatus < 2
 			and (sle.warehouse like %(txt)s or {searchfields})
 			{0}
-			{match_conditions}
 		group by warehouse having sum(sle.actual_qty) > 0
 		order by batch.expiry_date, sle.batch_no desc
-		limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype), searchfields=searchfields), args)
+		limit %(start)s, %(page_len)s""".format(cond, searchfields=searchfields), args)
 	
-	return warehouse_query
+	return w_query
 
 def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""

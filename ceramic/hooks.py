@@ -54,8 +54,8 @@ app_license = "GPL 3.0"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/css/ceramic.min.css"
-# app_include_js = "/assets/js/ceramic.min.js"
+app_include_css = "/assets/css/ceramic.min.css"
+app_include_js = "/assets/js/ceramic.min.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/ceramic/css/ceramic.css"
@@ -66,7 +66,10 @@ app_license = "GPL 3.0"
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_list_js = {"Pick List" : "public/js/doctype_js/pick_list_list.js"}
+doctype_list_js = {
+	"Pick List" : "public/js/doctype_js/pick_list_list.js",
+	"Sales Order" : "public/js/doctype_js/sales_order_list.js"
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 

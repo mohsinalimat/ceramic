@@ -321,6 +321,21 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 				real_delivered_qty = i.real_qty - i.delivered_real_qty
 				for j in frappe.get_all("Pick List Item", filters={"sales_order": source.name, "sales_order_item": i.name, "docstatus": 1}):
 					pick_doc = frappe.get_doc("Pick List Item", j.name)
+					warehouse_query = frappe.db.sql(f"""
+					select sle.warehouse
+					from `tabStock Ledger Entry` sle
+						INNER JOIN `tabBatch` batch on sle.batch_no = batch.name
+					where
+						sle.item_code = '{pick_doc.item_code}'
+						and batch.docstatus < 2
+						and sle.batch_no = '{pick_doc.batch_no}'
+					group by warehouse having sum(sle.actual_qty) > 0
+					order by sum(sle.actual_qty) desc
+					limit 1""")
+
+					warehouse = None
+					if warehouse_query:
+						warehouse = warehouse_query[0][0]
 					
 					if real_delivered_qty <= 0:
 						real_delivered_qty = 0
@@ -336,7 +351,7 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 							'so_detail': i.name,
 							'against_pick_list': pick_doc.parent,
 							'pl_detail': pick_doc.name,
-							'warehouse': pick_doc.warehouse,
+							'warehouse': warehouse,
 							'batch_no': pick_doc.batch_no,
 							'lot_no': pick_doc.lot_no,
 							'item_series': i.item_series,

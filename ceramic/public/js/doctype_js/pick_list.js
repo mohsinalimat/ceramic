@@ -94,7 +94,6 @@ frappe.ui.form.on('Pick List', {
 			},
 			callback: function(r){
 				if (r.message){
-					console.log(r.message)
 					r.message.forEach(function(item, index){
 						var d = frm.add_child('picked_sales_orders')
 						frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
@@ -260,7 +259,7 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, packaging_type: d.packing_type});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, packaging_type: d.packing_type, date: d.date, so_picked_percent: d.so_picked_percent, idx: d.idx});
 	},
 });
 
@@ -293,25 +292,32 @@ frappe.ui.form.on('Picked Sales Orders', {
 
 frappe.ui.keys.add_shortcut({
 	shortcut: 'ctrl+i',
-    action: () => { 
-		const current_doc = $('.data-row.editable-row').parent().attr("data-name");
-		const d = locals["Pick List Item"][current_doc];
-		select_items({
-			frm:cur_frm, 
-			item_code: d.item_code, 
-			sales_order: d.sales_order, 
-			sales_order_item: d.sales_order_item, 
-			so_qty: d.so_qty, 
-			company: cur_frm.doc.company, 
-			customer: d.customer, date: d.date, 
-			delivery_date: d.delivery_date, 
-			picked_qty: d.picked_qty, 
-			so_real_qty: d.so_real_qty, 
-			remaining_to_pick: (d.so_qty - d.picked_qty), 
-			batch_no: d.batch_no, 
-			qty: d.qty, 
-			packaging_type: d.packaging_type
-		});
+    action: function(e) { 
+		e.preventDefault();	
+		if (!cur_dialog){
+			const current_doc = $('.data-row.editable-row').parent().attr("data-name");
+			const d = locals["Pick List Item"][current_doc];
+			select_items({
+				frm:cur_frm,
+				item_code: d.item_code,
+				sales_order: d.sales_order,
+				sales_order_item: d.sales_order_item,
+				so_qty: d.so_qty,
+				company: cur_frm.doc.company,
+				customer: d.customer,
+				date: d.date, delivery_date:
+				d.delivery_date,
+				picked_qty: d.picked_qty,
+				so_real_qty: d.so_real_qty,
+				remaining_to_pick: (d.so_qty - d.picked_qty),
+				batch_no: d.batch_no,
+				qty: d.qty,
+				packaging_type: d.packing_type,
+				date: d.date,
+				so_picked_percent: d.so_picked_percent,
+				idx: d.idx
+			});
+		}
 	},
 	page: this.page,
     description: __('Select Lot from warehouse'),
@@ -319,31 +325,85 @@ frappe.ui.keys.add_shortcut({
 });
 
 frappe.ui.keys.add_shortcut({
-	shortcut: 'ctrl+m',
+	shortcut: 'ctrl+d',
     action: function(e){ 
 		e.preventDefault();
-		cur_dialog.cancel();
-		const current_doc = $('.data-row.editable-row').parent().attr("data-name");
-		var d = locals["Pick List Item"][current_doc];
-		next = flt(d.idx) + 1
-		cur_frm.get_field('items').grid.get_field("item_code").$input.focus()
-		var d = locals["Pick List Item"][current_doc];
-		select_items({
-			frm:cur_frm, 
-			item_code: d.item_code, 
-			sales_order: d.sales_order, 
-			sales_order_item: d.sales_order_item, 
-			so_qty: d.so_qty, 
-			company: cur_frm.doc.company, 
-			customer: d.customer, date: d.date, 
-			delivery_date: d.delivery_date, 
-			picked_qty: d.picked_qty, 
-			so_real_qty: d.so_real_qty, 
-			remaining_to_pick: (d.so_qty - d.picked_qty), 
-			batch_no: d.batch_no, 
-			qty: d.qty, 
-			packaging_type: d.packaging_type
-		});
+
+		if (cur_dialog){	
+		
+			// const current_doc = $('.data-row.editable-row').parent().attr("data-name");
+			// var d = locals["Pick List Item"][current_doc];
+			let next = cint(cur_dialog.fields_dict.idx.value) + 1
+			let next_locations = cur_frm.doc.locations[next - 1]
+			if (next_locations){
+				// cur_frm.get_field('items').grid.get_field("item_code").'$input'.focus()
+				cur_dialog.cancel();
+				var d = locals[next_locations.doctype][next_locations.name];
+				select_items({
+					frm:cur_frm,
+					item_code: d.item_code,
+					sales_order: d.sales_order,
+					sales_order_item: d.sales_order_item,
+					so_qty: d.so_qty,
+					company: cur_frm.doc.company,
+					customer: d.customer,
+					date: d.date, delivery_date:
+					d.delivery_date,
+					picked_qty: d.picked_qty,
+					so_real_qty: d.so_real_qty,
+					remaining_to_pick: (d.so_qty - d.picked_qty),
+					batch_no: d.batch_no,
+					qty: d.qty,
+					packaging_type: d.packing_type,
+					date: d.date,
+					so_picked_percent: d.so_picked_percent,
+					idx: d.idx
+				});
+			}
+		}
+	},
+	page: this.page,
+    description: __('Select Lot from warehouse'),
+    ignore_inputs: true,
+});
+
+frappe.ui.keys.add_shortcut({
+	shortcut: 'ctrl+u',
+    action: function(e){ 
+		e.preventDefault();
+
+		if (cur_dialog){	
+		
+			// const current_doc = $('.data-row.editable-row').parent().attr("data-name");
+			// var d = locals["Pick List Item"][current_doc];
+			let previous = cint(cur_dialog.fields_dict.idx.value) - 1
+			let previous_locations = cur_frm.doc.locations[previous - 1]
+			if (previous_locations){
+				// cur_frm.get_field('items').grid.get_field("item_code").'$input'.focus()
+				cur_dialog.cancel();
+				var d = locals[previous_locations.doctype][previous_locations.name];
+				select_items({
+					frm:cur_frm,
+					item_code: d.item_code,
+					sales_order: d.sales_order,
+					sales_order_item: d.sales_order_item,
+					so_qty: d.so_qty,
+					company: cur_frm.doc.company,
+					customer: d.customer,
+					date: d.date, delivery_date:
+					d.delivery_date,
+					picked_qty: d.picked_qty,
+					so_real_qty: d.so_real_qty,
+					remaining_to_pick: (d.so_qty - d.picked_qty),
+					batch_no: d.batch_no,
+					qty: d.qty,
+					packaging_type: d.packing_type,
+					date: d.date,
+					so_picked_percent: d.so_picked_percent,
+					idx: d.idx
+				});
+			}
+		}
 	},
 	page: this.page,
     description: __('Select Lot from warehouse'),

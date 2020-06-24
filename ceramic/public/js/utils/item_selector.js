@@ -11,7 +11,6 @@ ItemSelector = Class.extend({
 	
 	make_dialog: function(){
 		let me = this;
-		console.log(me.packaging_type)
 		this.data = [];
 
 		let fields = 
@@ -25,6 +24,26 @@ ItemSelector = Class.extend({
 				reqd: 1,
 				default: me.item_code,
 			},
+			{
+				label: __('Customer'),
+				fieldtype:'Link',
+				options:'Customer',
+				fieldname: 'customer',
+				read_only: 1,
+				reqd: 1,
+				default: me.customer,
+			},
+			{
+				label: __('Idx'),
+				fieldtype:'Int',
+				fieldname: 'idx',
+				read_only: 1,
+				reqd: 1,
+				hidden: 1,
+				default: me.idx,
+			},
+			
+			
 
 			{fieldtype:'Column Break'},
 
@@ -38,6 +57,14 @@ ItemSelector = Class.extend({
 				default: me.sales_order
 			},
 			{
+				label: __('Sales Order Date'),
+				fieldtype:'Date',
+				fieldname: 'so_date',
+				read_only: 1,
+				reqd: 1,
+				default: me.date,
+			},
+			{
 				label: __('Sales Order Item'),
 				fieldtype:'Data',
 				fieldname: 'sales_order_item',
@@ -45,6 +72,14 @@ ItemSelector = Class.extend({
 				read_only: 1,
 				hidden: 1,
 				default: me.sales_order_item
+			},
+			{
+				label: __('SO Picked %'),
+				fieldtype:'Percent',
+				fieldname: 'so_picked_percent',
+				reqd: 0,
+				read_only: 1,
+				default: me.so_picked_percent
 			},
 			{ fieldtype: 'Section Break', label: __('Quantity') },
 			{
@@ -385,6 +420,7 @@ ItemSelector = Class.extend({
 			var locations = me.frm.add_child('locations');
 			frappe.model.set_value(locations.doctype, locations.name, 'item_code', d.item_code);
 			frappe.model.set_value(locations.doctype, locations.name, 'customer', me.customer);
+			frappe.model.set_value(locations.doctype, locations.name, 'so_picked_percent', me.so_picked_percent);
 			frappe.model.set_value(locations.doctype, locations.name, 'so_qty', me.values.so_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'so_real_qty', me.values.so_real_qty);
 			frappe.model.set_value(locations.doctype, locations.name, 'delivery_date', me.delivery_date);
