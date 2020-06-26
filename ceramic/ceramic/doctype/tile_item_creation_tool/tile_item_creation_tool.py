@@ -86,10 +86,10 @@ class TileItemCreationTool(Document):
 			for tile in self.tile_quality:
 				category = '-' + tile.tile_quality
 				tile_grade = '-' + frappe.db.get_value("Tile Quality", tile.tile_quality, 'tile_grade')
-				if not frappe.db.exists("Item", {'item_name': self.item_name + category}):
+				if not frappe.db.exists("Item", {'item_code': self.item_design + tile_grade + item_group_code}):
 					item = frappe.new_doc("Item")
 				else:
-					item = frappe.get_doc("Item", {'item_name': self.item_name + category})
+					item = frappe.get_doc("Item", {'item_code': self.item_design + tile_grade + item_group_code})
 				
 				
 				item.item_code = self.item_design + tile_grade + item_group_code

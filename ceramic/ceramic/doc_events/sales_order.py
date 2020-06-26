@@ -47,14 +47,21 @@ def check_qty_rate(self):
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 def calculate_totals(self):
+	total_deliverd_weight = 0.0
 	for d in self.items:
 		d.picked_weight = flt(d.picked_qty * d.weight_per_unit)
 		d.total_weight = flt(d.weight_per_unit * d.qty)
+		total_deliverd_weight += flt(d.weight_per_unit * d.delivered_qty)
+
 	self.total_qty = sum([row.qty for row in self.items])
 	self.total_real_qty = sum([row.real_qty for row in self.items])
 	self.total_picked_qty = sum([row.picked_qty for row in self.items])
 	self.total_picked_weight = sum([row.picked_weight for row in self.items])
 	self.total_net_weight = sum([row.total_weight for row in self.items])
+	total_delivered_qty = sum([row.delivered_qty for row in self.items])
+	total_wastage_qty = sum([row.wastage_qty for row in self.items])
+	self.picked_to_be_delivered_qty = self.total_picked_qty - flt(total_delivered_qty) - flt(total_wastage_qty)
+	self.picked_to_be_delivered_weight = self.total_picked_weight - total_deliverd_weight
 
 def on_submit(self, method):
 	#checking_rate(self)
@@ -187,14 +194,29 @@ def remove_pick_list(self):
 
 def update_picked_percent(self):
 	if self.items:
-		picked_qty = 0
 		qty = 0
-		for item in self.items:
-			picked_qty += item.picked_qty
-			qty += item.qty
+		total_picked_qty = 0.0
+		total_picked_weight = 0.0
+		total_delivered_qty = 0.0
+		total_wastage_qty = 0.0
+		total_deliverd_weight = 0.0
 
-	self.db_set('per_picked', (picked_qty / qty) * 100)
-	self.db_set('total_picked_qty', flt(picked_qty))
+		for row in self.items:
+			qty += row.qty
+			row.db_set('picked_weight',flt(row.weight_per_unit * row.picked_qty))
+			total_picked_qty += row.picked_qty
+			total_picked_weight += row.picked_weight
+			total_delivered_qty += row.delivered_qty
+			total_wastage_qty += row.wastage_qty
+			total_deliverd_weight += flt(row.weight_per_unit * row.delivered_qty)
+			
+
+	self.db_set('per_picked', (total_picked_qty / qty) * 100)
+	self.db_set('total_picked_qty', flt(total_picked_qty))
+	self.db_set('total_picked_weight', total_picked_weight)
+	self.db_set('picked_to_be_delivered_qty', self.total_picked_qty - flt(total_delivered_qty - flt(total_wastage_qty)))  
+	self.db_set('picked_to_be_delivered_weight', flt(total_picked_weight) - total_deliverd_weight) 
+
 
 def update_idx(self):
 	for idx, item in enumerate(self.items):

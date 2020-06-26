@@ -5,6 +5,7 @@ from frappe.model.mapper import get_mapped_doc, map_child_doc, map_doc, map_fiel
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note as create_delivery_note_from_sales_order
 from erpnext.stock.doctype.pick_list.pick_list import get_items_with_location_and_quantity
 from frappe.utils import flt
+from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 
 def before_vaidate(self, method):
 	remove_items_without_batch_no(self)
@@ -191,6 +192,7 @@ def update_status_sales_order(self):
 
 	for sales_order in sales_order_list:
 		so = frappe.get_doc("Sales Order", sales_order)
+		update_picked_percent(so)
 		qty = 0
 		picked_qty = 0
 
@@ -358,6 +360,54 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 	return sales_order_list
 
 @frappe.whitelist()
+def get_pick_list_so(sales_order, item_code, sales_order_item):
+	pick_list_list = frappe.db.sql(f"""
+		SELECT 
+			pli.sales_order, pli.sales_order_item, pli.customer, pli.name as pick_list_item,
+			pli.date, pli.item_code, pli.qty as picked_qty, pli.delivered_qty, pli.wastage_qty,
+			pli.delivered_qty, pli.batch_no,
+			pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
+			pli.conversion_factor, pli.name, pli.parent
+		FROM
+			`tabPick List Item` as pli
+		WHERE
+			pli.item_code = '{item_code}' AND
+			pli.sales_order = '{sales_order}' AND
+			pli.sales_order_item = '{sales_order_item}' AND
+			pli.`docstatus` = 1
+	""", as_dict = 1)
+
+	for item in pick_list_list:
+		actual_qty = frappe.db.sql(f"""
+			SELECT
+				SUM(sle.`actual_qty`) AS `actual_qty`
+			FROM
+				`tabStock Ledger Entry` sle, `tabBatch` batch
+			WHERE
+				sle.batch_no = batch.name
+				and sle.`item_code` = '{item_code}'
+				and sle.batch_no = '{item.batch_no}'
+			GROUP BY
+				`batch_no`
+			HAVING `actual_qty` > 0
+		""")[0][0]
+
+		pick_list_available = frappe.db.sql(f"""
+			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
+			JOIN `tabPick List` AS pl ON pl.name = pli.parent
+			WHERE `item_code` = '{item_code}'
+			AND batch_no = '{item.batch_no}'
+			AND pl.docstatus = 1
+		""")[0][0] or 0
+
+		# current_picked = item.picked_qty - item.delivered_qty - item.wastage_qty
+
+		item.available_qty = actual_qty - pick_list_available
+		item.actual_qty = actual_qty
+	
+	return pick_list_list
+
+@frappe.whitelist()
 def get_picked_items(company, item_code = None, customer = None, sales_order = None):
 	if not item_code and not customer and not sales_order:
 		return
@@ -430,7 +480,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 		""", as_dict = 1)
 	
 	return pick_list_list
-from ceramic.ceramic.doc_events.sales_order import update_picked_percent
+
 
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):
@@ -564,3 +614,37 @@ def get_items(filters):
 			data.append(item)
 	# frappe.msgprint(str(data))
 	return data
+
+@frappe.whitelist()
+def get_sales_order_items(sales_order):
+	doc = frappe.get_doc("Sales Order", sales_order)
+
+	items = []
+	for item in doc.items:
+		items.append({
+			'sales_order': doc.name,
+			'sales_order_item': item.name,
+			'qty': item.qty,
+			'real_qty': item.qty,
+			'item_code': item.item_code,
+			'rate': item.rate,
+			'discounted_rate': item.discounted_rate,
+			'picked_qty': item.picked_qty,
+		})
+	return items
+
+@frappe.whitelist()
+def update_pick_list(picked_qty, pick_list_item):
+	pick_list_item_doc = frappe.get_doc("Pick List Item", pick_list_item)
+
+	picked_qty_old = pick_list_item_doc.qty
+	diff_qty = picked_qty_old - flt(picked_qty)
+
+	if not diff_qty:
+		return 'success'
+
+	pick_list_item_doc.db_set('qty', picked_qty_old - diff_qty)
+	so_picked = frappe.db.get_value("Sales Order Item", pick_list_item_doc.sales_order_item, 'picked_qty')
+	frappe.db.set_value('Sales Order Item', pick_list_item_doc.sales_order_item, 'picked_qty', so_picked - diff_qty)
+
+	return 'success'

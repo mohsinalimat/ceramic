@@ -114,6 +114,7 @@ erpnext.utils.update_child_items = function (opts) {
 		],
 		primary_action: function() {
 			const trans_items = this.get_values()["trans_items"];
+			console.log(trans_items);
 			frappe.call({
 				method: 'ceramic.update_item.update_child_qty_rate',
 				freeze: true,

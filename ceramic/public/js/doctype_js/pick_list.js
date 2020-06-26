@@ -79,8 +79,41 @@ frappe.ui.form.on('Pick List', {
 			});
 		}
 	},
+	create_remaining_pick: function(frm){
+		console.log(frm.doc.sales_order_item);
+		let trans_items = []
+		$.each(frm.doc["sales_order_item"] || [], function(i, d) {
+			trans_items.push({
+				'item_code': d.item,
+				'rate':d.rate,
+				'discounted_rate': d.discounted_rate,
+				'name':d.sales_order_item,
+				'docname':d.sales_order_item,
+				'idx':d.idx,
+				'real_qty':d.real_qty,
+				'qty':d.qty
+			})
+		});
+		
+		frappe.call({
+			method: 'ceramic.update_item.update_child_qty_rate',
+			args: {
+				parent_doctype: "Sales Order",
+				trans_items: trans_items,
+				parent_doctype_name: frm.doc.sales_order,
+			},
+			callback: function(r){
+				if (r.message){
+					frappe.msgprint(str(r.message));
+					frm.trigger('get_locations');
+					frm.trigger('get_so_items');
+				}
+			}
+		});
+	},
 	update_items: function(frm){
-		frm.trigger('get_locations')
+		frm.trigger('get_locations');
+		frm.trigger('get_so_items');
 	},
 	get_picked_items: (frm) => {
 		frm.doc.picked_sales_orders = []
@@ -200,6 +233,7 @@ frappe.ui.form.on('Pick List', {
 						frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty);
 						frappe.model.set_value(d.doctype, d.name, 'available_qty', item.available_qty);
 						frappe.model.set_value(d.doctype, d.name, 'remaining', item.available_qty);
+						frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
 					});
 					
 				} else {
@@ -231,11 +265,62 @@ frappe.ui.form.on('Pick List', {
 			} 
 		})
 	},
+	get_so_items: function(frm) {
+		if(frm.doc.sales_order){
+			frm.doc.sales_order_item = []
+			frappe.call({
+				method: 'ceramic.ceramic.doc_events.pick_list.get_sales_order_items',
+				args: {
+					sales_order: frm.doc.sales_order,
+				},
+				callback: function(r){
+					console.log(r)
+					if (r.message){
+						console.log(r.message)
+						r.message.forEach(function(item, index){
+							// console.log(item)
+							var d = frm.add_child('sales_order_item')
+							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
+							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
+							frappe.model.set_value(d.doctype, d.name, 'item', item.item_code);
+							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
+							frappe.model.set_value(d.doctype, d.name, 'real_qty', item.real_qty);
+							frappe.model.set_value(d.doctype, d.name, 'rate', item.rate);
+							frappe.model.set_value(d.doctype, d.name, 'discounted_rate', item.discounted_rate);
+							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty);
+							frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
+						});
+						frm.refresh_field('sales_order_item');
+					}
+				}
+			});
+		}
+	},
 	company: function(frm) {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
 	},
+});
+
+frappe.ui.form.on('Sales Order Item Pick List', {
+	view_detail: function(frm, cdt, cdn){
+		let d = locals[cdt][cdn];
+
+		view_pick_list_details({
+			frm:frm,
+			item_code: d.item,
+			sales_order: d.sales_order,
+			sales_order_item: d.sales_order_item,
+			qty: d.qty,
+			real_qty: d.real_qty,
+			company: frm.doc.company,
+			customer: frm.doc.customer,
+			idx: d.idx,
+			picked_qty: d.picked_qty,
+			batch_no: me.batch_no
+		});
+	}
 });
 
 frappe.ui.form.on('Pick List Item', {
@@ -266,6 +351,12 @@ frappe.ui.form.on('Pick List Item', {
 const select_items = (args) => {
 	frappe.require("assets/ceramic/js/utils/item_selector.js", function() {
 		new ItemSelector(args)
+	})
+}
+
+const view_pick_list_details = (args) => {
+	frappe.require("assets/ceramic/js/utils/view_pick_list_details.js", function() {
+		new pickListItem(args)
 	})
 }
 
