@@ -214,6 +214,9 @@ cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (do
 frappe.ui.form.on('Delivery Note', {
 	refresh: function(frm) {
 		frm.trigger('add_get_items_button')
+		if (frm.doc.tax_category && frm.doc.docstatus ==0) {
+			frm.trigger('get_taxes')
+		}
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
@@ -276,6 +279,33 @@ frappe.ui.form.on('Delivery Note', {
 			frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
 		}
 	},
+	tax_category: function (frm) {
+		frm.trigger('get_taxes')
+	},
+	tax_paid: function (frm) {
+		if (frm.doc.tax_category) {
+			frm.trigger('get_taxes')
+		}
+	},
+	get_taxes: function (frm) {
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.sales_order.get_tax_template",
+			args: {
+				'tax_paid': frm.doc.tax_paid,
+				'tax_category': frm.doc.tax_category,
+				'company': frm.doc.company
+			},
+			callback: function (r) {
+				if (r.message) {
+					frm.set_value('taxes_and_charges', r.message)
+				}
+				else {
+					frm.set_value('taxes_and_charges', null)
+					frm.set_value('taxes', [])
+				}
+			}
+		})
+	}
 });
 frappe.ui.form.on("Delivery Note Item", {
 	qty: (frm, cdt, cdn) => {

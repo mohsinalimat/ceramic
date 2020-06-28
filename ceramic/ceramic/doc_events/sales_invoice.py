@@ -192,8 +192,12 @@ def create_main_sales_invoice(self):
 				target.update(get_fetch_values("Sales Invoice", 'company_address', target.company_address))
 
 		def update_item(source_doc, target_doc, source_parent):
-			target_doc.qty = to_make_invoice_qty_map[source_doc.name]
+			target_company_income_account = frappe.db.get_value("Company", source_parent.company, "default_income_account")
+			if target_company_income_account:
+				target_doc.income_account = target_company_income_account
 
+			target_doc.qty = to_make_invoice_qty_map[source_doc.name]
+			
 			if source_doc.serial_no and source_parent.per_billed > 0 and not source_parent.is_return:
 				target_doc.serial_no = get_delivery_note_serial_no(source_doc.item_code,
 					target_doc.qty, source_parent.name)
@@ -236,7 +240,7 @@ def create_main_sales_invoice(self):
 					"so_detail": "so_detail",
 					"against_sales_order": "sales_order",
 					"serial_no": "serial_no",
-					"cost_center": "cost_center"
+					"cost_center": "cost_center",
 				},
 				"postprocess": update_item,
 				"filter": lambda d: get_pending_qty(d) <= 0 if not doc.get("is_return") else get_pending_qty(d) > 0

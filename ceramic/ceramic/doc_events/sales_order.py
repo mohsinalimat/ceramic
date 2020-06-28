@@ -214,6 +214,7 @@ def update_picked_percent(self):
 	self.db_set('per_picked', (total_picked_qty / qty) * 100)
 	self.db_set('total_picked_qty', flt(total_picked_qty))
 	self.db_set('total_picked_weight', total_picked_weight)
+	self.db_set('total_delivered_qty', total_delivered_qty)
 	self.db_set('picked_to_be_delivered_qty', self.total_picked_qty - flt(total_delivered_qty - flt(total_wastage_qty)))  
 	self.db_set('picked_to_be_delivered_weight', flt(total_picked_weight) - total_deliverd_weight) 
 
