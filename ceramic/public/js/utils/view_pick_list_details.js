@@ -71,9 +71,7 @@ pickListItem = Class.extend({
 				fieldtype:'Float',
 				fieldname: 'qty',
 				reqd: 0,
-				read_only: 1,
 				default: me.qty,
-				read_only: 1
 			},
 			{fieldtype:'Column Break'},
 			{
@@ -82,7 +80,6 @@ pickListItem = Class.extend({
 				fieldname: 'real_qty',
 				reqd: 0,
 				default: me.real_qty,
-				read_only: 1,
 			},
 			{fieldtype:'Column Break'},
 			{
@@ -108,19 +105,23 @@ pickListItem = Class.extend({
 
 			let picked_qty = me.values.picked_qty + me.picked_qty
 			let so_qty = me.values.so_qty
-			if (me.values.qty >= me.values.picked_qty){
+			if (flt(me.values.qty) >= flt(me.values.picked_qty)){
 				frappe.run_serially([
 					() => {
-						me.frm.trigger('create_remaining_pick');
+						setTimeout(function(){
+							frappe.model.set_value(me.doctype, me.name, 'qty', me.values.qty);
+							frappe.model.set_value(me.doctype, me.name, 'real_qty', me.values.real_qty); 
+							me.frm.refresh_field('sales_order_item')
+						}, 1000);
 					},
 					() => {
-						me.update_pick_list();
-						me.dialog.hide();
+						setTimeout(function(){ me.frm.trigger('create_remaining_pick'); }, 1000);
 					},
 					() => {
-						frappe.model.set_value(me.doctype, me.name, 'picked_qty', me.values.picked_qty)
-						me.frm.refresh_field('sales_order_item')
-						me.frm.trigger('get_locations')
+						setTimeout(function(){ me.update_pick_list(); me.dialog.hide(); }, 500);
+					},
+					() => {
+						setTimeout(function(){ me.frm.trigger('update_items') }, 1000);
 					}
 				])
 			} else {

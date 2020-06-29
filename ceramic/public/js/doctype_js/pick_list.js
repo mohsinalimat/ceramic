@@ -59,6 +59,11 @@ frappe.ui.form.on('Pick List', {
 		frm.set_df_property("locations", "read_only", frm.doc.docstatus == 0 ? 0 : 1);
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
+	onload: function(frm){
+		if (frm.doc.docstatus == 0){
+			frm.trigger('get_so_items')
+		}
+	},
 	add_get_items_button: (frm) => {
 		frm.remove_custom_button(__('Get Items'));
 	},
@@ -80,36 +85,36 @@ frappe.ui.form.on('Pick List', {
 		}
 	},
 	create_remaining_pick: function(frm){
-		console.log(frm.doc.sales_order_item);
 		let trans_items = []
-		$.each(frm.doc["sales_order_item"] || [], function(i, d) {
-			trans_items.push({
-				'item_code': d.item,
-				'rate':d.rate,
-				'discounted_rate': d.discounted_rate,
-				'name':d.sales_order_item,
-				'docname':d.sales_order_item,
-				'idx':d.idx,
-				'real_qty':d.real_qty + d.delivered_real_qty,
-				'qty':d.qty + d.delivered_qty + d.wastage_qty
-			})
-		});
-		
-		frappe.call({
-			method: 'ceramic.update_item.update_child_qty_rate',
-			args: {
-				parent_doctype: "Sales Order",
-				trans_items: trans_items,
-				parent_doctype_name: frm.doc.sales_order,
+		frappe.run_serially([
+			() => {
+				$.each(frm.doc["sales_order_item"] || [], function(i, d) {
+					trans_items.push({
+						'item_code': d.item,
+						'rate':d.rate,
+						'discounted_rate': d.discounted_rate,
+						'name':d.sales_order_item,
+						'docname':d.sales_order_item,
+						'idx':d.idx,
+						'real_qty':d.real_qty + d.delivered_real_qty,
+						'qty':d.qty + d.delivered_qty + d.wastage_qty
+					})
+				});
 			},
-			callback: function(r){
-				if (r.message){
-					frappe.msgprint(str(r.message));
-					frm.trigger('get_locations');
-					frm.trigger('get_so_items');
-				}
-			}
-		});
+			() => {
+				frappe.call({
+					method: 'ceramic.update_item.update_child_qty_rate',
+					args: {
+						parent_doctype: "Sales Order",
+						trans_items: trans_items,
+						parent_doctype_name: frm.doc.sales_order,
+					},
+					callback: function(r){
+						frm.trigger('update_items');
+					}
+				});
+			},
+		]);
 	},
 	update_items: function(frm){
 		frm.trigger('get_locations');
@@ -274,11 +279,8 @@ frappe.ui.form.on('Pick List', {
 					sales_order: frm.doc.sales_order,
 				},
 				callback: function(r){
-					console.log(r)
 					if (r.message){
-						console.log(r.message)
 						r.message.forEach(function(item, index){
-							// console.log(item)
 							var d = frm.add_child('sales_order_item')
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
@@ -321,12 +323,12 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 			customer: frm.doc.customer,
 			idx: d.idx,
 			picked_qty: d.picked_qty,
-			batch_no: me.batch_no,
+			batch_no: d.batch_no,
 			delivered_qty: me.delivered_qty,
 			delivered_real_qty: me.delivered_real_qty,
-			wastage_qty: me.wastage_qty,
-			doctype: me.doctype,
-			name: me.name
+			wastage_qty: d.wastage_qty,
+			doctype: cdt,
+			name: cdn
 		});
 	}
 });

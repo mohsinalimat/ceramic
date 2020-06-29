@@ -25,6 +25,7 @@ def before_submit(self, method):
 	update_remaining_qty(self)
 	self.picked_sales_orders = []
 	self.available_qty = []
+	self.sales_order_item = []
 
 def on_submit(self, method):
 	check_item_qty(self)
@@ -402,7 +403,7 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 
 		# current_picked = item.picked_qty - item.delivered_qty - item.wastage_qty
 
-		item.available_qty = actual_qty - pick_list_available
+		item.available_qty = actual_qty - pick_list_available + item.qty
 		item.actual_qty = actual_qty
 	
 	return pick_list_list
@@ -528,7 +529,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				""")[0][0] or 0
 				
 				available_qty = actual_qty - pick_list_available + (doc.qty - doc.delivered_qty - doc.wastage_qty)
-				if available_qty < abs(unpick_qty):
+				if available_qty < doc.qty - unpick_qty:
 					frappe.throw(f"Qty can not be greater than available qty in Lot {available_qty}")
 				
 				doc.db_set('qty', doc.qty - unpick_qty)
@@ -653,7 +654,7 @@ def get_sales_order_items(sales_order):
 			'sales_order': doc.name,
 			'sales_order_item': item.name,
 			'qty': item.qty - item.wastage_qty - item.delivered_qty,
-			'real_qty': item.qty - item.delivered_real_qty,
+			'real_qty': item.real_qty - item.delivered_real_qty,
 			'item_code': item.item_code,
 			'rate': item.rate,
 			'discounted_rate': item.discounted_rate,
