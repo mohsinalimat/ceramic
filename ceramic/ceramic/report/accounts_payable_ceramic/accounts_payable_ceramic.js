@@ -6,10 +6,16 @@ frappe.query_reports["Accounts Payable Ceramic"] = {
 		{
 			"fieldname":"company",
 			"label": __("Company"),
-			"fieldtype": "Link",
-			"options": "Company",
-			"reqd": 1,
-			"default": frappe.defaults.get_user_default("Company")
+			"fieldtype": "MultiSelectList",
+			"default": [frappe.defaults.get_user_default("Company")],
+			"get_data": function (text) {
+				return frappe.db.get_link_options('Company', text, {
+					authority : 'Unauthorized'
+				})
+			},
+			"change": function () {
+				frappe.query_report.refresh();
+			}
 		},
 		{
 			"fieldname":"ageing_based_on",

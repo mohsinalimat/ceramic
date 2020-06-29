@@ -34,6 +34,12 @@ def execute(filters=None):
 class ReceivablePayableReport(object):
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
+		if not self.filters.get("company"):
+			default_company = frappe.defaults.get_user_default("Company")
+			if default_company and frappe.db.get_value("Company", default_company,"authority") == "Unauthorized":
+				self.filters.company = [default_company]
+			else:
+				frappe.throw("Please select Company")
 		self.filters.report_date = getdate(self.filters.report_date or nowdate())
 		self.age_as_on = getdate(nowdate()) \
 			if self.filters.report_date > getdate(nowdate()) \
@@ -45,12 +51,13 @@ class ReceivablePayableReport(object):
 		self.party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
 		self.get_columns()
 		self.get_data()
-		self.data_map()
+		self.make_data_map()
 		self.update_data()
 		self.get_chart_data()
 		return self.columns, self.data, None, self.chart, None, self.skip_total_row
 	
-	def data_map(self):
+
+	def make_data_map(self):
 		self.data_map = {}
 		for d in self.data:
 			self.data_map.setdefault(d.voucher_no, {})\
@@ -64,7 +71,7 @@ class ReceivablePayableReport(object):
 		uncovered_voucher = []
 
 		for row in data:
-			if row.company != self.filters.company:
+			if row.company not in self.filters.company:
 				row.billed_amount = row.invoiced
 				row.bank_paid = row.paid
 				row.bank_outstanding = row.outstanding
@@ -88,7 +95,7 @@ class ReceivablePayableReport(object):
 
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
 					self.data.append(row)
-			elif row.company == self.filters.company and not row.reference_doc:
+			elif row.company in self.filters.company and not row.reference_doc:
 				row.cash_amount = row.invoiced
 				row.cash_paid = row.paid
 				row.cash_outstanding = row.outstanding
@@ -119,7 +126,16 @@ class ReceivablePayableReport(object):
 	def set_defaults(self):
 		if not self.filters.get("company"):
 			self.filters.company = frappe.db.get_single_value('Global Defaults', 'default_company')
-		self.company_currency = frappe.get_cached_value('Company',  self.filters.get("company"), "default_currency")
+		company_currency = []
+		for company in self.filters.get("company"):
+			company_currency.append(frappe.get_cached_value('Company', company, "default_currency"))
+			
+		company_currency = list(set(company_currency))
+		if len(company_currency) > 1:
+			frappe.throw("You can not select two companies with different default currencies")
+		else:
+			for currency in company_currency:
+				self.company_currency = currency
 		self.currency_precision = get_currency_precision() or 2
 		self.dr_or_cr = "debit" if self.filters.party_type == "Customer" else "credit"
 		self.party_type = self.filters.party_type
@@ -730,9 +746,15 @@ class ReceivablePayableReport(object):
 			return "order by gle.posting_date, gle.party"
 
 	def add_common_filters(self, conditions, values, party_type_field):
+		company_placeholder_list = []
 		if self.filters.company:
-			alternate_company = frappe.get_value("Company", self.filters.company, 'alternate_company')
-			conditions.append(f"gle.company in ('{self.filters.company}', '{alternate_company}')")
+			for company in self.filters.company:
+				company_placeholder_list.append(company) 
+				alternate_company = frappe.get_value("Company", company, 'alternate_company')
+				company_placeholder_list.append(alternate_company)
+
+			company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
+			conditions.append(f"gle.company in ({company_placeholder})")
 
 		if self.filters.finance_book:
 			conditions.append("ifnull(finance_book, '') in (%s, '')")
@@ -746,7 +768,7 @@ class ReceivablePayableReport(object):
 		# get GL with "receivable" or "payable" account_type
 		account_type = "Receivable" if self.party_type == "Customer" else "Payable"
 		accounts = [d.name for d in frappe.get_all("Account",
-			filters={"account_type": account_type, "company": ['in', (self.filters.company, alternate_company)]})]
+			filters={"account_type": account_type, "company": ['in', company_placeholder_list]})]
 		conditions.append("account in (%s)" % ','.join(['%s'] *len(accounts)))
 		values += accounts
 
@@ -844,7 +866,7 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_('Payment Term'), fieldname='payment_term', fieldtype='Data')
 			self.add_column(label=_('Invoice Grand Total'), fieldname='invoice_grand_total')
 
-		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Bank Outstanding Amount'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt, cint
-from erpnext.accounts.party import get_partywise_advanced_payment_amount
+#from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from ceramic.ceramic.report.accounts_receivable_ceramic.accounts_receivable_ceramic import ReceivablePayableReport
 from six import iteritems
 
@@ -16,6 +16,7 @@ def execute(filters=None):
 	}
 
 	return AccountsReceivableSummary(filters).run(args)
+
 
 class AccountsReceivableSummary(ReceivablePayableReport):
 	def run(self, args):
@@ -32,29 +33,16 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		self.get_party_total(args)
 
-		party_advance_amount = get_partywise_advanced_payment_amount(self.party_type,
-			self.filters.report_date, self.filters.company) or {}
-
 		for party, party_dict in iteritems(self.party_total):
-			if party_dict.outstanding == 0:
+			if party_dict.outstanding == 0 and party_dict.bank_outstanding == 0 and party_dict.cash_outstanding ==0:
 				continue
 
 			row = frappe._dict()
 
-			# row.party = party
-			# row.primary_customer = primary_customer
-			# row.primary_customer = frappe.db.get_value("Customer", row.party, 'primary_customer')
 			if self.party_naming_by == "Naming Series":
 				row.party_name = frappe.get_cached_value(self.party_type, party, scrub(self.party_type) + "_name")
 
 			row.update(party_dict)
-			
-			# Advance against party
-			row.advance = party_advance_amount.get(party, 0)
-
-			# In AR/AP, advance shown in paid columns,
-			# but in summary report advance shown in separate column
-			row.paid -= row.advance
 			
 			self.data.append(row)
 			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party'])) 

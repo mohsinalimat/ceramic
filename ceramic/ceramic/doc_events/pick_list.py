@@ -343,7 +343,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
 				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked,
-				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
+				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty - soi.picked_qty as qty, soi.qty as so_qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
 				`tabSales Order`as so ON soi.parent = so.name 
@@ -364,7 +364,7 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 	pick_list_list = frappe.db.sql(f"""
 		SELECT 
 			pli.sales_order, pli.sales_order_item, pli.customer, pli.name as pick_list_item,
-			pli.date, pli.item_code, pli.qty as picked_qty, pli.delivered_qty, pli.wastage_qty,
+			pli.date, pli.item_code, pli.qty, pli.qty - pli.delivered_qty - pli.wastage_qty as picked_qty, pli.delivered_qty, pli.wastage_qty,
 			pli.delivered_qty, pli.batch_no,
 			pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
 			pli.conversion_factor, pli.name, pli.parent
@@ -487,6 +487,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 	if pick_list_item and pick_list:
 		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
+		soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
 		if not unpick_qty:
 			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
 			doc.db_set('qty', doc.qty - diff_qty)
@@ -501,13 +502,40 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				doc.cancel()
 				doc.delete()
 		else:
-			if unpick_qty > doc.qty - doc.wastage_qty - doc.delivered_qty:
+			if unpick_qty > 0 and unpick_qty > doc.qty - doc.wastage_qty - doc.delivered_qty:
 				frappe.throw(f"You can not unpick qty {unpick_qty} higher than remaining pick qty { doc.qty - doc.wastage_qty - doc.delivered_qty }")
+			elif unpick_qty < 0:
+				actual_qty = frappe.db.sql(f"""
+					SELECT
+						SUM(sle.`actual_qty`) AS `actual_qty`
+					FROM
+						`tabStock Ledger Entry` sle, `tabBatch` batch
+					WHERE
+						sle.batch_no = batch.name
+						and sle.`item_code` = '{soi_doc.item_code}'
+						and sle.batch_no = '{doc.batch_no}'
+					GROUP BY
+						`batch_no`
+					HAVING `actual_qty` > 0
+				""")[0][0]
+
+				pick_list_available = frappe.db.sql(f"""
+					SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
+					JOIN `tabPick List` AS pl ON pl.name = pli.parent
+					WHERE `item_code` = '{soi_doc.item_code}'
+					AND batch_no = '{doc.batch_no}'
+					AND pl.docstatus = 1
+				""")[0][0] or 0
+				
+				available_qty = actual_qty - pick_list_available + (doc.qty - doc.delivered_qty - doc.wastage_qty)
+				if available_qty < abs(unpick_qty):
+					frappe.throw(f"Qty can not be greater than available qty in Lot {available_qty}")
+				
+				doc.db_set('qty', doc.qty - unpick_qty)
+				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
 			else:
 				doc.db_set('qty', doc.qty - unpick_qty)
-
-				soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
-				soi_doc.db_set('picked_qty', soi_doc.picked_qty - unpick_qty)
+				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
 
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
@@ -624,27 +652,28 @@ def get_sales_order_items(sales_order):
 		items.append({
 			'sales_order': doc.name,
 			'sales_order_item': item.name,
-			'qty': item.qty,
-			'real_qty': item.qty,
+			'qty': item.qty - item.wastage_qty - item.delivered_qty,
+			'real_qty': item.qty - item.delivered_real_qty,
 			'item_code': item.item_code,
 			'rate': item.rate,
 			'discounted_rate': item.discounted_rate,
-			'picked_qty': item.picked_qty,
+			'picked_qty': item.picked_qty - item.delivered_qty,
+			'delivered_qty': item.delivered_qty,
+			'wastage_qty': item.wastage_qty,
+			'delivered_real_qty': item.delivered_real_qty
 		})
 	return items
 
 @frappe.whitelist()
-def update_pick_list(picked_qty, pick_list_item):
-	pick_list_item_doc = frappe.get_doc("Pick List Item", pick_list_item)
+def update_pick_list(items):
+	picked_items = json.loads(items)
+	for item in picked_items:
+		pick_list_item_doc = frappe.get_doc("Pick List Item", item['pick_list_item'])
 
-	picked_qty_old = pick_list_item_doc.qty
-	diff_qty = picked_qty_old - flt(picked_qty)
+		picked_qty_old = pick_list_item_doc.qty
+		diff_qty = picked_qty_old - flt(item['picked_qty'])
 
-	if not diff_qty:
-		return 'success'
-
-	pick_list_item_doc.db_set('qty', picked_qty_old - diff_qty)
-	so_picked = frappe.db.get_value("Sales Order Item", pick_list_item_doc.sales_order_item, 'picked_qty')
-	frappe.db.set_value('Sales Order Item', pick_list_item_doc.sales_order_item, 'picked_qty', so_picked - diff_qty)
+		if diff_qty:
+			unpick_item(pick_list_item_doc.sales_order, sales_order_item = pick_list_item_doc.sales_order_item, pick_list = pick_list_item_doc.parent, pick_list_item = pick_list_item_doc.name, unpick_qty = diff_qty)
 
 	return 'success'

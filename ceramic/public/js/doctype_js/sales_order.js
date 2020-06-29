@@ -597,6 +597,9 @@ frappe.ui.form.on('Sales Order', {
 	},
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
+		if (!frm.doc.primary_customer) {
+			frm.set_value('primary_customer',frm.doc.customer)
+		}
 	},
 	naming_series: function (frm) {
 		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {

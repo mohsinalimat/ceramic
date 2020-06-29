@@ -13,6 +13,9 @@
   "sales_order",
   "sales_order_item",
   "picked_qty",
+  "delivered_qty",
+  "wastage_qty",
+  "delivered_real_qty",
   "batch_no",
   "view_detail"
  ],
@@ -100,10 +103,30 @@
    "fieldtype": "Link",
    "label": "Batch No",
    "options": "Batch"
+  },
+  {
+   "default": "0",
+   "fieldname": "delivered_qty",
+   "fieldtype": "Float",
+   "label": "Delivered qty",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "wastage_qty",
+   "fieldtype": "Float",
+   "label": "Wastage qty",
+   "reqd": 1
+  },
+  {
+   "fieldname": "delivered_real_qty",
+   "fieldtype": "Float",
+   "label": "Delivered Real Qty",
+   "reqd": 1
   }
  ],
  "istable": 1,
- "modified": "2020-06-25 20:59:16.680966",
+ "modified": "2020-06-28 15:28:51.558137",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Sales Order Item Pick List",

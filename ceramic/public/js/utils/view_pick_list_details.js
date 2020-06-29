@@ -73,7 +73,7 @@ pickListItem = Class.extend({
 				reqd: 0,
 				read_only: 1,
 				default: me.qty,
-				read_only: 0
+				read_only: 1
 			},
 			{fieldtype:'Column Break'},
 			{
@@ -82,7 +82,7 @@ pickListItem = Class.extend({
 				fieldname: 'real_qty',
 				reqd: 0,
 				default: me.real_qty,
-				read_only: 0,
+				read_only: 1,
 			},
 			{fieldtype:'Column Break'},
 			{
@@ -108,9 +108,24 @@ pickListItem = Class.extend({
 
 			let picked_qty = me.values.picked_qty + me.picked_qty
 			let so_qty = me.values.so_qty
-
-            me.update_pick_list();
-            me.dialog.hide();
+			if (me.values.qty >= me.values.picked_qty){
+				frappe.run_serially([
+					() => {
+						me.frm.trigger('create_remaining_pick');
+					},
+					() => {
+						me.update_pick_list();
+						me.dialog.hide();
+					},
+					() => {
+						frappe.model.set_value(me.doctype, me.name, 'picked_qty', me.values.picked_qty)
+						me.frm.refresh_field('sales_order_item')
+						me.frm.trigger('get_locations')
+					}
+				])
+			} else {
+				frappe.msgprint("Picked Qty should be less than " + me.qty)
+			}
 		});
 
 		let $package_wrapper = this.get_item_location_wrapper();
@@ -127,7 +142,7 @@ pickListItem = Class.extend({
 		let filters = {'item_code': me.item_code};
 		me.get_items(filters);
 
-		this.bind_events();
+		// this.bind_events();
 	},
 	get_items: function(filters) {
 		let me = this;
@@ -193,8 +208,12 @@ pickListItem = Class.extend({
 						'label': 'Picked Qty',
 						'fieldtype': 'Float',
 						'fieldname': 'picked_qty',
+						'default':0.0,
 						'read_only': 1,
 						'in_list_view': 1,
+						change: function(){
+							me.cal_picked_qty()
+						}
 					},
 					{
 						'label': 'Actual Qty',
@@ -243,10 +262,9 @@ pickListItem = Class.extend({
 	cal_picked_qty: function(){
 		let me = this;
 
-		let selected_item_locations = me.get_selected_item_locations();
-		let picked_qty = frappe.utils.sum((selected_item_locations || []).map(row => row.to_pick_qty));
+		let selected_item_locations = me.dialog.fields_dict.item_locations.df.data;
+		let picked_qty = frappe.utils.sum((selected_item_locations || []).map(row => row.picked_qty));
 		me.dialog.set_value('picked_qty', picked_qty);
-		
 	},
 	set_item_location_data: function(){
 		let me = this;
@@ -314,18 +332,23 @@ pickListItem = Class.extend({
 	},
 	update_pick_list: function () {
 		let me = this;
+		let items = []
 		me.dialog.fields_dict.item_locations.df.data.forEach(function(row, int){
-			frappe.call({
-				method: 'ceramic.ceramic.doc_events.pick_list.update_pick_list',
-				freeze: true,
-				args: {
-					picked_qty: flt(row.picked_qty),
-					pick_list_item: row.pick_list_item
-				},
-				callback: function(r){
-
-				}
+			items.push({
+				picked_qty: flt(flt(row.picked_qty) + flt(row.waste_qty) + flt(row.delivered_qty)),
+				pick_list_item: row.pick_list_item
 			})
+		})
+		
+		frappe.call({
+			method: 'ceramic.ceramic.doc_events.pick_list.update_pick_list',
+			freeze: true,
+			args: {
+				items: items
+			},
+			callback: function(r){
+
+			}
 		})
 	},
 });

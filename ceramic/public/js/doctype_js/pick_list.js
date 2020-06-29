@@ -90,8 +90,8 @@ frappe.ui.form.on('Pick List', {
 				'name':d.sales_order_item,
 				'docname':d.sales_order_item,
 				'idx':d.idx,
-				'real_qty':d.real_qty,
-				'qty':d.qty
+				'real_qty':d.real_qty + d.delivered_real_qty,
+				'qty':d.qty + d.delivered_qty + d.wastage_qty
 			})
 		});
 		
@@ -172,9 +172,9 @@ frappe.ui.form.on('Pick List', {
 			callback: function(r){
 				if (r.message){
 					r.message.forEach(function(item, index){
-						if ((item.qty - item.picked_qty) > 0.0){
+						if ((item.so_qty - item.picked_qty) > 0.0){
 							var d = frm.add_child('locations')
-							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.qty)
+							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty)
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
 							frappe.model.set_value(d.doctype, d.name, 'date', item.transaction_date);
@@ -289,6 +289,9 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'discounted_rate', item.discounted_rate);
 							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.picked_qty);
 							frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
+							frappe.model.set_value(d.doctype, d.name, 'delivered_qty', item.delivered_qty);
+							frappe.model.set_value(d.doctype, d.name, 'delivered_real_qty', item.delivered_real_qty);
+							frappe.model.set_value(d.doctype, d.name, 'wastage_qty', item.wastage_qty);
 						});
 						frm.refresh_field('sales_order_item');
 					}
@@ -318,7 +321,12 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 			customer: frm.doc.customer,
 			idx: d.idx,
 			picked_qty: d.picked_qty,
-			batch_no: me.batch_no
+			batch_no: me.batch_no,
+			delivered_qty: me.delivered_qty,
+			delivered_real_qty: me.delivered_real_qty,
+			wastage_qty: me.wastage_qty,
+			doctype: me.doctype,
+			name: me.name
 		});
 	}
 });

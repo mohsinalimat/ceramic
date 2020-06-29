@@ -203,7 +203,7 @@ def get_conditions(filters):
 def get_stock_ledger_entries(filters):
 	conditions = get_conditions(filters)
 	return frappe.db.sql("""
-		select sle.item_code, i.item_group, i.tile_quality, i.item_design, i.website_image as image, batch.lot_no, batch.packing_type, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
+		select sle.item_code, i.item_group, i.tile_quality, i.item_design, i.image as image, batch.lot_no, batch.packing_type, sle.batch_no, sle.posting_date, sum(actual_qty) as actual_qty
 		from `tabStock Ledger Entry` as sle 
 		JOIN `tabItem` as i on i.item_code = sle.item_code
 		JOIN `tabBatch` as batch on batch.name = sle.batch_no
@@ -261,7 +261,7 @@ def get_picked_qty(filters,float_precision):
 def get_picked_items(filters):
 	conditions = get_picked_conditions(filters)
 	return frappe.db.sql(f"""
-				SELECT pli.item_code, pli.batch_no, pli.warehouse, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as pickedqty
+				SELECT pli.item_code, pli.batch_no, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as pickedqty
 				FROM `tabPick List Item` as pli 
 				JOIN `tabPick List` as pl on pli.parent = pl.name 
 				JOIN `tabItem` as i on i.item_code = pli.item_code

@@ -222,6 +222,11 @@ frappe.ui.form.on('Delivery Note', {
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
+	before_save: function (frm) {
+		if (!frm.doc.primary_customer) {
+			frm.set_value('primary_customer', frm.doc.customer)
+		}
+	},
 	customer: function (frm) {
 		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
 		    frm.set_value("primary_customer", r.message.primary_customer)

@@ -1,4 +1,4 @@
-// Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
+// Copyright (c) Finbyz Tech Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
 frappe.query_reports["Accounts Receivable Ceramic Summary"] = {
@@ -6,16 +6,15 @@ frappe.query_reports["Accounts Receivable Ceramic Summary"] = {
 		{
 			"fieldname":"company",
 			"label": __("Company"),
-			"fieldtype": "Link",
-			"options": "Company",
-			"reqd": 1,
-			"default": frappe.defaults.get_user_default("Company"),
-			get_query: () => {
-				return {
-					filters: {
-						'authority': "Unauthorized"
-					}
-				}
+			"fieldtype": "MultiSelectList",
+			"default": [frappe.defaults.get_user_default("Company")],
+			"get_data": function (text) {
+				return frappe.db.get_link_options('Company', text, {
+					authority : 'Unauthorized'
+				})
+			},
+			"change": function () {
+				frappe.query_report.refresh();
 			}
 		},
 		{

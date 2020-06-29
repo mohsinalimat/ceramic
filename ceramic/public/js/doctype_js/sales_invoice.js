@@ -182,6 +182,9 @@ frappe.ui.form.on('Sales Invoice', {
 		})
 	},
 	before_save: function (frm) {
+		if (!frm.doc.primary_customer) {
+			frm.set_value('primary_customer', frm.doc.customer)
+		}
 		frm.trigger('calculate_total');
 	},
 	calculate_total: function (frm) {
