@@ -153,11 +153,6 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 			"options": "Sales Person"
 		},
 		{
-			"fieldname": "group_by_party",
-			"label": __("Group By Customer"),
-			"fieldtype": "Check"
-		},
-		{
 			"fieldname":"based_on_payment_terms",
 			"label": __("Based On Payment Terms"),
 			"fieldtype": "Check",

@@ -49,13 +49,16 @@
         width: 140px;
         height: 140px;
         background-color: #002c67;
+        opacity: 0.99 !important
     }
 
     .product-img {
         position: relative;
         top: 20px;
         left: 20px;
-        width: 140px;
+        max-width: 140px !important;
+        max-width: 140px !important;
+        opacity: 0.99 !important;
     }
 
     .group-text {
@@ -107,7 +110,7 @@
                 <tbody>
                     <tr>
                         <td width="10%" >
-                            <p class="field-title group-text" style="font-weight: 400; color: #002c67; !important"> Group:</p>
+                            <p class="field-title group-text" style="font-weight: 400; color: #002c67 !important"> Group:</p>
 
                         </td>
                         <td>
@@ -136,10 +139,10 @@
                                 <div class="overlap-wrapper">
                                     <div class="img-background"></div>
                                     {% if(data[i].image){ %}
-                                    <img style="width: 140px !important;" class="product-img" src="{{data[i].image}}"
+                                    <img  class="product-img" src="{{data[i].image}}"
                                         alt="tile-image">
                                     {% } else { %}
-                                    <img style="width: 140px !important;" class="product-img" src="/files/no-image.png"
+                                    <img  class="product-img" src="/files/no-image.png"
                                         alt="tile-image">
                                     {% } %}
                                 </div>
