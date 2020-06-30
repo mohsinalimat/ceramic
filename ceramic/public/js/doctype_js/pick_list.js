@@ -253,8 +253,7 @@ frappe.ui.form.on('Pick List', {
 		});
 	},
 	check_qty: function(frm, cdt, cdn){
-		
-		frm.doc.available_qty.forEach(function(item, index){
+		(frm.doc.available_qty || []).forEach(function(item, index){
 			let qty = 0;
 			(frm.doc.locations || []).forEach(function(value, key){
 				if (value.item_code == item.item_code && value.batch_no == item.batch_no){

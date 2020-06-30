@@ -325,6 +325,7 @@ doc_events = {
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
+		"on_update_after_submit": "ceramic.ceramic.doc_events.payment_entry.on_update_after_submit",
 	},	
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",

@@ -101,8 +101,18 @@ def before_update_after_submit(self, method):
 	self.calculate_taxes_and_totals()
 
 def on_update_after_submit(self, method):
+	delete_pick_list(self)
 	update_picked_percent(self)
 	#checking_rate(self)
+
+def delete_pick_list(self):
+	pick_list_list = frappe.get_list("Pick List Item", {'sales_order': self.name})
+
+	for item in pick_list_list:
+		pl = frappe.get_doc("Pick List Item", item.name)
+		if not frappe.db.exists("Sales Order Item", pl.sales_order_item):
+			pl.cancel()
+			pl.delete()
 	
 def on_cancel(self, method):
 	remove_pick_list(self)

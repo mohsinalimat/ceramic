@@ -108,21 +108,8 @@ pickListItem = Class.extend({
 			if (flt(me.values.qty) >= flt(me.values.picked_qty)){
 				frappe.run_serially([
 					() => {
-						setTimeout(function(){
-							frappe.model.set_value(me.doctype, me.name, 'qty', me.values.qty);
-							frappe.model.set_value(me.doctype, me.name, 'real_qty', me.values.real_qty); 
-							me.frm.refresh_field('sales_order_item')
-						}, 1000);
-					},
-					() => {
-						setTimeout(function(){ me.frm.trigger('create_remaining_pick'); }, 1000);
-					},
-					() => {
 						setTimeout(function(){ me.update_pick_list(); me.dialog.hide(); }, 500);
 					},
-					() => {
-						setTimeout(function(){ me.frm.trigger('update_items') }, 1000);
-					}
 				])
 			} else {
 				frappe.msgprint("Picked Qty should be less than " + me.qty)
@@ -144,6 +131,15 @@ pickListItem = Class.extend({
 		me.get_items(filters);
 
 		// this.bind_events();
+	},
+	update_available_qty_child: function(filters){
+		let me = this;
+		me.dialog.fields_dict.item_locations.df.data.forEach(value => {
+			// value.actual_available_qty = value.available_qty
+			value.available_qty = value.actual_available_qty - value.picked_qty
+			// item_locations.grid.df.data.push(value)
+		});
+		me.dialog.fields_dict.item_locations.grid.refresh();
 	},
 	get_items: function(filters) {
 		let me = this;
@@ -169,6 +165,8 @@ pickListItem = Class.extend({
 			callback: function(r){
 				item_locations.grid.df.data = []
 				r.message.forEach(value => {
+					value.actual_available_qty = value.available_qty
+					value.available_qty = value.actual_available_qty - value.picked_qty
 					item_locations.grid.df.data.push(value)
 				});
 
@@ -214,20 +212,29 @@ pickListItem = Class.extend({
 						'in_list_view': 1,
 						change: function(){
 							me.cal_picked_qty()
+							me.update_available_qty_child()
 						}
-					},
-					{
-						'label': 'Actual Qty',
-						'fieldtype': 'Float',
-						'fieldname': 'actual_qty',
-						'read_only': 1,
-						'in_list_view': 1,
 					},
 					{
 						'label': 'Available Qty',
 						'fieldtype': 'Float',
 						'fieldname': 'available_qty',
-						'read_only': 1,
+						read_only: 1,
+						'in_list_view': 1,
+					},
+					{
+						'label': 'Actual Available Qty',
+						'fieldtype': 'Float',
+						'fieldname': 'actual_available_qty',
+						read_only: 1,
+						'in_list_view': 0,
+						// 'hidden': 1
+					},
+					{
+						'label': 'Actual Qty',
+						'fieldtype': 'Float',
+						'fieldname': 'actual_qty',
+						read_only: 1,
 						'in_list_view': 1,
 					},
 					{
@@ -333,23 +340,55 @@ pickListItem = Class.extend({
 	},
 	update_pick_list: function () {
 		let me = this;
-		let items = []
-		me.dialog.fields_dict.item_locations.df.data.forEach(function(row, int){
-			items.push({
-				picked_qty: flt(flt(row.picked_qty) + flt(row.waste_qty) + flt(row.delivered_qty)),
-				pick_list_item: row.pick_list_item
-			})
-		})
 		
-		frappe.call({
-			method: 'ceramic.ceramic.doc_events.pick_list.update_pick_list',
-			freeze: true,
-			args: {
-				items: items
+		let trans_items = []
+		frappe.run_serially([
+			() => {
+				frappe.model.set_value(me.doctype, me.name, 'qty', me.values.qty);
+				frappe.model.set_value(me.doctype, me.name, 'real_qty', me.values.real_qty); 
+				me.frm.refresh_field('sales_order_item')
+				$.each(me.frm.doc["sales_order_item"] || [], function(i, d) {
+					trans_items.push({
+						'item_code': d.item,
+						'rate':d.rate,
+						'discounted_rate': d.discounted_rate,
+						'name':d.sales_order_item,
+						'docname':d.sales_order_item,
+						'idx':d.idx,
+						'real_qty':d.real_qty + d.delivered_real_qty,
+						'qty':d.qty + d.delivered_qty + d.wastage_qty
+					})
+				});
 			},
-			callback: function(r){
-
-			}
-		})
+			() => {
+				frappe.call({
+					method: 'ceramic.update_item.update_child_qty_rate',
+					args: {
+						parent_doctype: "Sales Order",
+						trans_items: trans_items,
+						parent_doctype_name: me.frm.doc.sales_order,
+					},
+					callback: function(r){
+						let items = []
+						me.dialog.fields_dict.item_locations.df.data.forEach(function(row, int){
+							items.push({
+								picked_qty: flt(flt(row.picked_qty) + flt(row.waste_qty) + flt(row.delivered_qty)),
+								pick_list_item: row.pick_list_item
+							})
+						})
+						frappe.call({
+							method: 'ceramic.ceramic.doc_events.pick_list.update_pick_list',
+							freeze: true,
+							args: {
+								items: items
+							},
+							callback: function(r){
+								me.frm.trigger('update_items')
+							}
+						})
+					}
+				});
+			},
+		]);
 	},
 });
