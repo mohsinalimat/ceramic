@@ -11,11 +11,11 @@ from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 
-# import erpnext
-# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+import erpnext
+from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
@@ -325,6 +325,7 @@ doc_events = {
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.payment_entry.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.payment_entry.on_trash",
+		"on_update_after_submit": "ceramic.ceramic.doc_events.payment_entry.on_update_after_submit",
 	},	
 	"Stock Entry":{
 		"before_validate": "ceramic.ceramic.doc_events.stock_entry.before_validate",

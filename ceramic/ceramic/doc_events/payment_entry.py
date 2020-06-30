@@ -15,6 +15,10 @@ def validate(self,method):
 			if item.reference_doctype == 'Sales Invoice':
 				item.ref_invoice = frappe.db.get_value("Sales Invoice", item.reference_name, 'si_ref')
 
+def on_update_after_submit(self, method):
+	if self.pe_ref:
+		frappe.db.set_value("Payment Entry", self.pe_ref, 'primary_customer', self.primary_customer)
+
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
 	create_payment_entry(self)

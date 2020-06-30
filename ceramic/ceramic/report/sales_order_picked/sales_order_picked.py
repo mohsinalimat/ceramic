@@ -83,7 +83,8 @@ def get_data(filters):
 		LEFT JOIN 
 			`tabPick List Item` as pni ON soi.name = pni.sales_order_item and pni.docstatus = 1
 		WHERE
-			so.docstatus = 1%s
+			pni.qty != (pni.delivered_qty + pni.wastage_qty)
+			and so.docstatus = 1%s
 		Having
 			pending > 0
 		ORDER BY

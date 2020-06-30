@@ -312,24 +312,26 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 	view_detail: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
 
-		view_pick_list_details({
-			frm:frm,
-			item_code: d.item,
-			sales_order: d.sales_order,
-			sales_order_item: d.sales_order_item,
-			qty: d.qty,
-			real_qty: d.real_qty,
-			company: frm.doc.company,
-			customer: frm.doc.customer,
-			idx: d.idx,
-			picked_qty: d.picked_qty,
-			batch_no: d.batch_no,
-			delivered_qty: me.delivered_qty,
-			delivered_real_qty: me.delivered_real_qty,
-			wastage_qty: d.wastage_qty,
-			doctype: cdt,
-			name: cdn
-		});
+		if (d.sales_order_item){
+			view_pick_list_details({
+				frm:frm,
+				item_code: d.item,
+				sales_order: d.sales_order,
+				sales_order_item: d.sales_order_item,
+				qty: d.qty,
+				real_qty: d.real_qty,
+				company: frm.doc.company,
+				customer: frm.doc.customer,
+				idx: d.idx,
+				picked_qty: d.picked_qty,
+				batch_no: d.batch_no,
+				delivered_qty: me.delivered_qty,
+				delivered_real_qty: me.delivered_real_qty,
+				wastage_qty: d.wastage_qty,
+				doctype: cdt,
+				name: cdn
+			});
+		}
 	}
 });
 
