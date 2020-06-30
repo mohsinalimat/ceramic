@@ -530,7 +530,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				
 				available_qty = actual_qty - pick_list_available + (doc.qty - doc.delivered_qty - doc.wastage_qty)
 				if available_qty < doc.qty - unpick_qty:
-					frappe.throw(f"Qty can not be greater than available qty in Lot {available_qty}")
+					frappe.throw(f"Qty can not be greater than available qty {available_qty} in Lot {doc.lot_no}")
 				
 				doc.db_set('qty', doc.qty - unpick_qty)
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
