@@ -331,6 +331,12 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 				name: cdn
 			});
 		}
+	},
+	qty: function(frm, cdt, cdn){
+		let d = locals[cdt][cdn]
+		console.log(d.qty)
+		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
+		frm.refresh_field('sales_order_item')
 	}
 });
 
