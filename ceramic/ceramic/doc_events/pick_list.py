@@ -364,13 +364,14 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 def get_pick_list_so(sales_order, item_code, sales_order_item):
 	pick_list_list = frappe.db.sql(f"""
 		SELECT 
-			pli.sales_order, pli.sales_order_item, pli.customer, pli.name as pick_list_item,
+			pli.sales_order, pli.sales_order_item, pli.customer, pli.name as pick_list_item, batch.packing_type,
 			pli.date, pli.item_code, pli.qty, pli.qty - pli.delivered_qty - pli.wastage_qty as picked_qty, pli.delivered_qty, pli.wastage_qty,
 			pli.delivered_qty, pli.batch_no,
 			pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
 			pli.conversion_factor, pli.name, pli.parent
 		FROM
 			`tabPick List Item` as pli
+			JOIN `tabBatch` as batch on batch.name = pli.batch_no
 		WHERE
 			pli.item_code = '{item_code}' AND
 			pli.sales_order = '{sales_order}' AND
@@ -661,7 +662,8 @@ def get_sales_order_items(sales_order):
 			'picked_qty': item.picked_qty - item.delivered_qty,
 			'delivered_qty': item.delivered_qty,
 			'wastage_qty': item.wastage_qty,
-			'delivered_real_qty': item.delivered_real_qty
+			'delivered_real_qty': item.delivered_real_qty,
+			'packing_type': item.packing_type
 		})
 	return items
 

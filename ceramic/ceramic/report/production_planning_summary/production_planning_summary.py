@@ -94,7 +94,7 @@ def get_data(filters):
 		SELECT
 			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, soi.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
 			SUM(soi.picked_qty - soi.delivered_qty - soi.wastage_qty) as picked_total, SUM(soi.qty - soi.picked_qty) as to_pick,
-			SUM(soi.`picked_qty`) as `picked_qty`, soi.packing_type
+			SUM(soi.`picked_qty`) as `picked_qty`, soi.packing_type as packing_type
 		FROM
 			`tabSales Order Item` as soi JOIN
 			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1 JOIN
@@ -110,12 +110,14 @@ def get_data(filters):
 	for item in data:
 		actual_qty = frappe.db.sql(f"""
 		SELECT
-			SUM(`actual_qty`) AS `actual_qty`
+			SUM(sle.`actual_qty`) AS `actual_qty`
 		FROM
-			`tabStock Ledger Entry`
+			`tabStock Ledger Entry` as sle
+			JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		WHERE
-			`item_code`='{item['item_code']}'
-			and `company` = '{filters['company']}'
+			sle.`item_code`='{item['item_code']}'
+			and sle.`company` = '{filters['company']}'
+			and batch.`packing_type` = '{item['packing_type']}'
 		""")
 
 		item['actual_qty'] = actual_qty[0][0] or 0.0
