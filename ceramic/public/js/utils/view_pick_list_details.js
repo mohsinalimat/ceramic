@@ -57,6 +57,15 @@ pickListItem = Class.extend({
 				default: me.sales_order
 			},
 			{
+				label: __('Packing Type'),
+				fieldtype:'Link',
+				fieldname: 'packing_type',
+				options: 'Packing Type',
+				reqd: 1,
+				read_only: 1,
+				default: me.packing_type
+			},
+			{
 				label: __('Sales Order Item'),
 				fieldtype:'Data',
 				fieldname: 'sales_order_item',
@@ -171,6 +180,7 @@ pickListItem = Class.extend({
 					picked_item_location.grid.df.data.push({
 						'batch_no': value.batch_no,
 						'lot_no': value.lot_no,
+						'packing_type': value.packing_type,
 						'available_qty': value.available_qty,
 						'actual_available_qty': value.actual_available_qty,
 						'actual_qty': value.actual_qty,
@@ -210,6 +220,14 @@ pickListItem = Class.extend({
 						'label': 'Lot',
 						'fieldtype': 'Data',
 						'fieldname': 'lot_no',
+						'read_only': 1,
+						'in_list_view': 1,
+						'columns': 2,
+					},
+					{
+						'label': 'Packing Type',
+						'fieldtype': 'Data',
+						'fieldname': 'packing_type',
 						'read_only': 1,
 						'in_list_view': 1,
 						'columns': 2,

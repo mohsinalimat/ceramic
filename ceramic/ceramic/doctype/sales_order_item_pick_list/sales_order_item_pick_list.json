@@ -5,6 +5,7 @@
  "engine": "InnoDB",
  "field_order": [
   "item",
+  "packing_type",
   "qty",
   "real_qty",
   "rate",
@@ -78,7 +79,6 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Discounted Rate",
-   "permlevel": 1,
    "reqd": 1
   },
   {
@@ -89,6 +89,7 @@
    "label": "View Detail"
   },
   {
+   "columns": 1,
    "default": "0",
    "fieldname": "picked_qty",
    "fieldtype": "Float",
@@ -125,10 +126,17 @@
    "fieldtype": "Float",
    "label": "Delivered Real Qty",
    "reqd": 1
+  },
+  {
+   "fieldname": "packing_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Packing Type",
+   "options": "Packing Type"
   }
  ],
  "istable": 1,
- "modified": "2020-06-29 19:04:54.324486",
+ "modified": "2020-06-30 16:22:39.963201",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Sales Order Item Pick List",

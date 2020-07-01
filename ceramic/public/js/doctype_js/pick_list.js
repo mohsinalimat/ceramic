@@ -282,6 +282,7 @@ frappe.ui.form.on('Pick List', {
 						r.message.forEach(function(item, index){
 							var d = frm.add_child('sales_order_item')
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
+							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
 							frappe.model.set_value(d.doctype, d.name, 'item', item.item_code);
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
@@ -328,9 +329,16 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 				delivered_real_qty: me.delivered_real_qty,
 				wastage_qty: d.wastage_qty,
 				doctype: cdt,
-				name: cdn
+				name: cdn,
+				packing_type: d.packing_type 
 			});
 		}
+	},
+	qty: function(frm, cdt, cdn){
+		let d = locals[cdt][cdn]
+		console.log(d.qty)
+		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
+		frm.refresh_field('sales_order_item')
 	}
 });
 
