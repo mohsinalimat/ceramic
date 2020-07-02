@@ -39,13 +39,13 @@ erpnext.utils.update_child_items = function (opts) {
 					return this.data;
 				},
 				fields: [{
-					fieldtype:'Data',
-					fieldname:"docname",
+					fieldtype: 'Data',
+					fieldname: "docname",
 					read_only: 1,
 					hidden: 1,
 				}, {
-					fieldtype:'Link',
-					fieldname:"item_code",
+					fieldtype: 'Link',
+					fieldname: "item_code",
 					options: 'Item',
 					in_list_view: 1,
 					read_only: 0,
@@ -76,24 +76,24 @@ erpnext.utils.update_child_items = function (opts) {
 					// 	}
 					// }
 				}, {
-					fieldtype:'Float',
-					fieldname:"qty",
+					fieldtype: 'Float',
+					fieldname: "qty",
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
 					columns: 1,
 					label: __('Qty')
 				}, {
-					fieldtype:'Float',
-					fieldname:"real_qty",
+					fieldtype: 'Float',
+					fieldname: "real_qty",
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
 					columns: 1,
 					label: __('Real Qty')
 				}, {
-					fieldtype:'Currency',
-					fieldname:"rate",
+					fieldtype: 'Currency',
+					fieldname: "rate",
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
@@ -101,8 +101,8 @@ erpnext.utils.update_child_items = function (opts) {
 					permlevel: 2,
 					label: __('Rate')
 				}, {
-					fieldtype:'Currency',
-					fieldname:"discounted_rate",
+					fieldtype: 'Currency',
+					fieldname: "discounted_rate",
 					default: 0,
 					read_only: 0,
 					in_list_view: 1,
@@ -112,7 +112,7 @@ erpnext.utils.update_child_items = function (opts) {
 				}]
 			},
 		],
-		primary_action: function() {
+		primary_action: function () {
 			const trans_items = this.get_values()["trans_items"];
 			console.log(trans_items);
 			frappe.call({
@@ -124,7 +124,7 @@ erpnext.utils.update_child_items = function (opts) {
 					'parent_doctype_name': frm.doc.name,
 					'child_docname': child_docname
 				},
-				callback: function() {
+				callback: function () {
 					frm.reload_doc();
 				}
 			});
@@ -151,59 +151,59 @@ erpnext.utils.update_child_items = function (opts) {
 }
 
 erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.extend({
-	refresh: function(doc, dt, dn) {
+	refresh: function (doc, dt, dn) {
 		var me = this;
 		// FinByz Changes Start
 		// this._super();
 		// FinByz Changes Over
 		let allow_delivery = false;
 
-		
 
-		if (doc.docstatus==1) {
 
-			if (this.frm.doc.per_delivered == 0){
+		if (doc.docstatus == 1) {
+
+			if (this.frm.doc.per_delivered == 0) {
 				this.frm.add_custom_button(__('Unpick All'), () => this.unpick_all(this.frm.doc))
 			}
 
-			if(this.frm.has_perm("submit")) {
-				if(doc.status === 'On Hold') {
-				   // un-hold
-				   this.frm.add_custom_button(__('Resume'), function() {
-					   me.frm.cscript.update_status('Resume', 'Draft')
-				   }, __("Status"));
+			if (this.frm.has_perm("submit")) {
+				if (doc.status === 'On Hold') {
+					// un-hold
+					this.frm.add_custom_button(__('Resume'), function () {
+						me.frm.cscript.update_status('Resume', 'Draft')
+					}, __("Status"));
 
-				   if(flt(doc.per_delivered, 6) < 100 || flt(doc.per_billed) < 100) {
-					   // close
-					   this.frm.add_custom_button(__('Close'), () => this.close_sales_order(), __("Status"))
-				   }
+					if (flt(doc.per_delivered, 6) < 100 || flt(doc.per_billed) < 100) {
+						// close
+						this.frm.add_custom_button(__('Close'), () => this.close_sales_order(), __("Status"))
+					}
 				}
-			   	else if(doc.status === 'Closed') {
-				   // un-close
-				   this.frm.add_custom_button(__('Re-open'), function() {
-					   me.frm.cscript.update_status('Re-open', 'Draft')
-				   }, __("Status"));
-			   }
+				else if (doc.status === 'Closed') {
+					// un-close
+					this.frm.add_custom_button(__('Re-open'), function () {
+						me.frm.cscript.update_status('Re-open', 'Draft')
+					}, __("Status"));
+				}
 			}
-			if(doc.status !== 'Closed') {
-				if(doc.status !== 'On Hold') {
+			if (doc.status !== 'Closed') {
+				if (doc.status !== 'On Hold') {
 					allow_delivery = this.frm.doc.items.some(item => item.delivered_by_supplier === 0 && item.qty > flt(item.delivered_qty))
 						&& !this.frm.doc.skip_delivery_note
 
 					if (this.frm.has_perm("submit")) {
-						if(flt(doc.per_delivered, 6) < 100 || flt(doc.per_billed) < 100) {
+						if (flt(doc.per_delivered, 6) < 100 || flt(doc.per_billed) < 100) {
 							// hold
 							this.frm.add_custom_button(__('Hold'), () => this.hold_sales_order(), __("Status"))
 							// close
 							this.frm.add_custom_button(__('Close'), () => this.close_sales_order(), __("Status"))
 						}
 					}
-					if (this.frm.doc.per_picked !== 100){
+					if (this.frm.doc.per_picked !== 100) {
 						this.frm.add_custom_button(__('Pick List'), () => this.create_pick_list(), __('Create'));
 					}
 
 					// delivery note
-					if(flt(doc.per_delivered, 6) < 100 && ["Sales", "Shopping Cart"].indexOf(doc.order_type)!==-1 && allow_delivery && doc.workflow_state == "Approved") {
+					if (flt(doc.per_delivered, 6) < 100 && ["Sales", "Shopping Cart"].indexOf(doc.order_type) !== -1 && allow_delivery && doc.workflow_state == "Approved") {
 						this.frm.add_custom_button(__('Delivery Note'), () => this.make_delivery_note_based_on_delivery_date(), __('Create'));
 						this.frm.add_custom_button(__('Work Order'), () => this.make_work_order(), __('Create'));
 					}
@@ -216,7 +216,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 					// FinByz Changes End
 
 					// material request
-					if(!doc.order_type || ["Sales", "Shopping Cart"].indexOf(doc.order_type)!==-1
+					if (!doc.order_type || ["Sales", "Shopping Cart"].indexOf(doc.order_type) !== -1
 						&& flt(doc.per_delivered, 6) < 100) {
 						this.frm.add_custom_button(__('Material Request'), () => this.make_material_request(), __('Create'));
 						this.frm.add_custom_button(__('Request for Raw Materials'), () => this.make_raw_material_request(), __('Create'));
@@ -224,7 +224,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 					// make purchase order
 					// FinByz Changes Start
-						// this.frm.add_custom_button(__('Purchase Order'), () => this.make_purchase_order(), __('Create'));
+					// this.frm.add_custom_button(__('Purchase Order'), () => this.make_purchase_order(), __('Create'));
 					// FinByz Changes End
 
 					// maintenance
@@ -243,8 +243,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 					// }
 					// FinByz Changes End
 
-					if(!doc.auto_repeat) {
-						this.frm.add_custom_button(__('Subscription'), function() {
+					if (!doc.auto_repeat) {
+						this.frm.add_custom_button(__('Subscription'), function () {
 							erpnext.utils.make_subscription(doc.doctype, doc.name)
 						}, __('Create'))
 					}
@@ -256,7 +256,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 							let internal = customer.is_internal_customer;
 							let disabled = customer.disabled;
 							if (internal === 1 && disabled === 0) {
-								me.frm.add_custom_button("Inter Company Order", function() {
+								me.frm.add_custom_button("Inter Company Order", function () {
 									me.make_inter_company_order();
 								}, __('Create'));
 							}
@@ -274,9 +274,9 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 			}
 		}
 
-		if (this.frm.doc.docstatus===0) {
+		if (this.frm.doc.docstatus === 0) {
 			this.frm.add_custom_button(__('Quotation'),
-				function() {
+				function () {
 					erpnext.utils.map_current_doc({
 						method: "erpnext.selling.doctype.quotation.quotation.make_sales_order",
 						source_doctype: "Quotation",
@@ -302,19 +302,19 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		this.order_type(doc);
 	},
 
-	unpick_all: function(doc, dt, dn){
+	unpick_all: function (doc, dt, dn) {
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 			args: {
 				'sales_order': doc.name
 			},
-			callback: function(r){
+			callback: function (r) {
 				frappe.msgprint(r.message);
 			}
 		})
 	},
 
-	price_list_rate: function(doc, cdt, cdn){
+	price_list_rate: function (doc, cdt, cdn) {
 		let d = locals[cdt][cdn];
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.sales_order.get_rate_discounted_rate",
@@ -324,8 +324,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 				"company": doc.company,
 				"so_number": doc.name || null
 			},
-			callback: function(r){
-				if (r.message){
+			callback: function (r) {
+				if (r.message) {
 					frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
 					frappe.model.set_value(cdt, cdn, 'discounted_rate', r.message.discounted_rate);
 				}
@@ -334,24 +334,24 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 		this.calculate_taxes_and_totals();
 	},
-	discounted_rate: function(frm, cdt, cdn){
+	discounted_rate: function (frm, cdt, cdn) {
 		this.calculate_taxes_and_totals();
 	},
-	calculate_taxes: function() {
+	calculate_taxes: function () {
 		var me = this;
 		this.frm.doc.rounding_adjustment = 0;
 		var actual_tax_dict = {};
 
 		// maintain actual tax rate based on idx
-		$.each(this.frm.doc["taxes"] || [], function(i, tax) {
+		$.each(this.frm.doc["taxes"] || [], function (i, tax) {
 			if (tax.charge_type == "Actual") {
 				actual_tax_dict[tax.idx] = flt(tax.tax_amount, precision("tax_amount", tax));
 			}
 		});
 
-		$.each(this.frm.doc["items"] || [], function(n, item) {
+		$.each(this.frm.doc["items"] || [], function (n, item) {
 			var item_tax_map = me._load_item_tax_rate(item.item_tax_rate);
-			$.each(me.frm.doc["taxes"] || [], function(i, tax) {
+			$.each(me.frm.doc["taxes"] || [], function (i, tax) {
 				// tax_amount represents the amount of tax for the current step
 				var current_tax_amount = me.get_current_tax_amount(item, tax, item_tax_map);
 
@@ -365,7 +365,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 				// accumulate tax amount into tax.tax_amount
 				if (tax.charge_type != "Actual" &&
-					!(me.discount_amount_applied && me.frm.doc.apply_discount_on=="Grand Total")) {
+					!(me.discount_amount_applied && me.frm.doc.apply_discount_on == "Grand Total")) {
 					tax.tax_amount += current_tax_amount;
 				}
 
@@ -377,7 +377,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 				tax.tax_amount_after_discount_amount += current_tax_amount;
 
 				// for buying
-				if(tax.category) {
+				if (tax.category) {
 					// if just for valuation, do not add the tax amount in total
 					// hence, setting it as 0 for further steps
 					current_tax_amount = (tax.category == "Valuation") ? 0.0 : current_tax_amount;
@@ -387,11 +387,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 				// note: grand_total_for_current_item contains the contribution of
 				// item's amount, previously applied tax and the current tax on that item
-				if(i==0) {
+				if (i == 0) {
 					tax.grand_total_for_current_item = flt(item.discounted_net_amount + current_tax_amount);
 				} else {
 					tax.grand_total_for_current_item =
-						flt(me.frm.doc["taxes"][i-1].grand_total_for_current_item + current_tax_amount);
+						flt(me.frm.doc["taxes"][i - 1].grand_total_for_current_item + current_tax_amount);
 				}
 
 				// set precision in the last item iteration
@@ -414,23 +414,23 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 			});
 		});
 	},
-	get_current_tax_amount: function(item, tax, item_tax_map) {
+	get_current_tax_amount: function (item, tax, item_tax_map) {
 		var tax_rate = this._get_tax_rate(tax, item_tax_map);
 		var current_tax_amount = 0.0;
 
-		if(tax.charge_type == "Actual") {
+		if (tax.charge_type == "Actual") {
 			// distribute the tax amount proportionally to each item row
 			var actual = flt(tax.tax_amount, precision("tax_amount", tax));
 			current_tax_amount = this.frm.doc.net_total ?
 				((item.net_amount / this.frm.doc.net_total) * actual) : 0.0;
 
-		} else if(tax.charge_type == "On Net Total") {
+		} else if (tax.charge_type == "On Net Total") {
 			current_tax_amount = (tax_rate / 100.0) * item.discounted_net_amount;
-		} else if(tax.charge_type == "On Previous Row Amount") {
+		} else if (tax.charge_type == "On Previous Row Amount") {
 			current_tax_amount = (tax_rate / 100.0) *
 				this.frm.doc["taxes"][cint(tax.row_id) - 1].tax_amount_for_current_item;
 
-		} else if(tax.charge_type == "On Previous Row Total") {
+		} else if (tax.charge_type == "On Previous Row Total") {
 			current_tax_amount = (tax_rate / 100.0) *
 				this.frm.doc["taxes"][cint(tax.row_id) - 1].grand_total_for_current_item;
 		}
@@ -439,14 +439,14 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 
 		return current_tax_amount;
 	},
-	close_sales_order: function(){
+	close_sales_order: function () {
 		this.frm.cscript.update_status("Close", "Closed")
 		frappe.call({
 			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 			args: {
 				'sales_order': this.frm.doc.name,
 			},
-			callback: function(r){
+			callback: function (r) {
 				fappe.msgprint(str(r.message));
 			}
 		})
@@ -460,12 +460,12 @@ this.frm.cscript.onload = function (frm) {
 			filters: [
 
 				['is_sales_item', '=', 1],
-				['authority','in',['', doc.authority]]
+				['authority', 'in', ['', doc.authority]]
 			]
-			
+
 		}
 	});
-	
+
 	this.frm.set_query("customer", function (doc) {
 		return { query: "erpnext.controllers.queries.customer_query" }
 	});
@@ -542,27 +542,29 @@ frappe.ui.form.on('Sales Order', {
 		}
 	},
 	customer: function (frm) {
-		if (frm.doc.customer){
-			frm.set_value("primary_customer",'')
-			frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+		if (frm.doc.customer) {
+			frm.set_value("primary_customer", '')
+			frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function (r) {
 				frm.set_value("primary_customer", r.message.primary_customer)
 			})
-			if (!frm.doc.primary_customer){
-				setTimeout(function () { 
+			if (!frm.doc.primary_customer) {
+				setTimeout(function () {
 					frm.doc.sales_team = []
 					frappe.model.with_doc("Customer", frm.doc.customer, function () {
 						var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
 						$.each(cus_doc.sales_team, function (index, row) {
-							let st = frm.add_child("sales_team");
-							st.sales_person = row.sales_person
-							st.contact_no = row.contact_no
-							st.allocated_percentage = row.allocated_percentage
-							st.allocated_amount = row.allocated_amount
-							st.commission_rate = row.commission_rate
-							st.incentives = row.incentives
-							st.company = row.company
-							st.regional_sales_manager = row.regional_sales_manager
-							st.sales_manager = row.sales_manager
+							if (row.company == frm.doc.company) {
+								let st = frm.add_child("sales_team");
+								st.sales_person = row.sales_person
+								st.contact_no = row.contact_no
+								st.allocated_percentage = row.allocated_percentage
+								st.allocated_amount = row.allocated_amount
+								st.commission_rate = row.commission_rate
+								st.incentives = row.incentives
+								st.company = row.company
+								st.regional_sales_manager = row.regional_sales_manager
+								st.sales_manager = row.sales_manager
+							}
 						})
 
 						frm.refresh_field("sales_team");
@@ -578,16 +580,18 @@ frappe.ui.form.on('Sales Order', {
 				frappe.model.with_doc("Customer", frm.doc.primary_customer, function () {
 					var cus_doc = frappe.model.get_doc("Customer", frm.doc.primary_customer)
 					$.each(cus_doc.sales_team, function (index, row) {
-						let st = frm.add_child("sales_team");
-						st.sales_person = row.sales_person
-						st.contact_no = row.contact_no
-						st.allocated_percentage = row.allocated_percentage
-						st.allocated_amount = row.allocated_amount
-						st.commission_rate = row.commission_rate
-						st.incentives = row.incentives
-						st.company = row.company
-						st.regional_sales_manager = row.regional_sales_manager
-						st.sales_manager = row.sales_manager
+						if (row.company == frm.doc.company) {
+							let st = frm.add_child("sales_team");
+							st.sales_person = row.sales_person
+							st.contact_no = row.contact_no
+							st.allocated_percentage = row.allocated_percentage
+							st.allocated_amount = row.allocated_amount
+							st.commission_rate = row.commission_rate
+							st.incentives = row.incentives
+							st.company = row.company
+							st.regional_sales_manager = row.regional_sales_manager
+							st.sales_manager = row.sales_manager
+						}
 					})
 
 					frm.refresh_field("sales_team");
@@ -598,7 +602,7 @@ frappe.ui.form.on('Sales Order', {
 	before_save: function (frm) {
 		frm.trigger('calculate_total');
 		if (!frm.doc.primary_customer) {
-			frm.set_value('primary_customer',frm.doc.customer)
+			frm.set_value('primary_customer', frm.doc.customer)
 		}
 	},
 	naming_series: function (frm) {
@@ -650,7 +654,7 @@ frappe.ui.form.on('Sales Order', {
 		frm.set_value("total_picked_qty", total_picked_qty);
 		frm.set_value("total_picked_weight", total_picked_weight);
 	},
-	update_items: function(frm){
+	update_items: function (frm) {
 		erpnext.utils.update_child_items({
 			frm: frm,
 			child_docname: "items",
@@ -676,7 +680,7 @@ frappe.ui.form.on('Sales Order', {
 			},
 			callback: function (r) {
 				if (r.message) {
-					frm.set_value('taxes_and_charges',r.message)
+					frm.set_value('taxes_and_charges', r.message)
 				}
 				else {
 					frm.set_value('taxes_and_charges', null)
@@ -692,17 +696,17 @@ frappe.ui.form.on("Sales Order Item", {
 		row.delivery_date = frm.doc.delivery_date;
 		frm.refresh_field("items");
 	},
-	discounted_rate: (frm, cdt, cdn) =>{
+	discounted_rate: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);
 		frappe.model.set_value(cdt, cdn, 'discounted_net_amount', d.discounted_rate * d.real_qty);
 	},
-	real_qty: (frm, cdt, cdn) =>{
+	real_qty: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);
 		frappe.model.set_value(cdt, cdn, 'discounted_net_amount', d.discounted_rate * d.real_qty);
 	},
-	qty: (frm, cdt, cdn) =>{
+	qty: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
 		frm.events.calculate_total(frm)
@@ -719,7 +723,7 @@ frappe.ui.form.on("Sales Order Item", {
 				'sales_order': frm.doc.name,
 				'sales_order_item': d.name,
 			},
-			callback: function(r){
+			callback: function (r) {
 				fappe.msgprint(str(r.message));
 			}
 		})

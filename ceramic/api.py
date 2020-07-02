@@ -656,3 +656,14 @@ def update_so_wastage_qty():
 	
 	frappe.db.commit()
 
+def sales_order_item_patch():
+	data = frappe.get_list("Pick List Item", ['name', 'sales_order_item'])
+
+	for item in data:
+		if not frappe.db.exists("Sales Order Item", item.sales_order_item):
+			print(item.name)
+			pl = frappe.get_doc("Pick List Item", item.name)
+
+			if pl.docstatus == 1:
+				pl.cancel()
+			pl.delete()

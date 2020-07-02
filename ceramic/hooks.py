@@ -3,19 +3,21 @@ from __future__ import unicode_literals
 from . import __version__ as app_version
 
 # import erpnext
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry
 
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
 from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
+from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
+BankStatementTransactionEntry.create_payment_entry = create_payment_entry
 
-# import erpnext
-# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+import erpnext
+from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
@@ -349,6 +351,7 @@ doc_events = {
 		"before_naming": "ceramic.ceramic.doc_events.batch.batch_before_name",
 	},
 	"Customer": {
+		"before_vaildate": "ceramic.ceramic.doc_events.customer.validate",
 		'validate':"ceramic.ceramic.doc_events.customer.validate",
 	},
 	"Lead": {
