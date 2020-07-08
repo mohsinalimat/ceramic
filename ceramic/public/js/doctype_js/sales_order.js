@@ -605,21 +605,21 @@ frappe.ui.form.on('Sales Order', {
 			frm.set_value('primary_customer', frm.doc.customer)
 		}
 	},
-	naming_series: function (frm) {
-		if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
-			frappe.call({
-				method: "ceramic.api.check_counter_series",
-				args: {
-					'name': frm.doc.naming_series,
-					'company_series': frm.doc.company_series,
-					'date': frm.doc.transaction_date,
-				},
-				callback: function (e) {
-					frm.set_value("series_value", e.message);
-				}
-			});
-		}
-	},
+	// naming_series: function (frm) {
+	// 	if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
+	// 		frappe.call({
+	// 			method: "ceramic.api.check_counter_series",
+	// 			args: {
+	// 				'name': frm.doc.naming_series,
+	// 				'company_series': frm.doc.company_series,
+	// 				'date': frm.doc.transaction_date,
+	// 			},
+	// 			callback: function (e) {
+	// 				frm.set_value("series_value", e.message);
+	// 			}
+	// 		});
+	// 	}
+	// },
 	company: function (frm) {
 		frm.trigger('naming_series');
 	},

@@ -217,6 +217,7 @@ doc_events = {
 		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
 	},
 	"Sales Order": {
+		#"before_save": "ceramic.api.before_save",
 		"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.ceramic.doc_events.sales_order.before_validate", 
@@ -351,7 +352,7 @@ doc_events = {
 		"before_naming": "ceramic.ceramic.doc_events.batch.batch_before_name",
 	},
 	"Customer": {
-		"before_vaildate": "ceramic.ceramic.doc_events.customer.validate",
+		"before_validate": "ceramic.ceramic.doc_events.customer.before_validate",
 		'validate':"ceramic.ceramic.doc_events.customer.validate",
 	},
 	"Lead": {

@@ -94,6 +94,7 @@ frappe.ui.form.on('Stock Entry', {
 						},
 					},
 					callback: function (r) {
+						console.log(r.message)
 						if (r.message) {
 							frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message);
 						}
@@ -442,7 +443,30 @@ frappe.ui.form.on('Stock Entry Detail', {
 				}
 			}
 		});
-	},	
+	},
+	item_code: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if (d.lot_no) {
+			frappe.call({
+				method: "ceramic.query.get_batch",
+				args: {
+					'args': {
+						'item_code': d.item_code,
+						'lot_no': d.lot_no,
+						'packing_type': d.packing_type
+					},
+				},
+				callback: function (r) {
+					if (r.message) {
+						frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message);
+					}
+					else {
+						frappe.model.set_value(d.doctype, d.name, 'batch_no', "");
+					}
+				}
+			});	
+		}
+	},
 });
 
 erpnext.stock.select_batch_and_serial_no = (frm, item) => {

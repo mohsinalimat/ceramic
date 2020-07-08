@@ -194,8 +194,14 @@ def get_conditions(filters):
 
 	if filters.get("company"):
 		conditions += " and sle.company = '%s'" % filters["company"]
+	
+	if filters.get("sales_order"):
+		so_doc = frappe.get_doc("Sales Order", filters.sales_order)
+		so_item_list = [row.item_code for row in so_doc.items]
 
-	#frappe.msgprint(f'Get condition: {conditions}')
+		so_item_list_placeholder = ', '.join(f"'{i}'" for i in so_item_list)
+		conditions += " and sle.item_code in (%s)" % so_item_list_placeholder
+
 	return conditions
 
 
@@ -209,7 +215,7 @@ def get_stock_ledger_entries(filters):
 		JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
 		group by voucher_no, batch_no, item_code
-		order by i.item_group, i.item_code""" %
+		order by i.item_group, sle.item_code""" %
 		conditions, as_dict=1)
 
 
@@ -295,5 +301,13 @@ def get_picked_conditions(filters):
 	
 	if filters.get("company"):
 		conditions += " and pl.company = '%s'" % filters["company"]
+	
+	if filters.get("sales_order"):
+		so_doc = frappe.get_doc("Sales Order", filters.sales_order)
+		so_item_list = [row.item_code for row in so_doc.items]
+
+		so_item_list_placeholder = ', '.join(f"'{i}'" for i in so_item_list)
+		
+		conditions += " and i.item_code in (%s)" % so_item_list_placeholder
 
 	return conditions

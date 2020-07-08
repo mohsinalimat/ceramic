@@ -83,23 +83,23 @@ frappe.query_reports["Accounts Payable Ceramic"] = {
 			"label": __("Supplier"),
 			"fieldtype": "Link",
 			"options": "Supplier",
-			on_change: () => {
-				var supplier = frappe.query_report.get_filter_value('supplier');
-				if (supplier) {
-					frappe.db.get_value('Supplier', supplier, "tax_id", function(value) {
-						frappe.query_report.set_filter_value('tax_id', value["tax_id"]);
-					});
-				} else {
-					frappe.query_report.set_filter_value('tax_id', "");
-				}
-			}
+			// on_change: () => {
+			// 	var supplier = frappe.query_report.get_filter_value('supplier');
+			// 	if (supplier) {
+			// 		frappe.db.get_value('Supplier', supplier, "tax_id", function(value) {
+			// 			frappe.query_report.set_filter_value('tax_id', value["tax_id"]);
+			// 		});
+			// 	} else {
+			// 		frappe.query_report.set_filter_value('tax_id', "");
+			// 	}
+			// }
 		},
-		{
-			"fieldname":"payment_terms_template",
-			"label": __("Payment Terms Template"),
-			"fieldtype": "Link",
-			"options": "Payment Terms Template"
-		},
+		// {
+		// 	"fieldname":"payment_terms_template",
+		// 	"label": __("Payment Terms Template"),
+		// 	"fieldtype": "Link",
+		// 	"options": "Payment Terms Template"
+		// },
 		{
 			"fieldname":"supplier_group",
 			"label": __("Supplier Group"),

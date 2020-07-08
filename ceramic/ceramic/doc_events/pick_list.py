@@ -343,7 +343,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 	for item in item_codes:
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
-				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked,
+				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked, so.order_rank as order_item_priority,
 				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty - soi.picked_qty as qty, soi.qty as so_qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
@@ -469,7 +469,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 				pli.date, pli.item_code, pli.qty, pli.picked_qty,
 				pli.delivered_qty, pli.batch_no,
 				pli.lot_no, pli.uom, pli.stock_qty, pli.stock_uom,
-				pli.conversion_factor, pli.name, pli.parent, so.per_picked
+				pli.conversion_factor, pli.name, pli.parent, so.per_picked, so.order_rank
 			FROM
 				`tabPick List Item` as pli JOIN 
 				`tabPick List`as pl ON pli.parent = pl.name JOIN
@@ -663,7 +663,8 @@ def get_sales_order_items(sales_order):
 			'delivered_qty': item.delivered_qty,
 			'wastage_qty': item.wastage_qty,
 			'delivered_real_qty': item.delivered_real_qty,
-			'packing_type': item.packing_type
+			'packing_type': item.packing_type,
+			'order_rank': doc.order_rank
 		})
 	return items
 

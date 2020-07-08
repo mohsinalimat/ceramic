@@ -20,14 +20,13 @@ def before_validate(self, method):
 		
 		if (not item.discounted_rate) and (item.so_detail):
 			item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
-
+	validate_item_from_so(self)
 	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
 	so_doc.db_set("customer",self.customer)
 	so_doc.db_set("title",self.customer)
 	so_doc.db_set("customer_name",self.customer_name)
 
 def validate(self, method):
-	validate_item_from_so(self)
 	validate_item_from_picklist(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)

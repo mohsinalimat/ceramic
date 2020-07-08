@@ -151,6 +151,7 @@ frappe.ui.form.on('Pick List', {
 						frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
 						frappe.model.set_value(d.doctype, d.name, 'date', item.date);
 						frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
+						frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
 					});
 					frm.refresh_field('picked_sales_orders');
 				} else {
@@ -192,6 +193,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'so_real_qty', item.real_qty);
 							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
+							frappe.model.set_value(d.doctype, d.name, 'order_item_priority', item.order_item_priority);
 						}
 					});
 					frm.refresh_field('locations');
@@ -294,6 +296,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'delivered_qty', item.delivered_qty);
 							frappe.model.set_value(d.doctype, d.name, 'delivered_real_qty', item.delivered_real_qty);
 							frappe.model.set_value(d.doctype, d.name, 'wastage_qty', item.wastage_qty);
+							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
 						});
 						frm.refresh_field('sales_order_item');
 					}

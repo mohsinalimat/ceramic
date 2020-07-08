@@ -10,6 +10,10 @@ def before_save(self, method):
 		for row in self.items:
 			row.expense_account = f"Temporary Opening - {abbr}"
 
+def before_validate(self, method):
+	for item in self.items:
+		item.qty = flt(item.qty)
+
 def validate(self,method):
 	calculate_totals(self)
 	if self._action == 'submit':
@@ -48,6 +52,9 @@ def before_validate(self,method):
 		if row.qty == 0:
 			to_list.append(row)	
 	[self.remove(row) for row in to_list]
+
+	for item in self.items:
+		item.qty = flt(item.qty)
 
 def before_submit(self,method):
 	StockEntry.update_work_order = update_work_order

@@ -488,9 +488,21 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
 
 	picked_item = frappe.db.sql(f"""
-		SELECT pli.date, pli.customer, pli.sales_order, pli.sales_order_item, pl.name as pick_list, pli.name as pick_list_item, pli.item_code, pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty, pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
-		WHERE pl.docstatus = 1 AND pli.item_code = '{item_code}' AND pli.batch_no = '{batch_no}' AND pl.company = '{company}' AND pl.posting_date <= '{to_date}'
-		HAVING remaining_qty > 0
+		SELECT 
+			pli.date, pli.sales_order, pli.sales_order_item,
+			pl.name as pick_list, pli.name as pick_list_item, pli.item_code,
+			pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty,
+			pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty,
+			so.title as customer, so.order_rank
+		FROM 
+			`tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
+			JOIN `tabSales Order` as so on pli.sales_order = so.name
+		WHERE
+			pl.docstatus = 1 AND pli.item_code = '{item_code}' AND 
+			pli.batch_no = '{batch_no}' AND pl.company = '{company}' 
+			AND pl.posting_date <= '{to_date}'
+		HAVING
+			remaining_qty > 0
 	""", as_dict = 1)
 	
 	for item in picked_item:
@@ -657,13 +669,13 @@ def update_so_wastage_qty():
 	frappe.db.commit()
 
 def sales_order_item_patch():
-	data = frappe.get_list("Pick List Item", ['name', 'sales_order_item'])
+	data = frappe.get_list("Sales Order Item", ['name', 'sales_order_item'])
 
 	for item in data:
 		if not frappe.db.exists("Sales Order Item", item.sales_order_item):
 			print(item.name)
-			pl = frappe.get_doc("Pick List Item", item.name)
+			# pl = frappe.get_doc("Pick List Item", item.name)
 
-			if pl.docstatus == 1:
-				pl.cancel()
-			pl.delete()
+			# if pl.docstatus == 1:
+			# 	pl.cancel()
+			# pl.delete()

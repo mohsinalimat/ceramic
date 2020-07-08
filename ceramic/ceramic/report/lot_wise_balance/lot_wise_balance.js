@@ -112,6 +112,24 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"fieldtype": "Check",
 			"options": "Tile Quality",
 		},
+		{
+			"fieldname": "sales_order",
+			"label": __("Sales Order"),
+			"fieldtype": "Link",
+			"options": "Sales Order",
+			"get_query": function() {
+				var company = frappe.query_report.get_filter_value('company');
+				return {
+					"doctype": "Sales Order",
+					"filters": {
+						"company": ['in', company],
+						"docstatus": 1,
+						"per_delivered": ['!=', 100],
+						"status": ['not in', ('Draft', 'Submitted', 'Closed')]
+					}
+				}
+			}
+		},
 	]
 }
 
@@ -132,6 +150,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 		<table class="table table-bordered" style="margin: 0; font-size:80%;">
 			<thead>
 				<th>{{ __("Customer") }}</th>
+				<th>{{ __("Rank") }}</th>
 				<th>{{ __("Sales Order") }}</th>
 				<th>{{ __("SO Date") }}</th>
 				<th>{{ __("Pick List") }}</th>
@@ -142,6 +161,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 				{% for (let row of data ) { %}
 					<tr class="{{ __(row['pick_list_item']) }}">
 						<td>{{ __(row['customer']) }}</td>
+						<td>{{ __(row['order_rank']) }}</td>
 						<td>{{ __(row['sales_order_link']) }}</td>
 						<td>{{ __(row['date']) }}</td>
 						<td>{{ __(row['pick_list_link']) }}</td>

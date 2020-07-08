@@ -433,6 +433,7 @@ ItemSelector = Class.extend({
 			frappe.model.set_value(locations.doctype, locations.name, 'sales_order_item', sales_order_item);
 			frappe.model.set_value(locations.doctype, locations.name, 'batch_no', d.batch_no);
 			frappe.model.set_value(locations.doctype, locations.name, 'packing_type', d.packing_type);
+			frappe.model.set_value(locations.doctype, locations.name, 'order_item_priority', d.order_item_priority);
 		})
 
 		me.frm.doc.locations.forEach(function(d, idx){
