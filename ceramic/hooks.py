@@ -42,6 +42,9 @@ from erpnext.accounts.party import _get_party_details as party_detail
 from ceramic.api import _get_party_details as my_party_detail
 party_detail =my_party_detail
 
+from erpnext.controllers.stock_controller import StockController
+from ceramic.batch_creation import make_batches as my_make_batches
+StockController.make_batches = my_make_batches
 
 app_name = "ceramic"
 app_title = "Ceramic"
@@ -218,10 +221,10 @@ doc_events = {
 	},
 	"Sales Order": {
 		#"before_save": "ceramic.api.before_save",
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
-			"ceramic.ceramic.doc_events.sales_order.before_validate", 
-			"ceramic.api.naming_series_validate"
+			"ceramic.ceramic.doc_events.sales_order.before_validate"
+			#"ceramic.api.naming_series_validate"
 		],
 		"validate": [
 			"ceramic.controllers.item_validation.validate_item_authority", 
@@ -235,7 +238,7 @@ doc_events = {
 		"on_cancel": "ceramic.ceramic.doc_events.sales_order.on_cancel",
 	},
 	"Pick List": {
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.ceramic.doc_events.pick_list.validate", 
 			"ceramic.api.naming_series_validate"
@@ -246,7 +249,7 @@ doc_events = {
 		"before_update_after_submit": "ceramic.ceramic.doc_events.pick_list.before_update_after_submit"
 	},
 	"Delivery Note": {
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.ceramic.doc_events.delivery_note.before_validate", 
 			"ceramic.api.naming_series_validate"
@@ -263,7 +266,7 @@ doc_events = {
 	"Sales Invoice": {
 		"before_naming": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_naming",
-			"ceramic.api.before_naming"
+			#"ceramic.api.before_naming"
 		],
 		"before_validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_validate", 
@@ -279,7 +282,7 @@ doc_events = {
 		"on_trash": "ceramic.ceramic.doc_events.sales_invoice.on_trash",
 	},
 	"Purchase Order": {
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.api.naming_series_validate", 
 			"ceramic.ceramic.doc_events.purchase_order.before_validate"
@@ -288,7 +291,7 @@ doc_events = {
 		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
 	},
 	"Purchase Receipt":{
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.api.naming_series_validate",
 			"ceramic.ceramic.doc_events.purchase_receipt.before_validate",
@@ -298,7 +301,7 @@ doc_events = {
 	"Purchase Invoice": {
 		"before_naming": [
 			"ceramic.ceramic.doc_events.purchase_invoice.before_naming",
-			"ceramic.api.before_naming",
+			#"ceramic.api.before_naming",
 		],
 		"before_validate": [
 			"ceramic.ceramic.doc_events.purchase_invoice.before_validate", 
@@ -322,7 +325,7 @@ doc_events = {
 		'before_cancel': "ceramic.ceramic.doc_events.work_order.before_cancel",
 	},
 	"Payment Entry": {
-		"before_naming": "ceramic.api.before_naming",
+		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": "ceramic.api.naming_series_validate",
 		"validate": "ceramic.ceramic.doc_events.payment_entry.validate",
 		"on_submit": "ceramic.ceramic.doc_events.payment_entry.on_submit",
@@ -344,9 +347,6 @@ doc_events = {
 	},
 	"Fiscal Year": {
 		'before_save': 'ceramic.ceramic.doc_events.fiscal_year.before_save'
-	},
-	("Pick List", "Sales Invoice", "Purchase Invoice", "Payment Request", "Payment Entry", "Journal Entry", "Material Request", "Purchase Order", "Work Order", "Production Plan", "Stock Entry", "Quotation", "Sales Order", "Delivery Note", "Purchase Receipt", "Packing Slip"): {
-		"before_naming": "ceramic.api.before_naming",
 	},
 	"Batch":{
 		"before_naming": "ceramic.ceramic.doc_events.batch.batch_before_name",
