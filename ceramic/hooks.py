@@ -13,11 +13,11 @@ from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLed
 from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
 BankStatementTransactionEntry.create_payment_entry = create_payment_entry
 
-import erpnext
-from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+# import erpnext
+# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries

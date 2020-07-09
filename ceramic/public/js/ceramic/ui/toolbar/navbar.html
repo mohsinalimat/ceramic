@@ -43,8 +43,6 @@
 					<li class="divider"></li>
 					<li><a href="#" onclick="return frappe.app.logout();">
 						{%= __("Logout") %}</a></li>
-					<li><a href="#" onclick="return ceramic.restrict_access.restrict_access();">
-							{%= __("Restricted Access") %}</a></li>
 				</ul>
 			</li>
 
@@ -62,6 +60,8 @@
 						{%= __("About") %}</a></li>
 					<li><a href="#" onclick="return frappe.ui.toolbar.show_shortcuts(event);">
 						{%= __("Keyboard Shortcuts") %}</a></li>
+					<li><a href="#" onclick="return ceramic.restrict_access.restrict_access();">
+							{%= __("Restrict Access") %}</a></li>
 				</ul>
 			</li>
 
