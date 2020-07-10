@@ -272,7 +272,7 @@ def create_main_sales_invoice(self):
 				si = get_sales_invoice_entry(self.name)
 		else:
 			si = get_sales_invoice_entry(self.name)
-		si.naming_series = 'A' + self.naming_series
+		si.naming_series = 'A' + str(self.company_series) + self.naming_series
 		si.series_value = self.series_value
 		si.flags.ignore_permissions = True
 		si.si_ref = self.name

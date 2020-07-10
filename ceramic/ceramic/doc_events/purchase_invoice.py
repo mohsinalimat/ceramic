@@ -131,7 +131,7 @@ def create_main_purchase_invoice(self):
 	# If company is authorized then only cancel another invoice
 	if authority == "Authorized":
 		pi = get_purchase_invoice_entry(self.name)
-		pi.naming_series = 'A' + pi.naming_series
+		pi.naming_series = 'A' + str(self.company_series) + self.naming_series
 		pi.company_series = self.company_series
 		pi.flags.ignore_permissions = True
 
