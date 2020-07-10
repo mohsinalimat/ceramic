@@ -133,25 +133,27 @@ frappe.ui.form.on('Pick List', {
 			callback: function(r){
 				if (r.message){
 					r.message.forEach(function(item, index){
-						var d = frm.add_child('picked_sales_orders')
-						frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
-						frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
-						frappe.model.set_value(d.doctype, d.name, 'lot_no', item.lot_no);
-						frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
-						frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty);
-						frappe.model.set_value(d.doctype, d.name, 'uom', item.uom);
-						frappe.model.set_value(d.doctype, d.name, 'stock_qty', item.stock_qty);
-						frappe.model.set_value(d.doctype, d.name, 'stock_uom', item.stock_uom);
-						frappe.model.set_value(d.doctype, d.name, 'conversion_factor', item.conversion_factor);
-						frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.qty);
-						frappe.model.set_value(d.doctype, d.name, 'item_name', item.item_name);
-						frappe.model.set_value(d.doctype, d.name, 'pick_list', item.parent);
-						frappe.model.set_value(d.doctype, d.name, 'pick_list_item', item.name);
-						frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
-						frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
-						frappe.model.set_value(d.doctype, d.name, 'date', item.date);
-						frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
-						frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
+						if (item.qty > 0){
+							var d = frm.add_child('picked_sales_orders')
+							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
+							frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
+							frappe.model.set_value(d.doctype, d.name, 'lot_no', item.lot_no);
+							frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
+							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty);
+							frappe.model.set_value(d.doctype, d.name, 'uom', item.uom);
+							frappe.model.set_value(d.doctype, d.name, 'stock_qty', item.stock_qty);
+							frappe.model.set_value(d.doctype, d.name, 'stock_uom', item.stock_uom);
+							frappe.model.set_value(d.doctype, d.name, 'conversion_factor', item.conversion_factor);
+							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.qty);
+							frappe.model.set_value(d.doctype, d.name, 'item_name', item.item_name);
+							frappe.model.set_value(d.doctype, d.name, 'pick_list', item.parent);
+							frappe.model.set_value(d.doctype, d.name, 'pick_list_item', item.name);
+							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
+							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
+							frappe.model.set_value(d.doctype, d.name, 'date', item.date);
+							frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
+							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
+						}
 					});
 					frm.refresh_field('picked_sales_orders');
 				} else {
