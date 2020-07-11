@@ -205,6 +205,13 @@ cur_frm.fields_dict.customer.get_query = function (doc) {
 		}
 	}
 };
+cur_frm.fields_dict.invoice_company.get_query = function (doc) {
+	return {
+		filters: {
+			"authority": 'Authorized'
+		}
+	}
+};
 cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (doc) {
 	return {
 		filters: {
@@ -213,7 +220,19 @@ cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (do
 	}
 }
 frappe.ui.form.on('Delivery Note', {
+	onload: function (frm) {
+		if (frm.doc__islocal) {
+			frappe.db.get_value("Company", frm.doc.company, 'alternate_company', function (r) {
+				frm.set_value('invoice_company', r.alternate_company)
+			})
+		}
+	},
 	refresh: function(frm) {
+		if (frm.doc__islocal == 1) {
+			frappe.db.get_value("Company", frm.doc.company, 'alternate_company', function (r) {
+				frm.set_value('invoice_company', r.alternate_company)
+			})
+		}
 		frm.trigger('add_get_items_button')
 		if (frm.doc.tax_category && frm.doc.docstatus ==0) {
 			frm.trigger('get_taxes')

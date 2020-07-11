@@ -75,6 +75,10 @@ def calculate_totals(self):
 
 @frappe.whitelist()
 def before_submit(self, method):
+	if self.invoice_company:
+		if frappe.db.get_value("Company",self.invoice_company,'authority') == "Unauthorized":
+			frappe.throw(_("Invoice company should be authoried company"))
+
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
@@ -140,6 +144,13 @@ def validate_addresses(self):
 		frappe.throw(_("Billing Address is mandatory"))
 
 
+
+def validate_addresses(self):
+	if not self.shipping_address_name:
+		frappe.throw(_("Shipping Address is mandatory"))
+	if not self.customer_address:
+		frappe.throw(_("Billing Address is mandatory"))
+
 def check_rate_qty(self):
 	for item in self.items:
 		if not item.rate or item.rate <= 0:
@@ -197,7 +208,7 @@ def create_invoice(source_name, target_doc=None):
 	def set_missing_values(source, target):
 		target.is_pos = 0
 		target.ignore_pricing_rule = 1
-		alternate_company = frappe.db.get_value("Company", source.company, "alternate_company")
+		alternate_company = source.invoice_company or frappe.db.get_value("Company", source.company, "alternate_company")
 		target.expense_account = ""
 
 		target.update_stock = 1
@@ -266,7 +277,7 @@ def create_invoice(source_name, target_doc=None):
 		return pending_qty
 	
 	def update_taxes(source_doc, target_doc, source_parent):
-		target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+		target_company = source_parent.invoice_company or frappe.db.get_value("Company", source_parent.company, "alternate_company")
 		# item_code = frappe.db.get_value("Item", source_doc.item_code, "item_series")
 		doc = frappe.get_doc("Company", target_company)
 		target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
@@ -282,7 +293,7 @@ def create_invoice(source_name, target_doc=None):
 
 	
 	def update_item(source_doc, target_doc, source_parent):
-		target_company = frappe.db.get_value("Company", source_parent.company, "alternate_company")
+		target_company = source_parent.invoice_company or frappe.db.get_value("Company", source_parent.company, "alternate_company")
 		# item_code = frappe.db.get_value("Item", source_doc.item_code, "item_series")
 		doc = frappe.get_doc("Company", target_company)
 		target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
