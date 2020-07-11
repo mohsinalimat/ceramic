@@ -117,8 +117,32 @@ frappe.ui.form.on('Pick List', {
 		]);
 	},
 	update_items: function(frm){
-		frm.trigger('get_locations');
-		frm.trigger('get_so_items');
+		frappe.run_serially([
+			() => {
+				frm.set_df_property("update_items", "hidden", 1);
+			},
+			() => {
+				frm.doc.locations = [];
+				frm.refresh_field('locations')
+			},
+			() => {
+				frm.doc.sales_order_item = []
+				frm.refresh_field('sales_order_item')
+			},
+			() => {
+				frm.doc.locations = [];
+				frm.refresh_field('locations')
+				frm.trigger('get_locations');
+			},
+			() => {
+				frm.doc.sales_order_item = []
+				frm.refresh_field('sales_order_item')
+				frm.trigger('get_so_items');
+			},
+			() => {
+				frm.set_df_property("update_items", "hidden", 0);
+			}
+		])
 	},
 	get_picked_items: (frm) => {
 		frm.doc.picked_sales_orders = []
@@ -341,7 +365,6 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 	},
 	qty: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn]
-		console.log(d.qty)
 		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
 		frm.refresh_field('sales_order_item')
 	}
