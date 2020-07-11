@@ -15,7 +15,7 @@
   "mode_of_payment",
   "party_section",
   "primary_customer",
-  "column_break_11",
+  "section_break_9",
   "bank_account",
   "party_bank_account",
   "contact_person",
@@ -39,6 +39,7 @@
   "base_received_amount",
   "section_break_14",
   "get_outstanding_invoice",
+  "references",
   "section_break_34",
   "total_allocated_amount",
   "base_total_allocated_amount",
@@ -47,6 +48,7 @@
   "unallocated_amount",
   "difference_amount",
   "write_off_difference_amount",
+  "transaction_references",
   "reference_no",
   "column_break_23",
   "reference_date",
@@ -140,10 +142,6 @@
    "label": "Payment From / To"
   },
   {
-   "fieldname": "column_break_11",
-   "fieldtype": "Column Break"
-  },
-  {
    "depends_on": "party",
    "fieldname": "bank_account",
    "fieldtype": "Link",
@@ -188,7 +186,6 @@
   },
   {
    "bold": 1,
-   "depends_on": "eval:(in_list([\"Internal Transfer\", \"Pay\"], doc.payment_type) || doc.party)",
    "fieldname": "paid_from",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -221,7 +218,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:(in_list([\"Internal Transfer\", \"Receive\"], doc.payment_type) || doc.party)",
+   "depends_on": "eval:(in_list([\"Internal Transfer\", \"Receive\"], doc.payment_type))",
    "fieldname": "paid_to",
    "fieldtype": "Link",
    "in_global_search": 1,
@@ -267,8 +264,7 @@
    "fieldname": "source_exchange_rate",
    "fieldtype": "Float",
    "label": "Exchange Rate",
-   "print_hide": 1,
-   "reqd": 1
+   "print_hide": 1
   },
   {
    "fieldname": "base_paid_amount",
@@ -276,8 +272,7 @@
    "label": "Paid Amount (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "column_break_21",
@@ -289,15 +284,13 @@
    "fieldtype": "Currency",
    "label": "Received Amount",
    "options": "paid_to_account_currency",
-   "print_hide": 1,
-   "reqd": 1
+   "print_hide": 1
   },
   {
    "fieldname": "target_exchange_rate",
    "fieldtype": "Float",
    "label": "Exchange Rate",
-   "print_hide": 1,
-   "reqd": 1
+   "print_hide": 1
   },
   {
    "fieldname": "base_received_amount",
@@ -305,11 +298,10 @@
    "label": "Received Amount (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
-   "depends_on": "eval:(doc.party && doc.paid_from && doc.paid_to && doc.paid_amount && doc.received_amount)",
+   "depends_on": "eval:doc.primary_customer",
    "fieldname": "section_break_14",
    "fieldtype": "Section Break",
    "label": "Reference"
@@ -375,7 +367,6 @@
   },
   {
    "bold": 1,
-   "depends_on": "eval:(doc.paid_from && doc.paid_to)",
    "fieldname": "reference_no",
    "fieldtype": "Data",
    "label": "Cheque/Reference No"
@@ -386,7 +377,6 @@
   },
   {
    "bold": 1,
-   "depends_on": "eval:(doc.paid_from && doc.paid_to)",
    "fieldname": "reference_date",
    "fieldtype": "Date",
    "label": "Cheque/Reference Date",
@@ -531,10 +521,25 @@
    "in_global_search": 1,
    "label": "Primary Customer",
    "options": "Customer"
+  },
+  {
+   "fieldname": "references",
+   "fieldtype": "Table",
+   "label": "Payment Reference",
+   "options": "Primary Customer Payment Reference"
+  },
+  {
+   "fieldname": "section_break_9",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "transaction_references",
+   "fieldtype": "Section Break",
+   "label": "Transaction ID"
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-10 10:16:00.339686",
+ "modified": "2020-07-11 13:03:10.311246",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Primary Customer Payment",

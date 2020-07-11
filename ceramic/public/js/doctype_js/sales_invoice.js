@@ -223,6 +223,16 @@ frappe.ui.form.on('Sales Invoice', {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series_');
 		}
+		frappe.db.get_value("Company",frm.doc.company,['cost_center','default_income_account','abbr'],function(r){
+            frm.doc.items.forEach(function(row){
+				frappe.model.set_value(row.doctype,row.name,'cost_center',r.cost_center)
+				frappe.model.set_value(row.doctype,row.name,'income_account',r.default_income_account)
+			})
+			
+		})
+		
+		
+
 	},
 	company_series: function(frm){
 		if (frm.doc.__islocal){

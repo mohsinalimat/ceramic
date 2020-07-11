@@ -124,12 +124,21 @@ def update_status_pick_list(self):
 	change_delivery_authority(self.name)
 
 def on_submit(self,method):
+	validate_addresses(self)
 	wastage_stock_entry(self)
 	check_qty_rate(self)
 	check_rate_qty(self)
 	for item in self.items:
 		if item.against_sales_order:
 			update_picked_percent(frappe.get_doc("Sales Order", item.against_sales_order))
+	
+
+def validate_addresses(self):
+	if not self.shipping_address_name:
+		frappe.throw(_("Shipping Address is mandatory"))
+	if not self.customer_address:
+		frappe.throw(_("Billing Address is mandatory"))
+
 
 def check_rate_qty(self):
 	for item in self.items:

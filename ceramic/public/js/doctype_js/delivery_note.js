@@ -251,6 +251,7 @@ frappe.ui.form.on('Delivery Note', {
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
+		
 	},
 	add_get_items_button: (frm) => {
 		let get_query_filters = {
