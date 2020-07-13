@@ -4,7 +4,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
 from frappe.utils import flt
-from ceramic.ceramic.doc_events.sales_order import update_picked_percent
+from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
@@ -96,7 +96,7 @@ def before_submit(self, method):
 
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
-			update_picked_percent(frappe.get_doc("Sales Order", item.against_sales_order))
+			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 		
 		if item.pl_detail:
 			pick_list_batch_no = frappe.db.get_value("Pick List Item", item.pl_detail, 'batch_no')
@@ -134,7 +134,7 @@ def on_submit(self,method):
 	check_rate_qty(self)
 	for item in self.items:
 		if item.against_sales_order:
-			update_picked_percent(frappe.get_doc("Sales Order", item.against_sales_order))
+			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 	
 
 def validate_addresses(self):
@@ -181,7 +181,7 @@ def on_cancel(self, method):
 			wastage_qty = sales_order_item.wastage_qty - item.wastage_qty
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
-			update_picked_percent(frappe.get_doc("Sales Order", item.against_sales_order))
+			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 			
 	update_status_pick_list(self)
 	cancel_wastage_entry(self)

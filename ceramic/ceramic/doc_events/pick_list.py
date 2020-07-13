@@ -1,43 +1,95 @@
+import json
+
 import frappe
 from frappe import _
-from frappe.utils import today
+from frappe.utils import flt, today
 from frappe.model.mapper import get_mapped_doc, map_child_doc, map_doc, map_fields
+
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note as create_delivery_note_from_sales_order
 from erpnext.stock.doctype.pick_list.pick_list import get_items_with_location_and_quantity
-from frappe.utils import flt
-from ceramic.ceramic.doc_events.sales_order import update_picked_percent
 
-def before_vaidate(self, method):
-	remove_items_without_batch_no(self)
-	update_remaining_qty(self)
+from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
+from ceramic.update_item import update_child_qty_rate
 
 def validate(self, method):
-	check_item_qty(self)
 	remove_items_without_batch_no(self)
+	check_available_item_remaining_qty(self)
 	update_remaining_qty(self)
-
-	for item in self.locations:
-		if item.qty < 0:
-			frappe.throw(f"Row: {item.idx} Quantity can not be negative.")
+	check_qty(self)
 
 def before_submit(self, method):
 	update_available_qty(self)
 	update_remaining_qty(self)
+	check_available_item_remaining_qty(self)
+	removing_remaining_value(self)
+
+def removing_remaining_value(self):
 	self.picked_sales_orders = []
 	self.available_qty = []
 	self.sales_order_item = []
 
 def on_submit(self, method):
-	check_item_qty(self)
 	update_item_so_qty(self)
 	update_sales_order(self, "submit")
-	update_status_sales_order(self)
 
 def before_update_after_submit(self,method):
 	validate_item_qty(self)
 
-from ceramic.update_item import update_child_qty_rate
-import json
+def remove_items_without_batch_no(self):
+	""" This function is used to Removed all item from table location which dosen't have batch number  """
+
+	if self.locations:
+		locations = [item for item in self.locations if item.batch_no]
+		self.locations = locations
+
+def update_remaining_qty(self):
+	""" This function is use to update remaining qty in all all sales order """
+	
+	# getting unique list from sales_order_item from table locations
+	sales_order_item_list = set([row.sales_order_item for row in self.locations])
+
+	# updating remaining qty and validating if remaining qty is less than 0
+	for sales_order_item in sales_order_item_list:
+		qty = 0
+		for item in self.locations:
+			if sales_order_item == item.sales_order_item:
+				qty += flt(item.qty)
+				item.remaining_qty = flt(item.so_qty) - flt(item.picked_qty) - flt(qty)
+
+				if item.remaining_qty < 0:
+					frappe.throw(_(f"ROW: {item.idx} : Remaining Qty Cannot be negative."))
+
+def check_qty(self):
+	for item in self.locations:
+		if item.qty < 0:
+			frappe.throw(f"Row: {item.idx} Quantity can not be negative.")
+
+def update_available_qty(self):
+	self.available_qty = []
+	data = get_item_qty(self.company, self.item, self.customer, self.sales_order)
+	for item in data:
+		self.append('available_qty',{
+			'item_code': item.item_code,
+			'batch_no': item.batch_no,
+			'lot_no': item.lot_no,
+			'total_qty': item.total_qty,
+			'picked_qty': item.picked_qty,
+			'available_qty': item.available_qty,
+			'remaining': item.available_qty,
+			'picked_in_current': 0,
+		})
+	
+	for i in self.available_qty:
+		qty = 0
+		for j in self.locations:
+			if i.item_code == j.item_code and i.batch_no == j.batch_no:
+				qty += j.qty
+		i.picked_in_current = qty
+		i.remaining -= qty
+
+		if i.remaining < 0:
+			frappe.throw(_(f"Remaining Qty Cannot be less than 0 ({i.remaining}) for item {i.item_code} and lot {i.lot_no}"))
+
 def update_item_so_qty(self):
 	for item in self.locations:
 		doc = frappe.get_doc("Sales Order Item", item.sales_order_item)
@@ -70,9 +122,8 @@ def update_item_so_qty(self):
 
 def on_cancel(self, method):
 	update_sales_order(self, "cancel")
-	update_status_sales_order(self)
 	
-def check_item_qty(self):
+def check_available_item_remaining_qty(self):
 	for item in self.available_qty:
 		if item.remaining < 0:
 			frappe.throw(f"Row {item.idx}: Remaining Qty Less than 0")
@@ -84,11 +135,6 @@ def validate_item_qty(self):
 		if row.qty > row.so_qty:
 			frappe.throw(f"Row {row.idx}: Qty can not be greater than sales order qty {row.so_qty}")
 
-def remove_items_without_batch_no(self):
-	if self.locations:
-		locations = [item for item in self.locations if item.batch_no]
-		self.locations = locations
-
 def update_delivered_percent(self):
 	qty = 0
 	delivered_qty = 0
@@ -99,109 +145,35 @@ def update_delivered_percent(self):
 
 			item.db_set('idx', index + 1)
 
-		try:
+		if qty:
 			self.db_set('per_delivered', (delivered_qty / qty) * 100)
-		except:
+		else:
 			self.db_set('per_delivered', 0)
 
-def update_available_qty(self):
-	self.available_qty = []
-	data = get_item_qty(self.company, self.item, self.customer, self.sales_order)
-	for item in data:
-		self.append('available_qty',{
-			'item_code': item.item_code,
-			'batch_no': item.batch_no,
-			'lot_no': item.lot_no,
-			'total_qty': item.total_qty,
-			'picked_qty': item.picked_qty,
-			'available_qty': item.available_qty,
-			'remaining': item.available_qty,
-			'picked_in_current': 0,
-		})
-	
-	for i in self.available_qty:
-		qty = 0
-		for j in self.locations:
-			if i.item_code == j.item_code and i.batch_no == j.batch_no:
-				qty += j.qty
-		i.picked_in_current = qty
-		i.remaining -= qty
-
-		if i.remaining < 0:
-			frappe.throw(_(f"Remaining Qty Cannot be less than 0 ({i.remaining}) for item {i.item_code} and lot {i.lot_no}"))
-	
-def update_remaining_qty(self):
-	sales_order_item_list = list(set([row.sales_order_item for row in self.locations]))
-
-	for sales_order_item in sales_order_item_list:
-		qty = 0
-		for item in self.locations:
-			if sales_order_item == item.sales_order_item:
-				qty += flt(item.qty)
-				item.remaining_qty = flt(item.so_qty) - flt(item.picked_qty) - flt(qty)
-
-				if item.remaining_qty < 0:
-					frappe.throw(_(f"ROW: {item.idx} : Remaining Qty Cannot be less than 0."))
-
 def update_sales_order(self, method):
-	if method == "submit":
-		for item in self.locations:
-			if frappe.db.exists("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order}):
-				tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
-				picked_qty = tile.picked_qty + item.qty
-				if picked_qty > tile.qty:
-					frappe.throw("Can not pick item {} in row {} more than {}".format(item.item_code, item.idx, item.qty - item.picked_qty))
+	""" This function is used to update sales order data during pick list submit and cancel """
 
-				tile.db_set('picked_qty', picked_qty)
-			if item.sales_order:
-				so = frappe.get_doc("Sales Order",item.sales_order)
-				total_picked_qty = 0.0
-				total_picked_weight = 0.0
-				for row in so.items:
-					row.db_set('picked_weight',flt(row.weight_per_unit * row.picked_qty))
-					total_picked_qty += row.picked_qty
-					total_picked_weight += row.picked_weight
-				
-				so.db_set('total_picked_qty', total_picked_qty)
-				so.db_set('total_picked_weight', total_picked_weight)
+	# Looping through locations table
+	for row in self.locations:
+		if row.sales_order_item and frappe.db.exists("Sales Order Item", row.sales_order_item):
+			soi_picked_qty = flt(frappe.db.get_value("Sales Order Item", row.sales_order_item, 'picked_qty') or 0)
+			soi_qty = flt(frappe.db.get_value("Sales Order Item", row.sales_order_item, 'qty') or 0)
+			
+			if method == "submit":
+				picked_qty = soi_picked_qty + row.qty
+				if picked_qty > soi_qty:
+					frappe.throw("Can not pick item {} in row {} more than {}".format(row.item_code, row.idx, row.qty - row.picked_qty))
 	
-	if method == "cancel":
-		for item in self.locations:
-			if frappe.db.exists("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order}):
-				tile = frappe.get_doc("Sales Order Item", {'name': item.sales_order_item, 'parent': item.sales_order})
-				picked_qty = tile.picked_qty - item.qty
+			elif method == "cancel":	
+				picked_qty = soi_picked_qty - row.qty
 
-				if tile.picked_qty < 0:
-					frappe.throw("Row {}: All Item Already Canclled".format(item.idx))
-
-				tile.db_set('picked_qty', picked_qty)
-
-			if item.sales_order:
-				so = frappe.get_doc("Sales Order",item.sales_order)
-				total_picked_qty = 0.0
-				total_picked_weight = 0.0
-				for row in so.items:
-					row.db_set('picked_weight',flt(row.weight_per_unit * row.picked_qty))
-					total_picked_qty = row.picked_qty
-					total_picked_weight += row.picked_weight
-				
-				so.db_set('total_picked_qty', total_picked_qty)
-				so.db_set('total_picked_weight', total_picked_weight)
+			frappe.db.set_value("Sales Order Item", row.sales_order_item, 'picked_qty', picked_qty)
 	
-def update_status_sales_order(self):
-	sales_order_list = list(set([item.sales_order for item in self.locations if item.sales_order]))
+	sales_order_list = set([row.sales_order for row in self.locations if row.sales_order])
 
-	for sales_order in sales_order_list:
-		so = frappe.get_doc("Sales Order", sales_order)
-		update_picked_percent(so)
-		qty = 0
-		picked_qty = 0
-
-		for item in so.items:
-			qty += item.qty
-			picked_qty += item.picked_qty
-
-		so.db_set('per_picked', (picked_qty / qty) * 100)
+	for row in sales_order_list:
+		so = frappe.get_doc("Sales Order", row)
+		update_sales_order_total_values(so)
 
 @frappe.whitelist()
 def get_item_qty(company, item_code = None, customer = None, sales_order = None):
@@ -331,7 +303,6 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 		""")
 		where_clause += f" AND so.name = '{sales_order}'"
 		item_codes = [item[0] for item in item_code_list]
-	# frappe.throw(str(item_codes))
 	
 	if item_code and sales_order:
 		if item_code not in item_codes:
@@ -540,8 +511,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
 
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
-		update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
-		return "Pick List to this Sales Order Have Been Deleted."
+		update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 	elif sales_order and sales_order_item:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1}, ['name'])
 		
@@ -561,9 +531,8 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 					doc.delete()
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
-			update_picked_percent(frappe.get_doc("Sales Order", doc.sales_order))
+			update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 		
-		return "Pick List to this Sales Order Have Been Deleted."
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'docstatus': 1}, ['name'])
 		
@@ -584,9 +553,8 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		
-		update_picked_percent(frappe.get_doc("Sales Order", sales_order))
-		return "Pick List to this Sales Order Have Been Deleted."
-
+		update_sales_order_total_values(frappe.get_doc("Sales Order", sales_order))
+	return "Pick List to this Sales Order Have Been Deleted."
 
 @frappe.whitelist()
 def get_items(filters):
@@ -642,7 +610,7 @@ def get_items(filters):
 
 		if item:
 			data.append(item)
-	# frappe.msgprint(str(data))
+	
 	return data
 
 @frappe.whitelist()

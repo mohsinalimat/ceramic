@@ -19,6 +19,10 @@ BankStatementTransactionEntry.create_payment_entry = create_payment_entry
 # erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
 # erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
 
+# override_whitelisted_methods = {
+
+# }
+
 # naming series overrides
 from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
@@ -238,18 +242,14 @@ doc_events = {
 		"on_cancel": "ceramic.ceramic.doc_events.sales_order.on_cancel",
 	},
 	"Pick List": {
-		#"before_naming": "ceramic.api.before_naming",
-		"before_validate": [
-			"ceramic.ceramic.doc_events.pick_list.validate", 
-			"ceramic.api.naming_series_validate"
-		],
+		"before_validate": "ceramic.api.naming_series_validate",
+		"validate": "ceramic.ceramic.doc_events.pick_list.validate",
 		"before_submit": "ceramic.ceramic.doc_events.pick_list.before_submit",
 		"on_submit": "ceramic.ceramic.doc_events.pick_list.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.pick_list.on_cancel",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.pick_list.before_update_after_submit"
 	},
 	"Delivery Note": {
-		#"before_naming": "ceramic.api.before_naming",
 		"before_validate": [
 			"ceramic.ceramic.doc_events.delivery_note.before_validate", 
 			"ceramic.api.naming_series_validate"
@@ -266,7 +266,6 @@ doc_events = {
 	"Sales Invoice": {
 		"before_naming": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_naming",
-			#"ceramic.api.before_naming"
 		],
 		"before_validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_validate", 

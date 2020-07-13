@@ -3,89 +3,97 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe
+import frappe,erpnext,json
+from frappe import _
+from frappe.utils import flt
 from frappe.model.document import Document
+from erpnext.accounts.utils import get_outstanding_invoices,get_account_currency,get_allow_cost_center_in_entry_of_bs_account
+from erpnext.controllers.accounts_controller import get_supplier_block_status
+from erpnext.setup.utils import get_exchange_rate
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_negative_outstanding_invoices,get_orders_to_be_billed, get_outstanding_reference_documents
 from six import string_types
 
 class PrimaryCustomerPayment(Document):
-	pass
+	def validate(self):
+		self.clear_unallocated_reference_document_rows()
+		self.set_amounts()
+	
+	def clear_unallocated_reference_document_rows(self):
+		self.set("references", self.get("references", {"allocated_amount": ["not in", [0, None, ""]]}))
+		frappe.db.sql("""delete from `tabPrimary Customer Payment Reference`
+			where parent = %s and allocated_amount = 0""", self.name)
+	
+	def set_amounts(self):
+		self.set_amounts_in_company_currency
+		self.set_total_allocated_amount()
+		self.set_unallocated_amount()
+		self.set_difference_amount()
+	
+	def set_amounts_in_company_currency(self):
+		self.base_paid_amount, self.base_received_amount, self.difference_amount = 0, 0, 0
+		if self.paid_amount:
+			self.base_paid_amount = flt(flt(self.paid_amount) * flt(self.source_exchange_rate),
+				self.precision("base_paid_amount"))
+
+		if self.received_amount:
+			self.base_received_amount = flt(flt(self.received_amount) * flt(self.target_exchange_rate),
+				self.precision("base_received_amount"))
+
+	def set_total_allocated_amount(self):
+		if self.payment_type == "Internal Transfer":
+			return
+
+		total_allocated_amount, base_total_allocated_amount = 0, 0
+		for d in self.get("references"):
+			if d.allocated_amount:
+				total_allocated_amount += flt(d.allocated_amount)
+				base_total_allocated_amount += flt(flt(d.allocated_amount) * flt(d.exchange_rate),
+					self.precision("base_paid_amount"))
+
+		self.total_allocated_amount = abs(total_allocated_amount)
+		self.base_total_allocated_amount = abs(base_total_allocated_amount)
+
+	def set_unallocated_amount(self):
+		self.unallocated_amount = 0
+		if self.primary_customer:
+			frappe.msgprint('Primary Customer Called')
+			if self.payment_type == "Receive" \
+				and self.total_allocated_amount < self.paid_amount :
+						frappe.msgprint('unallocated amount Called')
+						self.unallocated_amount = (self.paid_amount -
+						self.total_allocated_amount) 
+
+
+	def set_difference_amount(self):
+		base_unallocated_amount = flt(self.unallocated_amount) * (flt(self.source_exchange_rate)
+		if self.payment_type == "Receive" else flt(self.target_exchange_rate))
+		base_party_amount = flt(self.base_total_allocated_amount) + flt(base_unallocated_amount)
+	
+		if self.payment_type == "Receive":
+			self.difference_amount = base_party_amount - self.base_received_amount
+		else:
+			self.difference_amount = self.base_paid_amount - flt(self.base_received_amount)
+
+		self.difference_amount = flt(self.difference_amount ,
+			self.precision("difference_amount"))
+
+
 
 @frappe.whitelist()
-def get_outstanding_reference_documents(args):
-
+def get_primary_customer_reference_documents(args):
 	if isinstance(args, string_types):
 		args = json.loads(args)
+	customer_list = frappe.get_list("Sales Invoice",{'primary_customer':args.get('primary_customer'),'outstanding_amount':('>',0)},'customer')
+	#customer_list = set(customer_list)
+	unique_customer_list = list(set(val for dic in customer_list for val in dic.values()))
+	#frappe.msgprint(str(unique_customer_list))
+	invoices = []
+	for customer in unique_customer_list:
+		args.update({'party': customer})
+		data = get_outstanding_reference_documents(args)
+		for invoice in data:
+			invoice.update({'party': customer})
+			invoices.append(invoice)
+	#frappe.msgprint(str(invoices))
+	return invoices
 
-	if args.get('party_type') == 'Member':
-		return
-
-	# confirm that Supplier is not blocked
-	if args.get('party_type') == 'Supplier':
-		supplier_status = get_supplier_block_status(args['party'])
-		if supplier_status['on_hold']:
-			if supplier_status['hold_type'] == 'All':
-				return []
-			elif supplier_status['hold_type'] == 'Payments':
-				if not supplier_status['release_date'] or getdate(nowdate()) <= supplier_status['release_date']:
-					return []
-
-	party_account_currency = get_account_currency(args.get("party_account"))
-	company_currency = frappe.get_cached_value('Company',  args.get("company"),  "default_currency")
-
-	# Get negative outstanding sales /purchase invoices
-	negative_outstanding_invoices = []
-	if args.get("party_type") not in ["Student", "Employee"] and not args.get("voucher_no"):
-		negative_outstanding_invoices = get_negative_outstanding_invoices(args.get("party_type"), args.get("party"),
-			args.get("party_account"), args.get("company"), party_account_currency, company_currency)
-
-	# Get positive outstanding sales /purchase invoices/ Fees
-	condition = ""
-	if args.get("voucher_type") and args.get("voucher_no"):
-		condition = " and voucher_type={0} and voucher_no={1}"\
-			.format(frappe.db.escape(args["voucher_type"]), frappe.db.escape(args["voucher_no"]))
-
-	# Add cost center condition
-	if args.get("cost_center") and get_allow_cost_center_in_entry_of_bs_account():
-		condition += " and cost_center='%s'" % args.get("cost_center")
-
-	date_fields_dict = {
-		'posting_date': ['from_posting_date', 'to_posting_date'],
-		'due_date': ['from_due_date', 'to_due_date']
-	}
-
-	for fieldname, date_fields in date_fields_dict.items():
-		if args.get(date_fields[0]) and args.get(date_fields[1]):
-			condition += " and {0} between '{1}' and '{2}'".format(fieldname,
-				args.get(date_fields[0]), args.get(date_fields[1]))
-
-	if args.get("company"):
-		condition += " and company = {0}".format(frappe.db.escape(args.get("company")))
-
-	outstanding_invoices = get_outstanding_invoices(args.get("party_type"), args.get("party"),
-		args.get("party_account"), filters=args, condition=condition)
-
-	for d in outstanding_invoices:
-		d["exchange_rate"] = 1
-		if party_account_currency != company_currency:
-			if d.voucher_type in ("Sales Invoice", "Purchase Invoice", "Expense Claim"):
-				d["exchange_rate"] = frappe.db.get_value(d.voucher_type, d.voucher_no, "conversion_rate")
-			elif d.voucher_type == "Journal Entry":
-				d["exchange_rate"] = get_exchange_rate(
-					party_account_currency,	company_currency, d.posting_date
-				)
-		if d.voucher_type in ("Purchase Invoice"):
-			d["bill_no"] = frappe.db.get_value(d.voucher_type, d.voucher_no, "bill_no")
-
-	# Get all SO / PO which are not fully billed or aginst which full advance not paid
-	orders_to_be_billed = []
-	if (args.get("party_type") != "Student"):
-		orders_to_be_billed =  get_orders_to_be_billed(args.get("posting_date"),args.get("party_type"),
-			args.get("party"), args.get("company"), party_account_currency, company_currency, filters=args)
-
-	data = negative_outstanding_invoices + outstanding_invoices + orders_to_be_billed
-
-	if not data:
-		frappe.msgprint(_("No-outstanding invoices found for the {0} {1} which qualify the filters you have specified.")
-			.format(args.get("party_type").lower(), frappe.bold(args.get("party"))))
-
-	return data

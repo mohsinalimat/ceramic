@@ -650,7 +650,7 @@ def test():
     return "hello"
 
 # console patches
-from ceramic.ceramic.doc_events.sales_order import update_picked_percent
+from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
 def update_so_wastage_qty():
 	sales_order_item_list = frappe.get_list("Sales Order Item", {'docstatus': 1})
 

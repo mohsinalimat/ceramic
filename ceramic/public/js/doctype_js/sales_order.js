@@ -52,29 +52,6 @@ erpnext.utils.update_child_items = function (opts) {
 					disabled: 0,
 					columns: 3,
 					label: __('Item Code'),
-					// change: function(){
-					// 	let trans_items = cur_dialog.fields_dict.trans_items;
-					// 	let me2 = this;
-					// 	if (this.doc.item_code){
-					// 		frappe.call({
-					// 			method: "ceramic.ceramic.doc_events.sales_order.get_rate_discounted_rate",
-					// 			args: {
-					// 				"item_code": this.doc.item_code,
-					// 				"customer": frm.doc.customer,
-					// 				"company": frm.doc.company,
-					// 				"so_number": frm.doc.name || null
-					// 			},
-					// 			callback: function(r){
-					// 				if (r.message){
-					// 					me2.doc.rate = r.message.rate || '0';
-					// 					me2.doc.discounted_rate = r.message.discounted_rate || '0';
-
-					// 					trans_items.grid.refresh();
-					// 				}
-					// 			}
-					// 		});
-					// 	}
-					// }
 				}, {
 					fieldtype: 'Float',
 					fieldname: "qty",
@@ -451,6 +428,82 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 			}
 		})
 	},
+	// Finbyz Changes Start
+	create_pick_list() {
+		frappe.model.open_mapped_doc({
+			method: "ceramic.ceramic.doc_events.sales_order.make_pick_list",
+			frm: this.frm
+		})
+	},
+	make_delivery_note_based_on_delivery_date: function() {
+		var me = this;
+
+		var delivery_dates = [];
+		$.each(this.frm.doc.items || [], function(i, d) {
+			if(!delivery_dates.includes(d.delivery_date)) {
+				delivery_dates.push(d.delivery_date);
+			}
+		});
+
+		var item_grid = this.frm.fields_dict["items"].grid;
+		if(!item_grid.get_selected().length && delivery_dates.length > 1) {
+			var dialog = new frappe.ui.Dialog({
+				title: __("Select Items based on Delivery Date"),
+				fields: [{fieldtype: "HTML", fieldname: "dates_html"}]
+			});
+
+			var html = $(`
+				<div style="border: 1px solid #d1d8dd">
+					<div class="list-item list-item--head">
+						<div class="list-item__content list-item__content--flex-2">
+							${__('Delivery Date')}
+						</div>
+					</div>
+					${delivery_dates.map(date => `
+						<div class="list-item">
+							<div class="list-item__content list-item__content--flex-2">
+								<label>
+								<input type="checkbox" data-date="${date}" checked="checked"/>
+								${frappe.datetime.str_to_user(date)}
+								</label>
+							</div>
+						</div>
+					`).join("")}
+				</div>
+			`);
+
+			var wrapper = dialog.fields_dict.dates_html.$wrapper;
+			wrapper.html(html);
+
+			dialog.set_primary_action(__("Select"), function() {
+				var dates = wrapper.find('input[type=checkbox]:checked')
+					.map((i, el) => $(el).attr('data-date')).toArray();
+
+				if(!dates) return;
+
+				$.each(dates, function(i, d) {
+					$.each(item_grid.grid_rows || [], function(j, row) {
+						if(row.doc.delivery_date == d) {
+							row.doc.__checked = 1;
+						}
+					});
+				})
+				me.make_delivery_note();
+				dialog.hide();
+			});
+			dialog.show();
+		} else {
+			this.make_delivery_note();
+		}
+	},
+
+	make_delivery_note: function() {
+		frappe.model.open_mapped_doc({
+			method: "ceramic.ceramic.doc_events.sales_order.make_delivery_note",
+			frm: me.frm
+		})
+	},
+	// Finbyz Changes End
 })
 $.extend(cur_frm.cscript, new erpnext.selling.SalesOrderController({ frm: cur_frm }));
 this.frm.cscript.onload = function (frm) {
@@ -493,6 +546,13 @@ cur_frm.set_query('primary_customer', function () {
 	return {
 		filters: {
 			'is_primary_customer': 1
+		}
+	}
+});
+cur_frm.set_query('company', function () {
+	return {
+		filters: {
+			'authority': "Unauthorized"
 		}
 	}
 });
