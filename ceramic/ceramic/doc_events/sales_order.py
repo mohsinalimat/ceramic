@@ -12,13 +12,61 @@ import datetime
 def before_validate(self, method):
 	ignore_permission(self)
 	# setting_rate_qty(self)
-	calculate_order_priority(self)
-	update_discounted_amount(self)
 
 def validate(self, method):
+	calculate_order_priority(self)
+	update_discounted_amount(self)
 	update_discounted_net_total(self)
 
+def on_submit(self, method):
+	checking_real_qty(self)
+	update_sales_order_total_values(self)
+	check_qty_rate(self)
+
+def ignore_permission(self):
+	""" This function is use to ignore save permission while saving sales order """
+
+	self.flags.ignore_permissions = True
+	if not self.order_priority:
+		self.order_priority = frappe.db.get_value("Customer", self.customer, 'customer_priority')
+	if self._action == "update_after_submit":
+		self.flags.ignore_validate_update_after_submit = True
+
+def setting_rate_qty(self):
+	""" This function is use to set rate and discounted rate on save """
+
+	# for item in self.items:
+	# 	if not item.rate:
+	# 		item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['rate']
+	pass
+
+def calculate_order_priority(self):
+	""" This function is use to calculate priority of order with logic """
+
+	for item in self.items:
+		try:
+			days = ((datetime.date.today() - datetime.datetime.strptime(self.transaction_date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 15
+		except:
+			days = ((datetime.date.today() - self.transaction_date) // datetime.timedelta(days = 1)) + 15
+		days = 1 if days <= 0 else days
+		item.order_item_priority = round(math.log(days, 1.1) * cint(self.order_priority))
+	
+	if self.items[0]:
+		self.order_item_priority = self.items[0].order_item_priority
+
+def update_discounted_amount(self):
+	""" This function is use to update discounted amonunt and net amount in sales order item """
+
+	for item in self.items:
+		item.discounted_rate = item.discounted_rate if item.discounted_rate else 0
+		item.real_qty = item.real_qty if item.real_qty else 0
+
+		item.discounted_amount = item.discounted_rate * flt(item.real_qty)
+		item.discounted_net_amount = item.discounted_amount
+
 def update_discounted_net_total(self):
+	""" This function is use to update discounted total amount in sales order """
+
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
 	self.discounted_net_total = sum(x.discounted_net_amount for x in self.items)
 	testing_only_tax = 0
@@ -40,11 +88,15 @@ def check_qty_rate(self):
 		if not item.real_qty:
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
-def on_submit(self, method):
-	checking_real_qty(self)
-	update_sales_order_total_values(self)
-	check_qty_rate(self)
-			
+def checking_real_qty(self):
+	""" This function will show alert on submit if real qty is 0 """
+
+	alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
+	for item in self.items:
+		if not item.real_qty:
+			frappe.msgprint(_(f"Row {item.idx}:You will not be able to make invoice in company {alternate_company}."))
+
+	
 def before_validate_after_submit(self, method):
 	# setting_rate_qty(self)
 	calculate_order_priority(self)
@@ -88,38 +140,6 @@ def ignore_permission(self):
 	if self._action == "update_after_submit":
 		self.flags.ignore_validate_update_after_submit = True
 
-def setting_rate_qty(self):
-	""" This function is use to set rate and discounted rate on save """
-
-	pass
-	# for item in self.items:
-	# 	if not item.rate:
-	# 		item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['rate']
-
-def calculate_order_priority(self):
-	""" This function is use to calculate priority of order with logic """
-
-	for item in self.items:
-		try:
-			days = ((datetime.date.today() - datetime.datetime.strptime(self.transaction_date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 15
-		except:
-			days = ((datetime.date.today() - self.transaction_date) // datetime.timedelta(days = 1)) + 15
-		days = 1 if days <= 0 else days
-		item.order_item_priority = round(math.log(days, 1.1) * cint(self.order_priority))
-	
-	if self.items[0]:
-		self.order_item_priority = self.items[0].order_item_priority
-
-def update_discounted_amount(self):
-	""" This function is use to update discounted amonunt and net amount """
-
-	for item in self.items:
-		item.discounted_rate = item.discounted_rate if item.discounted_rate else 0
-		item.real_qty = item.real_qty if item.real_qty else 0
-
-		item.discounted_amount = item.discounted_rate * flt(item.real_qty)
-		item.discounted_net_amount = item.discounted_amount
-
 def checking_rate(self):
 	""" This function is use to calculate rate is not 0 if status is apporved """
 
@@ -127,14 +147,6 @@ def checking_rate(self):
 		for row in self.items:
 			if not row.rate:
 				frappe.throw(_(f"Row {row.idx}: {row.item_code} Rate cannot be 0 in Approved Sales Order {self.name}."))
-
-def checking_real_qty(self):
-	""" This function will show alert on submit if real qty is 0 """
-
-	alternate_company = frappe.db.get_value("Company", self.company, 'alternate_company')
-	for item in self.items:
-		if not item.real_qty:
-			frappe.msgprint(_(f"Row {item.idx}:You will not be able to make invoice in company {alternate_company}."))
 
 def remove_pick_list(self):
 	from ceramic.ceramic.doc_events.pick_list import update_delivered_percent

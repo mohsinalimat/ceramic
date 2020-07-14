@@ -9,12 +9,11 @@
   "naming_series",
   "payment_type",
   "payment_order_status",
+  "primary_customer",
   "column_break_5",
   "posting_date",
   "company",
   "mode_of_payment",
-  "party_section",
-  "primary_customer",
   "section_break_9",
   "bank_account",
   "party_bank_account",
@@ -43,7 +42,6 @@
   "section_break_34",
   "total_allocated_amount",
   "base_total_allocated_amount",
-  "set_exchange_gain_loss",
   "column_break_36",
   "unallocated_amount",
   "difference_amount",
@@ -94,7 +92,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Payment Type",
-   "options": "Receive\nPay\nInternal Transfer",
+   "options": "Receive",
    "print_hide": 1,
    "reqd": 1
   },
@@ -129,17 +127,12 @@
    "reqd": 1
   },
   {
+   "default": "Cash",
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Mode of Payment",
    "options": "Mode of Payment"
-  },
-  {
-   "depends_on": "eval:in_list([\"Receive\", \"Pay\"], doc.payment_type)",
-   "fieldname": "party_section",
-   "fieldtype": "Section Break",
-   "label": "Payment From / To"
   },
   {
    "depends_on": "party",
@@ -301,7 +294,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.primary_customer",
+   "depends_on": "eval:doc.primary_customer && doc.paid_to",
    "fieldname": "section_break_14",
    "fieldtype": "Section Break",
    "label": "Reference"
@@ -334,11 +327,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "set_exchange_gain_loss",
-   "fieldtype": "Button",
-   "label": "Set Exchange Gain / Loss"
-  },
-  {
    "fieldname": "column_break_36",
    "fieldtype": "Column Break"
   },
@@ -354,6 +342,7 @@
    "depends_on": "eval:(doc.paid_amount && doc.received_amount)",
    "fieldname": "difference_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Difference Amount (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
@@ -395,11 +384,13 @@
    "collapsible": 1,
    "fieldname": "accounting_dimensions_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Accounting Dimensions"
   },
   {
    "fieldname": "project",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Project",
    "options": "Project",
    "print_hide": 1
@@ -411,6 +402,7 @@
   {
    "fieldname": "cost_center",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Cost Center",
    "options": "Cost Center"
   },
@@ -539,7 +531,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-11 13:03:10.311246",
+ "modified": "2020-07-14 15:26:37.603553",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Primary Customer Payment",

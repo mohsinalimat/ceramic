@@ -404,7 +404,7 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 				soi.qty != soi.picked_qty {where_cond} AND
 				so.status != 'Closed'
 			ORDER BY
-				soi.order_item_priority DESC
+				so.order_rank DESC
 		""")
 		item_codes = [item[0] for item in item_code_list]
 	
@@ -454,6 +454,12 @@ def get_picked_items(company, item_code = None, customer = None, sales_order = N
 	
 	return pick_list_list
 
+@frappe.whitelist()
+def unpick_item_1(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):
+	try:
+		unpick_item(sales_order, sales_order_item, pick_list, pick_list_item, unpick_qty)
+	except:
+		return "Error"
 
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):

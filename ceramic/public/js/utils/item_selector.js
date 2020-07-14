@@ -122,6 +122,14 @@ ItemSelector = Class.extend({
 				default: me.so_real_qty,
 				read_only: 0,
 			},
+			{
+				label: __('Previously Picked'),
+				fieldtype:'Float',
+				fieldname: 'previously_picked_qty',
+				reqd: 0,
+				default: me.picked_qty,
+				read_only: 1
+			},
 			{fieldtype:'Column Break'},
 			{
 				label: __('Picked Qty'),

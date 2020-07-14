@@ -111,6 +111,8 @@ frappe.ui.form.on('Pick List', {
 					},
 					callback: function(r){
 						frm.trigger('update_items');
+						frm.trigger('get_item_qty')
+						frm.trigger('get_picked_items')
 					}
 				});
 			},
@@ -423,6 +425,10 @@ frappe.ui.form.on('Picked Sales Orders', {
 			callback: function(r){
 				frm.events.get_item_qty(frm);
 				frm.events.get_picked_items(frm);
+
+				if (d.sales_order == frm.sales_order){
+					frm.events.get_item_qty('update_items');
+				}
 			}
 		})
 	}

@@ -503,6 +503,8 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 			AND pl.posting_date <= '{to_date}'
 		HAVING
 			remaining_qty > 0
+		ORDER BY
+			so.order_rank
 	""", as_dict = 1)
 	
 	for item in picked_item:

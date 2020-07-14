@@ -37,7 +37,7 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 				this.frm.add_custom_button(__('Sales Order'),
 					function() {
 						erpnext.utils.map_current_doc({
-							method: "erpnext.selling.doctype.sales_order.sales_order.make_delivery_note",
+							method: "ceramic.ceramic.doc_events.sales_order.make_delivery_note",
 							source_doctype: "Sales Order",
 							target: me.frm,
 							setters: {

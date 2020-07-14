@@ -5,85 +5,115 @@
 from __future__ import unicode_literals
 import frappe,erpnext,json
 from frappe import _
-from frappe.utils import flt
 from frappe.model.document import Document
-from erpnext.accounts.utils import get_outstanding_invoices,get_account_currency,get_allow_cost_center_in_entry_of_bs_account
-from erpnext.controllers.accounts_controller import get_supplier_block_status
-from erpnext.setup.utils import get_exchange_rate
-from erpnext.accounts.doctype.payment_entry.payment_entry import get_negative_outstanding_invoices,get_orders_to_be_billed, get_outstanding_reference_documents
+from frappe.utils import nowdate
+from erpnext.accounts.utils import get_balance_on,get_account_currency
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_outstanding_reference_documents
 from six import string_types
+from collections import defaultdict
+#from erpnext.controllers.accounts_controller import get_supplier_block_status
+#from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
+#from erpnext.accounts.doctype.bank_account.bank_account import get_party_bank_account, get_bank_account_details
+#from erpnext.setup.utils import get_exchange_rate
+
 
 class PrimaryCustomerPayment(Document):
 	def validate(self):
 		self.clear_unallocated_reference_document_rows()
-		self.set_amounts()
 	
 	def clear_unallocated_reference_document_rows(self):
 		self.set("references", self.get("references", {"allocated_amount": ["not in", [0, None, ""]]}))
 		frappe.db.sql("""delete from `tabPrimary Customer Payment Reference`
 			where parent = %s and allocated_amount = 0""", self.name)
+
+	def on_submit(self):
+		self.create_primay_customer_payment_entry()
+
+	def on_cancel(self):
+		self.cancel_primay_customer_payment_entry()
 	
-	def set_amounts(self):
-		self.set_amounts_in_company_currency
-		self.set_total_allocated_amount()
-		self.set_unallocated_amount()
-		self.set_difference_amount()
-	
-	def set_amounts_in_company_currency(self):
-		self.base_paid_amount, self.base_received_amount, self.difference_amount = 0, 0, 0
-		if self.paid_amount:
-			self.base_paid_amount = flt(flt(self.paid_amount) * flt(self.source_exchange_rate),
-				self.precision("base_paid_amount"))
-
-		if self.received_amount:
-			self.base_received_amount = flt(flt(self.received_amount) * flt(self.target_exchange_rate),
-				self.precision("base_received_amount"))
-
-	def set_total_allocated_amount(self):
-		if self.payment_type == "Internal Transfer":
-			return
-
-		total_allocated_amount, base_total_allocated_amount = 0, 0
-		for d in self.get("references"):
-			if d.allocated_amount:
-				total_allocated_amount += flt(d.allocated_amount)
-				base_total_allocated_amount += flt(flt(d.allocated_amount) * flt(d.exchange_rate),
-					self.precision("base_paid_amount"))
-
-		self.total_allocated_amount = abs(total_allocated_amount)
-		self.base_total_allocated_amount = abs(base_total_allocated_amount)
-
-	def set_unallocated_amount(self):
-		self.unallocated_amount = 0
-		if self.primary_customer:
-			frappe.msgprint('Primary Customer Called')
-			if self.payment_type == "Receive" \
-				and self.total_allocated_amount < self.paid_amount :
-						frappe.msgprint('unallocated amount Called')
-						self.unallocated_amount = (self.paid_amount -
-						self.total_allocated_amount) 
+	def create_primay_customer_payment_entry(self):
+		reference_dict={}
+		final_reference_dict = defaultdict(list)
+		for reference in self.references:
+			reference_dict=dict([(reference.customer,reference.name)])
+			final_reference_dict[reference.customer].append(reference.name)
+		
+		for key,value in final_reference_dict.items():
+			new_entry=frappe.new_doc("Payment Entry") #new payment entry(new_entry)
+			new_entry.posting_date=nowdate()
+			new_entry.payment_type="Receive"
+			new_entry.company=self.company
+			new_entry.mode_of_payment=self.mode_of_payment
+			new_entry.party=key
+			new_entry.party_type="Customer"
+			new_entry.party_name=self.party_name
+			new_entry.primary_customer=self.primary_customer
+			new_entry.paid_from=self.paid_from
+			new_entry.paid_to=self.paid_to
+			new_entry.reference_doctype = self.doctype
+			new_entry.reference_docname = self.name
+			#new_entry.paid_from_account_currency = self.paid_from_account_currency
+			#new_entry.paid_to_account_currency = self.paid_to_account_currency
+			#new_entry.paid_to_account_balance=self.paid_to_account_balance
+			new_entry.paid_amount=self.paid_amount
+			new_entry.total_allocated_amount=self.total_allocated_amount
+			new_entry.unallocated_amount=self.unallocated_amount
 
 
-	def set_difference_amount(self):
-		base_unallocated_amount = flt(self.unallocated_amount) * (flt(self.source_exchange_rate)
-		if self.payment_type == "Receive" else flt(self.target_exchange_rate))
-		base_party_amount = flt(self.base_total_allocated_amount) + flt(base_unallocated_amount)
-	
-		if self.payment_type == "Receive":
-			self.difference_amount = base_party_amount - self.base_received_amount
-		else:
-			self.difference_amount = self.base_paid_amount - flt(self.base_received_amount)
+			for v in value:
+				child_doc = frappe.get_doc("Primary Customer Payment Reference",v)
+				new_entry.append("references",{
+					'reference_doctype': v.reference_doctype,
+					'reference_name':v.reference_name,
+					'customer':v.customer,
+					'total_amount':v.total_amount,
+					'outstanding_amount':v.outstanding_amount,
+					'allocated_amount':v.allocated_amount,
+					'due_date':v.due_date
+				})
+			new_entry.save(ignore_permissions=True)
+			new_entry.submit()
+	def cancel_primay_customer_payment_entry(self):
+		cancel_entry=frappe.get_list("Payment Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
+		for row in cancel_entry:
+			pe_doc = frappe.get_doc("Payment Entry",row.name)
+			pe_doc.flags.ignore_permissions = True
+			try:
+				pe_doc.cancel()
+			except Exception as e:
+				raise e
+			pe_doc.db_set('reference_doctype','')
+			pe_doc.db_set('reference_docname','')
 
-		self.difference_amount = flt(self.difference_amount ,
-			self.precision("difference_amount"))
 
+@frappe.whitelist()
+def get_account_details(account, date, cost_center=None):
+	frappe.has_permission('Primary Customer Payment', throw=True)
+
+	# to check if the passed account is accessible under reference doctype Payment Entry
+	account_list = frappe.get_list('Account', {
+		'name': account
+	}, reference_doctype='Primary Customer Payment', limit=1)
+
+	if not account_list:
+		frappe.throw(_('Account: {0} is not permitted under Primary Customer Payment').format(account))
+
+	account_balance = get_balance_on(account, date, cost_center=cost_center,
+		ignore_account_permission=True)
+
+	return frappe._dict({
+		"account_currency": get_account_currency(account),
+		"account_balance": account_balance,
+		"account_type": frappe.db.get_value("Account", account, "account_type")
+	})
 
 
 @frappe.whitelist()
 def get_primary_customer_reference_documents(args):
 	if isinstance(args, string_types):
 		args = json.loads(args)
-	customer_list = frappe.get_list("Sales Invoice",{'primary_customer':args.get('primary_customer'),'outstanding_amount':('>',0)},'customer')
+	customer_list = frappe.get_list("Sales Invoice",{'primary_customer':args.get('primary_customer'),'company':args.get('company'),'outstanding_amount':('>',0)},'customer')
 	#customer_list = set(customer_list)
 	unique_customer_list = list(set(val for dic in customer_list for val in dic.values()))
 	#frappe.msgprint(str(unique_customer_list))
@@ -96,4 +126,6 @@ def get_primary_customer_reference_documents(args):
 			invoices.append(invoice)
 	#frappe.msgprint(str(invoices))
 	return invoices
+
+
 
