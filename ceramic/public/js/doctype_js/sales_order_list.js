@@ -15,15 +15,16 @@ frappe.listview_settings['Sales Order'] = {
 			// not delivered & overdue
 				return [__("Overdue"), "red",
 					"per_delivered,<,100|delivery_date,<,Today|status,!=,Closed"];
-			} else if (flt(doc.grand_total) === 0) {
-				// not delivered (zero-amount order)
-				return [__("To Deliver"), "orange",
-					"per_delivered,<,100|grand_total,=,0|status,!=,Closed"];
-            } else if (flt(doc.per_delivered, 6) < 100 && doc.workflow_state == "Applied") {
+			}else if (flt(doc.per_delivered, 6) < 100 && doc.workflow_state == "Applied") {
 				// not delivered & not billed
 				return [__("Applied"), "blue",
 					"per_delivered,<,100|per_billed,<,100|status,!=,Closed,workflow_state,=,Applied"];
 			} 
+			else if (flt(doc.grand_total) === 0) {
+				// not delivered (zero-amount order)
+				return [__("To Deliver"), "orange",
+					"per_delivered,<,100|grand_total,=,0|status,!=,Closed"];
+            }
             else if (flt(doc.per_billed, 6) < 100) {
 				// not delivered & not billed
 				return [__("To Deliver and Bill"), "orange",
