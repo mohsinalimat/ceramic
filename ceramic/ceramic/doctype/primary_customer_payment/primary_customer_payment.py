@@ -74,6 +74,7 @@ class PrimaryCustomerPayment(Document):
 				})
 			new_entry.save(ignore_permissions=True)
 			new_entry.submit()
+			
 	def cancel_primay_customer_payment_entry(self):
 		cancel_entry=frappe.get_list("Payment Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		for row in cancel_entry:
