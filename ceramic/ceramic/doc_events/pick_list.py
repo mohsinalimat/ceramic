@@ -387,7 +387,7 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 				`tabStock Ledger Entry` sle, `tabBatch` batch
 			WHERE
 				sle.batch_no = batch.name
-				and szle.`item_code` = '{item_code}'
+				and sle.`item_code` = '{item_code}'
 				and sle.batch_no = '{item.batch_no}'
 			GROUP BY
 				`batch_no`
