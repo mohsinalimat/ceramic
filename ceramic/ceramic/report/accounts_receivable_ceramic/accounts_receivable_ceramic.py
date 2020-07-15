@@ -750,8 +750,10 @@ class ReceivablePayableReport(object):
 		if self.filters.company:
 			for company in self.filters.company:
 				company_placeholder_list.append(company) 
-				alternate_company = frappe.get_value("Company", company, 'alternate_company')
-				company_placeholder_list.append(alternate_company)
+				alternate_company = [x.name for x in frappe.get_list("Company", {'alternate_company': company}, 'name')]
+				company_placeholder_list += alternate_company
+			
+			# frappe.msgprint(str(alternate_company))
 
 			company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
 			conditions.append(f"gle.company in ({company_placeholder})")
