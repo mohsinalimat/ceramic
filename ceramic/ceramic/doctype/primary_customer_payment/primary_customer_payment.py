@@ -40,7 +40,7 @@ class PrimaryCustomerPayment(Document):
 			#reference_dict=dict([(reference.customer,reference.name)])
 			#final_reference_dict[reference.customer].append(reference.name)
 			reference_dict=dict(([(reference.customer,[{reference.reference_doctype,reference.reference_name,reference.due_date,reference.total_amount,reference.outstanding_amount,reference.allocated_amount}])]))
-			if reference.customer == self.primary_customer:
+			if reference.customer == self.primary_customer and references_has_primary_customer==False:
 				references_has_primary_customer = True
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':self.unallocated_amount})	
 			else:
