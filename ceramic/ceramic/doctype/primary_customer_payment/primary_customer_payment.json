@@ -56,13 +56,8 @@
   "dimension_col_break",
   "cost_center",
   "section_break_12",
-  "status",
   "remarks",
   "column_break_16",
-  "letter_head",
-  "print_heading",
-  "bank",
-  "bank_account_no",
   "payment_order",
   "subscription_section",
   "auto_repeat",
@@ -414,14 +409,6 @@
    "label": "More Information"
   },
   {
-   "default": "Draft",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "\nDraft\nSubmitted\nCancelled",
-   "read_only": 1
-  },
-  {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks",
@@ -430,32 +417,6 @@
   {
    "fieldname": "column_break_16",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "letter_head",
-   "fieldtype": "Link",
-   "label": "Letter Head",
-   "options": "Letter Head",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "print_heading",
-   "fieldtype": "Link",
-   "label": "Print Heading",
-   "options": "Print Heading",
-   "print_hide": 1
-  },
-  {
-   "fetch_from": "bank_account.bank",
-   "fieldname": "bank",
-   "fieldtype": "Read Only",
-   "label": "Bank"
-  },
-  {
-   "fetch_from": "bank_account.bank_account_no",
-   "fieldname": "bank_account_no",
-   "fieldtype": "Read Only",
-   "label": "Bank Account No"
   },
   {
    "fieldname": "payment_order",
@@ -531,7 +492,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-14 15:26:37.603553",
+ "modified": "2020-07-15 11:45:10.482822",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Primary Customer Payment",

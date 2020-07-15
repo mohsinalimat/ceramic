@@ -94,7 +94,6 @@ frappe.ui.form.on('Primary Customer Payment', {
 			},
 			callback: function(r, rt) {
 				if(r.message) {
-					console.log(r.message)
 					var total_positive_outstanding = 0;
 					var total_negative_outstanding = 0;
 
@@ -106,9 +105,8 @@ frappe.ui.form.on('Primary Customer Payment', {
 						c.due_date = d.due_date;
 						c.customer = d.party;
 						c.total_amount = d.invoice_amount;
-						c.outstanding_amount = d.outstanding_amount;
+						c.outstanding_amount = d.diff_amt;
 						c.bill_no = d.bill_no;
-						console.log(c)
 						frm.refresh_field('references')
 						if(!in_list(["Sales Order", "Purchase Order", "Expense Claim", "Fees"], d.voucher_type)) {
 							if(flt(d.outstanding_amount) > 0)

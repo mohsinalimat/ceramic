@@ -22,6 +22,11 @@ def on_submit(self, method):
 	checking_real_qty(self)
 	update_sales_order_total_values(self)
 	check_qty_rate(self)
+	update_order_rank(self)
+
+def update_order_rank(self):
+	order_rank = frappe.db.sql(f"select order_rank, ABS(order_item_priority - {self.order_item_priority}) as difference from `tabSales Order` WHERE status not in ('Completed', 'Draft', 'Cancelled') order by difference LIMIT 1;")[0][0] or 0
+	self.db_set('order_rank', order_rank)
 
 def ignore_permission(self):
 	""" This function is use to ignore save permission while saving sales order """
@@ -113,6 +118,7 @@ def before_update_after_submit(self, method):
 	update_idx(self)
 	update_discounted_net_total(self)
 	self.calculate_taxes_and_totals()
+	update_order_rank(self)
 
 def on_update_after_submit(self, method):
 	delete_pick_list(self)
@@ -444,6 +450,18 @@ def calculate_order_item_priority_so():
 		frappe.db.set_value("Sales Order", item.name, 'order_rank', item.rank, update_modified = False)
 
 	frappe.db.commit()
+
+@frappe.whitelist()
+def update_order_rank_(date, order_priority):
+	try:
+		days = ((datetime.date.today() - datetime.datetime.strptime(date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 15
+	except:
+		days = ((datetime.date.today() - date) // datetime.timedelta(days = 1)) + 15
+	days = 1 if days <= 0 else days
+	order_item_priority = round(math.log(days, 1.1) * cint(order_priority))
+
+	order_rank = frappe.db.sql(f"select order_rank, ABS(order_item_priority - {order_item_priority}) as difference from `tabSales Order` WHERE status not in ('Completed', 'Draft', 'Cancelled') having difference > 0 order by difference LIMIT 1")[0][0] or 0
+	return {'order_item_priority': order_item_priority, 'order_rank': order_rank}
 
 @frappe.whitelist()
 def get_rate_discounted_rate(item_code, customer, company, so_number = None):

@@ -35,46 +35,62 @@ class PrimaryCustomerPayment(Document):
 	def create_primay_customer_payment_entry(self):
 		reference_dict={}
 		final_reference_dict = defaultdict(list)
+		references_has_primary_customer = False
 		for reference in self.references:
-			reference_dict=dict([(reference.customer,reference.name)])
-			final_reference_dict[reference.customer].append(reference.name)
-		
-		for key,value in final_reference_dict.items():
-			new_entry=frappe.new_doc("Payment Entry") #new payment entry(new_entry)
-			new_entry.posting_date=nowdate()
-			new_entry.payment_type="Receive"
-			new_entry.company=self.company
-			new_entry.mode_of_payment=self.mode_of_payment
-			new_entry.party=key
-			new_entry.party_type="Customer"
-			new_entry.party_name=self.party_name
-			new_entry.primary_customer=self.primary_customer
-			new_entry.paid_from=self.paid_from
-			new_entry.paid_to=self.paid_to
-			new_entry.reference_doctype = self.doctype
-			new_entry.reference_docname = self.name
-			#new_entry.paid_from_account_currency = self.paid_from_account_currency
-			#new_entry.paid_to_account_currency = self.paid_to_account_currency
-			#new_entry.paid_to_account_balance=self.paid_to_account_balance
-			new_entry.paid_amount=self.paid_amount
-			new_entry.total_allocated_amount=self.total_allocated_amount
-			new_entry.unallocated_amount=self.unallocated_amount
+			#reference_dict=dict([(reference.customer,reference.name)])
+			#final_reference_dict[reference.customer].append(reference.name)
+			reference_dict=dict(([(reference.customer,[{reference.reference_doctype,reference.reference_name,reference.due_date,reference.total_amount,reference.outstanding_amount,reference.allocated_amount}])]))
+			if reference.customer == self.primary_customer:
+				references_has_primary_customer = True
+				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':self.unallocated_amount})	
+			else:
+				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':0.0})
+		if references_has_primary_customer == False:
+			final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
 
+		for key,invoices in final_reference_dict.items():
+			payment_entry=frappe.new_doc("Payment Entry") #new payment entry(payment_entry)
+			payment_entry.posting_date=nowdate()
+			payment_entry.payment_type="Receive"
+			payment_entry.company=self.company
+			payment_entry.mode_of_payment=self.mode_of_payment
+			payment_entry.party=key
+			payment_entry.party_type="Customer"
+			payment_entry.party_name=key
+			payment_entry.primary_customer=self.primary_customer
+			payment_entry.received_amount = 1
+			payment_entry.paid_to=self.paid_to
+			payment_entry.reference_doctype = self.doctype
+			payment_entry.reference_docname = self.name
+			payment_entry.reference_no = self.reference_no
+			payment_entry.reference_date = self.reference_date
+			#payment_entry.paid_from_account_currency = self.paid_from_account_currency
+			#payment_entry.paid_to_account_currency = self.paid_to_account_currency
+			#payment_entry.paid_to_account_balance=self.paid_to_account_balance
+			#payment_entry.paid_amount=self.paid_amount
+			#payment_entry.total_allocated_amount=self.total_allocated_amount
+			#payment_entry.unallocated_amount=self.unallocated_amount
+			paid_amount = 0.0
+			unallocated_amount = 0.0
 
-			for v in value:
-				child_doc = frappe.get_doc("Primary Customer Payment Reference",v)
-				new_entry.append("references",{
-					'reference_doctype': v.reference_doctype,
-					'reference_name':v.reference_name,
-					'customer':v.customer,
-					'total_amount':v.total_amount,
-					'outstanding_amount':v.outstanding_amount,
-					'allocated_amount':v.allocated_amount,
-					'due_date':v.due_date
-				})
-			new_entry.save(ignore_permissions=True)
-			new_entry.submit()
-			
+			for invoice in invoices:
+				paid_amount += invoice['allocated_amount'] + invoice['unallocated_amount']
+				unallocated_amount += invoice['unallocated_amount']
+				if invoice['allocated_amount']:
+					payment_entry.append("references",{
+						'reference_doctype': invoice['reference_doctype'],
+						'reference_name':invoice['reference_name'],
+						'total_amount':invoice['total_amount'],
+						'outstanding_amount':invoice['outstanding_amount'],
+						'allocated_amount':invoice['allocated_amount'],
+						'due_date':invoice['due_date']
+					})
+			payment_entry.unallocated_amount = unallocated_amount
+			payment_entry.paid_amount = paid_amount
+			payment_entry.received_amount = payment_entry.paid_amount
+			payment_entry.save(ignore_permissions=True)
+			payment_entry.submit()
+
 	def cancel_primay_customer_payment_entry(self):
 		cancel_entry=frappe.get_list("Payment Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		for row in cancel_entry:
@@ -123,8 +139,11 @@ def get_primary_customer_reference_documents(args):
 		args.update({'party': customer})
 		data = get_outstanding_reference_documents(args)
 		for invoice in data:
-			invoice.update({'party': customer})
-			invoices.append(invoice)
+			diff_amt= frappe.db.get_value("Sales Invoice",invoice.voucher_no,"pay_amount_left")
+			if diff_amt > 0:
+				invoice.update({'party': customer})
+				invoice.update({'diff_amt':diff_amt})
+				invoices.append(invoice)
 	#frappe.msgprint(str(invoices))
 	return invoices
 

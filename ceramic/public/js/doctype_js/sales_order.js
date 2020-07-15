@@ -748,6 +748,22 @@ frappe.ui.form.on('Sales Order', {
 				}
 			}
 		})
+	},
+	order_priority: function(frm){
+		console.log('123')
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.sales_order.update_order_rank_",
+			args: {
+				'date': frm.doc.transaction_date,
+				'order_priority': frm.doc.order_priority
+			},
+			callback: function (r) {
+				if (r.message){
+					frm.set_value('order_item_priority', r.message.order_item_priority)
+					frm.set_value('order_rank', r.message.order_rank)
+				}
+			}
+		})
 	}
 });
 frappe.ui.form.on("Sales Order Item", {
