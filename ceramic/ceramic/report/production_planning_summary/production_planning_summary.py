@@ -104,7 +104,7 @@ def get_data(filters):
 
 	data = frappe.db.sql(f"""
 		SELECT
-			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, soi.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
+			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, i.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
 			SUM(soi.picked_qty - soi.delivered_qty - soi.wastage_qty) as picked_total, SUM(soi.qty - soi.picked_qty) as to_pick,
 			SUM(soi.`picked_qty`) as `picked_qty`, soi.packing_type as packing_type, i.punch_no, COUNT(DISTINCT soi.parent) as so_no
 		FROM
