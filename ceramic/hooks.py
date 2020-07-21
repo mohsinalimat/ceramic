@@ -206,6 +206,7 @@ doctype_js = {
 	"Pick List": "public/js/doctype_js/pick_list.js",
 	"Company": "public/js/doctype_js/company.js",
 	"Quotation": "public/js/doctype_js/quotation.js",
+	"Customer": "public/js/doctype_js/customer.js",
 }
 
 doc_events = {
