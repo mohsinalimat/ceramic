@@ -174,12 +174,6 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 			"fieldtype": "Data",
 			"hidden": 1
 		},
-		{
-			"fieldname":"credit_limit",
-			"label": __("Credit Limit"),
-			"fieldtype": "Currency",
-			"hidden": 1
-		}
 	],
 
 	"formatter": function(value, row, column, data, default_formatter) {

@@ -67,7 +67,9 @@ def make_purchase_invoice(source_name, target_doc=None):
 		
 		if source.taxes_and_charges:
 			taxes_and_charges = source.taxes_and_charges.replace(source_company_abbr, target_company_abbr)
-			if frappe.db.exists("Purchase Taxes and Charges", taxes_and_charges):
+			data = [x.name for x in frappe.db.get_list("Purchase Taxes and Charges Template", {'company': alternate_company})]
+
+			if taxes_and_charges in data:
 				target.taxes_and_charges = taxes_and_charges
 			else:
 				target.taxes_and_charges = None

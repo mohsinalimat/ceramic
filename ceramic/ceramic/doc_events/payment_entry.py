@@ -1,6 +1,8 @@
 import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_party_details
 
 def validate(self,method):
 	if self.authority == "Unauthorized" and not self.pe_ref and self.mode_of_payment not in ['Shroff / Hawala', 'Cash']:
@@ -51,14 +53,41 @@ def create_payment_entry(self):
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 
-			target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
-			target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
+			target.set_posting_time = 1
 			target.pe_ref = source.name
+			if target.payment_type == "Pay":
+				if target.mode_of_payment:
+					target.paid_from = get_bank_cash_account(target.mode_of_payment, target.company)['account']
+				else:
+					target.paid_from = source.paid_to.replace(source_company_abbr, target_company_abbr)
+				party_details = get_party_details(target.company, target.party_type, target.party, target.posting_date)
+				
+				target.paid_to = party_details['party_account']
+				target.paid_to_account_currency = party_details['party_account_currency']
+				target.paid_to_account_balance = party_details['account_balance']
+			
+			elif target.payment_type == "Receive":
+				if target.mode_of_payment:
+					target.paid_to = get_bank_cash_account(target.mode_of_payment, target.company)['account']
+				else:
+					target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
+				party_details = get_party_details(target.company, target.party_type, target.party, target.posting_date)
+				target.paid_from = party_details['party_account']
+				target.paid_from_account_currency = party_details['party_account_currency']
+				target.paid_from_account_balance = party_details['account_balance']
+			else:
+				target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
+				target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
+			
+
+
 			if source.deductions:
 				for index, i in enumerate(source.deductions):
 					target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
 					target.deductions[index].cost_center.replace(source_company_abbr, target_company_abbr)
 			
+			if self.amended_from:
+				target.amended_from = frappe.db.get_value("Payment Entry", self.amended_from, "pe_ref")			
 
 		def payment_ref(source_doc, target_doc, source_parent):
 			reference_name = source_doc.reference_name

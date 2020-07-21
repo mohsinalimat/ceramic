@@ -419,6 +419,7 @@ def calculate_order_item_priority():
 		WHERE
 			soi.`qty` > soi.`delivered_qty` AND
 			so.`docstatus` = 1
+			AND AND so.status not in ('Completed', 'Stopped', 'Hold', 'Closed')
 	""", as_dict = 1)
 
 	for soi in data:
@@ -436,6 +437,7 @@ def calculate_order_item_priority_so():
 		WHERE
 			so.`per_delivered` < 100 AND
 			so.`docstatus` = 1
+			AND so.status not in ('Completed', 'Stopped', 'Hold', 'Closed')
 	""", as_dict = 1)
 
 	for soi in data:
@@ -460,7 +462,19 @@ def update_order_rank_(date, order_priority):
 	days = 1 if days <= 0 else days
 	order_item_priority = round(math.log(days, 1.1) * cint(order_priority))
 
-	order_rank = frappe.db.sql(f"select order_rank, ABS(order_item_priority - {order_item_priority}) as difference from `tabSales Order` WHERE status not in ('Completed', 'Draft', 'Cancelled') having difference > 0 order by difference LIMIT 1")[0][0] or 0
+	order_rank = frappe.db.sql(f"""
+	select 
+		order_rank, ABS(order_item_priority - {order_item_priority}) as difference
+	from
+		`tabSales Order` 
+	WHERE
+		status not in ('Completed', 'Draft', 'Cancelled', 'Hold') 
+		AND order_rank > 0
+	HAVING
+		difference > 0 
+	ORDER BY
+		difference LIMIT 1
+	""")[0][0] or 0
 	return {'order_item_priority': order_item_priority, 'order_rank': order_rank}
 
 @frappe.whitelist()

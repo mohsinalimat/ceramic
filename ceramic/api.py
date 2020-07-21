@@ -681,3 +681,5 @@ def sales_order_item_patch():
 			# if pl.docstatus == 1:
 			# 	pl.cancel()
 			# pl.delete()
+
+# update `tabPick List Item` qty = delivered_qty + wastage_qty  WHERE qty < delivered_qty + wastage_qty

@@ -343,7 +343,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 	for item in item_codes:
 		sales_order_list += frappe.db.sql(f"""
 			SELECT 
-				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked, so.order_rank as order_item_priority,
+				so.name as sales_order, so.customer, so.transaction_date, so.delivery_date, soi.packing_type as packing_type, so.per_picked, so.order_item_priority, so.order_rank,
 				soi.name as sales_order_item, soi.item_code, soi.picked_qty, soi.qty - soi.picked_qty as qty, soi.qty as so_qty, soi.real_qty, soi.uom, soi.stock_qty, soi.stock_uom, soi.conversion_factor
 			FROM
 				`tabSales Order Item` as soi JOIN 
@@ -392,7 +392,10 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 			GROUP BY
 				`batch_no`
 			HAVING `actual_qty` > 0
-		""")[0][0] or 0
+		""")
+
+		if actual_qty:
+			actual_qty = actual_qty[0][0] or 0
 
 		pick_list_available = frappe.db.sql(f"""
 			SELECT SUM(pli.qty - (pli.delivered_qty + pli.wastage_qty)) FROM `tabPick List Item` as pli
@@ -400,7 +403,10 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 			WHERE `item_code` = '{item_code}'
 			AND batch_no = '{item.batch_no}'
 			AND pl.docstatus = 1
-		""")[0][0] or 0
+		""")
+
+		if pick_list_available:
+			pick_list_available = pick_list_available[0][0] or 0
 
 
 		item.available_qty = actual_qty - pick_list_available + item.qty

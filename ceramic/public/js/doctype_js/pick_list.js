@@ -143,6 +143,10 @@ frappe.ui.form.on('Pick List', {
 			},
 			() => {
 				frm.set_df_property("update_items", "hidden", 0);
+			},
+			() => {
+				frm.trigger('get_picked_items');
+				frm.trigger('get_item_qty');
 			}
 		])
 	},
@@ -222,6 +226,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
 							frappe.model.set_value(d.doctype, d.name, 'order_item_priority', item.order_item_priority);
+							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
 						}
 					});
 					frm.refresh_field('locations');
