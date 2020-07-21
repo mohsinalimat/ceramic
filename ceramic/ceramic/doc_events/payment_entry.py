@@ -149,7 +149,7 @@ def create_payment_entry(self):
 
 	if authority == "Authorized":
 		pe = get_payment_entry(self.name)
-		pe.naming_series = 'A' + pe.naming_series
+		pe.naming_series = 'A' + str(self.company_series) + pe.naming_series
 		pe.series_value = self.series_value
 		pe.save(ignore_permissions= True)
 		self.db_set('pe_ref', pe.name)
