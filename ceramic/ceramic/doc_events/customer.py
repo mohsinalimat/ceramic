@@ -22,7 +22,7 @@ def customer_validate(self):
 
 def before_validate(self, method):
 	from erpnext.selling.doctype.customer.customer import Customer
-	Customer.load_dashboard_info = override_load_dashboard_info
+	#Customer.load_dashboard_info = override_load_dashboard_info
 	Customer.validate = customer_validate
 	
 
@@ -46,16 +46,55 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 	}, distinct=1, fields=['company'])
 
 	company_wise_info = []
+	if party_type == 'Customer' and  frappe.db.get_value(party_type,party,'is_primary_customer'):
 
-	company_wise_grand_total = frappe.get_all(doctype,
-		filters={
-			'docstatus': 1,
-			party_type.lower(): party,
-			'posting_date': ('between', [current_fiscal_year.year_start_date, current_fiscal_year.year_end_date])
-			},
-			group_by="company",
-			fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
-		)
+		customer_list = []
+		l = frappe.get_list("Sales Invoice",{'primary_customer':party},'customer',distinct=1)
+		for customer in l:
+			customer_list.append(customer['customer'])
+		#customer_list_placeholder = ', '.join(f"'{i}'" for i in customer_list)
+		#frappe.msgprint(str(customer_list))
+		if l:
+			company_wise_grand_total = frappe.get_all(doctype,
+				filters={
+					'docstatus': 1,
+					party_type.lower():('in', customer_list),
+					'posting_date': ('between', [current_fiscal_year.year_start_date, current_fiscal_year.year_end_date])
+					},
+					group_by="company",
+					fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
+				
+			)
+				    
+			# company_wise_grand_total = frappe.get_all(doctype,
+			# 	filters=[
+			# 	    ['docstatus','=', 1],
+			# 		[party_type.lower(),'in', customer_list],
+			# 		['posting_date', ('between', [current_fiscal_year.year_start_date, current_fiscal_year.year_end_date])]
+			# 		],
+			# 		group_by="company",
+			# 		fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
+			# 	)
+		else:
+			company_wise_grand_total = frappe.get_all(doctype,
+			filters={
+				'docstatus': 1,
+				party_type.lower(): party,
+				'posting_date': ('between', [current_fiscal_year.year_start_date, current_fiscal_year.year_end_date])
+				},
+				group_by="company",
+				fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
+			)
+	else:
+		company_wise_grand_total = frappe.get_all(doctype,
+			filters={
+				'docstatus': 1,
+				party_type.lower(): party,
+				'posting_date': ('between', [current_fiscal_year.year_start_date, current_fiscal_year.year_end_date])
+				},
+				group_by="company",
+				fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
+			)
 
 	loyalty_point_details = []
 
@@ -85,13 +124,14 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 			customer_list.append(customer['customer'])
 		customer_list_placeholder = ', '.join(f"'{i}'" for i in customer_list)
 		#frappe.msgprint(str(customer_list_placeholder))
-		
+		#
 		if l:
 			company_wise_total_unpaid = frappe._dict(frappe.db.sql(f"""
 				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
 				from `tabGL Entry`
 				where party_type = '{party_type}' and party in ({customer_list_placeholder})
 				group by company"""))
+			
 		else:
 			company_wise_total_unpaid = frappe._dict(frappe.db.sql("""
 				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)

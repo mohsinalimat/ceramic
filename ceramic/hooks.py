@@ -13,6 +13,10 @@ from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLed
 from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
 BankStatementTransactionEntry.create_payment_entry = create_payment_entry
 
+
+from erpnext.selling.doctype.customer.customer import Customer
+from ceramic.ceramic.doc_events.customer import override_load_dashboard_info
+Customer.load_dashboard_info = override_load_dashboard_info
 # import erpnext
 # from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
 # from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
