@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_party_details
+from erpnext.accounts.utils import update_reference_in_payment_entry
 
 def validate(self,method):
 	if self.authority == "Unauthorized" and not self.pe_ref and self.mode_of_payment not in ['Shroff / Hawala', 'Cash']:
@@ -20,6 +21,48 @@ def validate(self,method):
 def on_update_after_submit(self, method):
 	if self.pe_ref:
 		frappe.db.set_value("Payment Entry", self.pe_ref, 'primary_customer', self.primary_customer)
+	update_payment_entries(self)
+
+def update_payment_entries(self):
+	authority = frappe.db.get_value("Company", self.company, 'authority')
+	
+	if authority == "Unauthorized" and not self.pe_ref:
+		for item in self.references:
+			if item.reference_doctype == "Sales Invoice":
+				pay_amount_left = real_difference_amount = frappe.db.get_value("Sales Invoice", item.reference_name, 'real_difference_amount')
+				allocated_amount = frappe.get_value("Payment Entry References", {'voucher_no': row.voucher_no, 'docstatus': 1}, "sum(allocated_amount)")
+				diff_value = pay_amount_left - allocated_amount
+				if diff_value > real_difference_amount:
+					frappe.throw("Allocated Amount Cannot be Greater Than Difference Amount {}".format(diff_value))
+				else:
+					frappe.db.set_value("Sales Invoice", item.reference_name, 'pay_amount_left', diff_value)
+			
+			if item.reference_doctype == "Purchase Invoice":
+				pay_amount_left = real_difference_amount = frappe.db.get_value("Purchase Invoice", item.reference_name, 'real_difference_amount')
+				allocated_amount = frappe.get_value("Payment Entry References", {'voucher_no': row.voucher_no, 'docstatus': 1}, "sum(allocated_amount)")
+				diff_value = pay_amount_left - allocated_amount
+				
+				if diff_value > real_difference_amount:
+					frappe.throw("Allocated Amount Cannot be Greater Than Difference Amount {}".format(diff_value))
+				else:
+					frappe.db.set_value("Purchase Invoice", item.reference_name, 'pay_amount_left', diff_value)
+
+	if self.pe_ref and not self.get('dont_replicate'):
+		payment_doc = frappe.get_doc("Payment Entry", self.pe_ref)
+		payment_doc.dont_replicate = 1
+		payment_doc_reference_list = [x.reference_name for x in payment_doc.references]
+
+		for idx, row in enumerate(self.references):
+			if row.reference_doctype != "Journal Entry" and self.paid_from_account_currency == 'INR' and self.paid_from_account_currency == 'INR':
+				ref_field = "pi_ref" if row.reference_doctype == 'Purchase Invoice' else 'si_ref'
+				row.against_voucher = frappe.db.get_value(row.reference_doctype, row.reference_name, ref_field)
+				row.voucher_detail_no = None
+				row.difference_amount = 0
+				row.difference_account = None
+				if row.against_voucher not in payment_doc_reference_list:
+					row.against_voucher_type = row.reference_doctype
+					row.grand_total = row.total_amount
+					update_reference_in_payment_entry(row, payment_doc)
 
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
@@ -79,8 +122,6 @@ def create_payment_entry(self):
 				target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
 				target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
 			
-
-
 			if source.deductions:
 				for index, i in enumerate(source.deductions):
 					target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
@@ -94,14 +135,14 @@ def create_payment_entry(self):
 			if source_parent.payment_type == 'Pay':
 				if source_doc.reference_doctype == 'Purchase Invoice':
 					target_doc.reference_name = frappe.db.get_value("Purchase Invoice", reference_name, 'pi_ref')
-					target_doc.total_amount = frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'rounded_total') or frappe.db.get_value("Purchase Invoice", reference_name, 'total')
+					target_doc.total_amount = frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'rounded_total') or frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'total')
 					target_doc.outstanding_amount = frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'outstanding_amount')
 					target_doc.allocated_amount = min(target_doc.outstanding_amount - (frappe.db.get_value("Purchase Invoice", target_doc.reference_name, 'pay_amount_left')), source_doc.allocated_amount)
 
 			if source_parent.payment_type == 'Receive':
 				if source_doc.reference_doctype == 'Sales Invoice':
 					target_doc.reference_name = frappe.db.get_value("Sales Invoice", reference_name, 'si_ref')
-					target_doc.total_amount = frappe.db.get_value("Sales Invoice", target_doc.reference_name, 'rounded_total') or frappe.db.get_value("Purchase Invoice", reference_name, 'total')
+					target_doc.total_amount = frappe.db.get_value("Sales Invoice", target_doc.reference_name, 'rounded_total') or frappe.db.get_value("Sales Invoice", target_doc.reference_name, 'total')
 					target_doc.outstanding_amount = frappe.db.get_value("Sales Invoice", target_doc.reference_name, 'outstanding_amount')
 					target_doc.allocated_amount = min(target_doc.outstanding_amount - (frappe.db.get_value("Sales Invoice", target_doc.reference_name, 'pay_amount_left')), source_doc.allocated_amount)
 
