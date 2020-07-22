@@ -78,6 +78,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 				"grand_total": d.grand_total,
 				"base_grand_total": d.base_grand_total
 			})
+
 	if party_type == 'Customer':
 		customer_list = []
 		if frappe.db.get_value(party_type,party,'is_primary_customer'):
@@ -93,6 +94,12 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 					from `tabGL Entry`
 					where party_type = '{party_type}' and party in ({customer_list_placeholder})
 					group by company"""))
+			else:
+				company_wise_total_unpaid = frappe._dict(frappe.db.sql("""
+				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
+				from `tabGL Entry`
+				where party_type = %s and party=%s
+				group by company""", (party_type, party)))
 		else:
 			company_wise_total_unpaid = frappe._dict(frappe.db.sql("""
 				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
