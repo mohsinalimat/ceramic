@@ -31,24 +31,7 @@ frappe.ui.form.on('Payment Entry', {
 		    frm.set_value("primary_customer", r.message.primary_customer)
 		});
 	},
-	naming_series: function(frm) {
-		if (frm.doc.company && !frm.doc.amended_from && frm.doc.__islocal){
-			frappe.call({
-				method: "ceramic.api.check_counter_series",
-				args: {
-					'name': frm.doc.naming_series,
-					'company_series': frm.doc.company_series,
-				},
-				callback: function(e) {
-					frm.set_value("series_value", e.message);
-				}
-			});
-		}
-	},
 	company: function(frm){
-		if (frm.doc.__islocal){
-			frm.trigger('naming_series');
-		}
 		frm.trigger('mode_of_payment');
 		frm.trigger('party');
 	},

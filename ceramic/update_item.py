@@ -77,9 +77,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 				pl.cancel()
 				pl.delete()
-			
-			frappe.msgprint("HERE")
-			
+						
 			child_item.picked_qty = 0
 			frappe.msgprint(_(f"All Pick List For Item {child_item.item_code} has been deleted."))
 		

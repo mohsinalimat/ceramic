@@ -318,7 +318,7 @@ frappe.ui.form.on('Pick List', {
 				}
 			});
 		}
-	}
+	},
 });
 
 frappe.ui.form.on('Sales Order Item Pick List', {
