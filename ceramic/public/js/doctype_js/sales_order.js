@@ -746,6 +746,7 @@ frappe.ui.form.on('Sales Order', {
 					frm.set_value('taxes_and_charges', null)
 					frm.set_value('taxes', [])
 				}
+				frm.refresh_field("taxes");
 			}
 		})
 	},

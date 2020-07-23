@@ -54,7 +54,6 @@ frappe.ui.form.on('Pick List', {
 				frm.trigger('get_item_qty');
 				frm.trigger('get_picked_items');
 			}
-			frm.trigger('naming_series');
 		}
 		frm.set_df_property("locations", "read_only", frm.doc.docstatus == 0 ? 0 : 1);
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
@@ -66,23 +65,6 @@ frappe.ui.form.on('Pick List', {
 	},
 	add_get_items_button: (frm) => {
 		frm.remove_custom_button(__('Get Items'));
-	},
-	naming_series: function(frm) {
-		if (frm.doc.company && !frm.doc.amended_from){
-			frappe.call({
-				method: "ceramic.api.check_counter_series",
-				args: {
-					'name': frm.doc.naming_series,
-					'company_series': frm.doc.company_series,
-					'date': cur_frm.doc.transaction_date
-				},
-				callback: function(e) {
-					if (e.message){
-						frm.set_value("series_value", e.message);
-					}
-				}
-			});
-		}
 	},
 	create_remaining_pick: function(frm){
 		let trans_items = []
@@ -336,12 +318,7 @@ frappe.ui.form.on('Pick List', {
 				}
 			});
 		}
-	},
-	company: function(frm) {
-		if (frm.doc.__islocal){
-			frm.trigger('naming_series');
-		}
-	},
+	}
 });
 
 frappe.ui.form.on('Sales Order Item Pick List', {

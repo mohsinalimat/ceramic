@@ -329,6 +329,7 @@ frappe.ui.form.on('Delivery Note', {
 					frm.set_value('taxes_and_charges', null)
 					frm.set_value('taxes', [])
 				}
+				frm.refresh_field("taxes");
 			}
 		})
 	}

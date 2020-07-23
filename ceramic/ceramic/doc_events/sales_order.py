@@ -419,7 +419,7 @@ def calculate_order_item_priority():
 		WHERE
 			soi.`qty` > soi.`delivered_qty` AND
 			so.`docstatus` = 1
-			AND AND so.status not in ('Completed', 'Stopped', 'Hold', 'Closed')
+			AND so.status not in ('Completed', 'Stopped', 'Hold', 'Closed')
 	""", as_dict = 1)
 
 	for soi in data:
