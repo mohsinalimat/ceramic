@@ -424,7 +424,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 				'sales_order': this.frm.doc.name,
 			},
 			callback: function (r) {
-				fappe.msgprint(str(r.message));
+				frappe.msgprint(r.message);
 			}
 		})
 	},
@@ -801,7 +801,7 @@ frappe.ui.form.on("Sales Order Item", {
 				'sales_order_item': d.name,
 			},
 			callback: function (r) {
-				fappe.msgprint(str(r.message));
+				frappe.msgprint(r.message);
 			}
 		})
 	}
