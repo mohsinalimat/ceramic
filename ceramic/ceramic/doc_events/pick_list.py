@@ -495,6 +495,27 @@ def unpick_item_1(sales_order, sales_order_item = None, pick_list = None, pick_l
 	except:
 		return "Error"
 
+def unpick_qty_comment(reference_name, sales_order, data):
+	comment_pl_doc = frappe.new_doc("Comment")
+	comment_pl_doc.comment_type = "Updated"
+	comment_pl_doc.comment_email = frappe.session.user
+	comment_pl_doc.reference_doctype = "Pick List"
+	comment_pl_doc.reference_name = reference_name
+
+	comment_pl_doc.content = data
+
+	comment_pl_doc.save()
+
+	comment_so_doc = frappe.new_doc("Comment")
+	comment_so_doc.comment_type = "Updated"
+	comment_so_doc.comment_email = frappe.session.user
+	comment_so_doc.reference_doctype = "Sales Order"
+	comment_so_doc.reference_name = sales_order
+
+	comment_so_doc.content = data
+
+	comment_so_doc.save()
+
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):
 	if pick_list_item and pick_list:
@@ -514,6 +535,9 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			if not doc.delivered_qty and not doc.wastage_qty:
 				doc.cancel()
 				doc.delete()
+			
+			if diff_qty > 0:
+				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
 		else:
 			if unpick_qty > 0 and unpick_qty > doc.qty - doc.wastage_qty - doc.delivered_qty:
 				frappe.throw(f"You can not unpick qty {unpick_qty} higher than remaining pick qty { doc.qty - doc.wastage_qty - doc.delivered_qty }")
@@ -546,13 +570,18 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				
 				doc.db_set('qty', doc.qty - unpick_qty)
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
+				if unpick_qty > 0:
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} from item {doc.item_code}")
 			else:
 				doc.db_set('qty', doc.qty - unpick_qty)
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
+				if unpick_qty > 0:
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} from item {doc.item_code}")
 
+		
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
-		return "Pick List to this Sales Order Have Been Deleted."
+		
 	elif sales_order and sales_order_item:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1}, ['name'])
 		
@@ -571,10 +600,12 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 						doc.cancel()
 					doc.delete()
 			
+			if diff_qty > 0:
+				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 			update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 		
-		return "Pick List to this Sales Order Have Been Deleted."
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'docstatus': 1}, ['name'])
 		
@@ -593,10 +624,14 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 					
 					doc.delete()
 			
+			if diff_qty > 0:
+				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		
 		update_sales_order_total_values(frappe.get_doc("Sales Order", sales_order))
-		return "Pick List to this Sales Order Have Been Deleted."
+	
+	return "Pick List to this Sales Order Have Been Deleted."
 
 
 @frappe.whitelist()
