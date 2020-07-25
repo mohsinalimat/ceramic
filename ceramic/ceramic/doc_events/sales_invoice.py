@@ -30,6 +30,10 @@ def before_validate(self, method):
 
 				if not item.full_qty:
 					item.full_qty = item.qty
+	
+	if self.is_return:
+		for item in self.items:
+			item.full_qty = item.qty
 
 def before_naming(self, method):
 	if self.is_opening == "Yes":
@@ -74,6 +78,11 @@ def create_main_sales_invoice(self):
 
 			target.si_ref = self.name
 			target.authority = "Unauthorized"
+
+			if source.is_return:
+				target.is_return = source.is_return
+				target.return_against = frappe.db.get_value("Sales Invoice", source.return_against, 'si_ref')
+
 
 			if source.debit_to:
 				target.debit_to = source.debit_to.replace(source_company_abbr, target_company_abbr)
