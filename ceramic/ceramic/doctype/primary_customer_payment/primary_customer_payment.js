@@ -8,10 +8,11 @@
 // 		}
 // 	}
 // };
+
 cur_frm.fields_dict.company.get_query = function (doc) {
 	return {
 		filters: {
-			"authority": "Unauthorized"
+			"authority": "Authorized"
 		}
 	}
 };
@@ -36,10 +37,27 @@ cur_frm.fields_dict.paid_to.get_query = function (doc) {
 cur_frm.fields_dict.mode_of_payment.get_query = function (doc) {
 	return {
 		filters: [
-			["authority",'!=', "Unauthorized"]
+			["authority",'!=', "Authorized"]
 		]
 	}
 };
+cur_frm.set_query("cost_center","deductions", function(doc, cdt, cdn){
+	var d = locals[cdt][cdn];
+	return{
+		filters: [
+			["company",'=',doc.company]
+		]
+	}
+});
+cur_frm.set_query("account","deductions", function(doc, cdt, cdn){
+	var d = locals[cdt][cdn];
+	return{
+		filters: [
+			["company",'=',doc.company],
+			["is_group",'=',0]
+		]
+	}
+});
 
 frappe.ui.form.on('Primary Customer Payment', {
 	 refresh: function(frm) {
@@ -55,6 +73,15 @@ frappe.ui.form.on('Primary Customer Payment', {
 			//var payment_account_field = frm.doc.payment_type == "Receive" ? "paid_to" : "paid_from";
 			frm.set_value("paid_to", account);
 		})
+		if (frm.doc.deductions == undefined && frm.doc.mode_of_payment == "Shroff / Hawala") {
+			frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
+
+				let d = frm.add_child("deductions")
+				d.account = "Hawala / Shroff Commision - " + r.abbr, 
+					d.cost_center = "Main - " + r.abbr,
+					d.amount = 0
+			})
+		}
 	},
 	
 	
@@ -88,6 +115,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 		}
 		frappe.call({
 			//method: 'erpnext.accounts.doctype.payment_entry.payment_entry.get_outstanding_reference_documents',
+			// get primary customer 
 			method: 'ceramic.ceramic.doctype.primary_customer_payment.primary_customer_payment.get_primary_customer_reference_documents',
 			args: {
 				args:args
@@ -96,9 +124,10 @@ frappe.ui.form.on('Primary Customer Payment', {
 				if(r.message) {
 					var total_positive_outstanding = 0;
 					var total_negative_outstanding = 0;
-
+					
+					// iterate loop over the invoices
 					$.each(r.message, function (i, d) {
-						console.log(d.voucher_type)
+						//console.log(d.voucher_type)
 						var c = frm.add_child("references");
 						c.reference_doctype = d.voucher_type;
 						c.reference_name = d.voucher_no;
@@ -149,6 +178,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 		});					
 	},
 
+	// set Account paid_to and set account currency and account balance 
 	paid_to: function(frm) {
 		if(frm.set_party_account_based_on_party) return;
 
@@ -169,6 +199,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 		);
 	},
 	
+	// set account details like account currency and account balance
 	set_account_currency_and_balance: function(frm, account, currency_field,
 		balance_field, callback_function) {
 	if (frm.doc.posting_date && account) {
@@ -191,13 +222,14 @@ frappe.ui.form.on('Primary Customer Payment', {
 									(r.message['account_type'] == "Bank" ? 1 : 0));
 								if(!frm.doc.received_amount && frm.doc.paid_amount)
 									frm.events.paid_amount(frm);
-							} else if(frm.doc.payment_type=="Pay" && currency_field=="paid_from_account_currency") {
-								frm.toggle_reqd(["reference_no", "reference_date"],
-									(r.message['account_type'] == "Bank" ? 1 : 0));
-
-								if(!frm.doc.paid_amount && frm.doc.received_amount)
-									frm.events.received_amount(frm);
 							}
+							// } else if(frm.doc.payment_type=="Pay" && currency_field=="paid_from_account_currency") {
+							// 	frm.toggle_reqd(["reference_no", "reference_date"],
+							// 		(r.message['account_type'] == "Bank" ? 1 : 0));
+
+							// 	if(!frm.doc.paid_amount && frm.doc.received_amount)
+							// 		frm.events.received_amount(frm);
+							// }
 						},
 						() => {
 							if(callback_function) callback_function(frm);
@@ -277,6 +309,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 		frm.events.set_total_allocated_amount(frm);
 	},
 
+	// set total allocated amount
 	set_total_allocated_amount: function(frm) {
 		var total_allocated_amount = 0.0;
 		var base_total_allocated_amount = 0.0;
@@ -293,6 +326,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 		frm.events.set_unallocated_amount(frm);
 	},
 
+	// set unallocated amount if primary customer and if paid amount is > total allocated amount
 	set_unallocated_amount: function(frm) {
 		var unallocated_amount = 0;
 
@@ -454,6 +488,7 @@ frappe.ui.form.on('Primary Customer Payment Reference', {
 	}
 });
 
+// throw message before select primary customer if company is not selected and set value in paid_to
 var get_payment_mode_account = function(frm, mode_of_payment, callback) {
 	if(!frm.doc.company) {
 		frappe.throw(__("Please select the Company first"));

@@ -21,6 +21,7 @@ class PrimaryCustomerPayment(Document):
 	def validate(self):
 		self.clear_unallocated_reference_document_rows()
 	
+	# it will clear Primary Customer Payment Reference entries where allocated_amount is 0
 	def clear_unallocated_reference_document_rows(self):
 		self.set("references", self.get("references", {"allocated_amount": ["not in", [0, None, ""]]}))
 		frappe.db.sql("""delete from `tabPrimary Customer Payment Reference`
@@ -39,22 +40,32 @@ class PrimaryCustomerPayment(Document):
 		for reference in self.references:
 			#reference_dict=dict([(reference.customer,reference.name)])
 			#final_reference_dict[reference.customer].append(reference.name)
+
+			#it will create dict for Primary Customer Payment Reference Entries
 			reference_dict=dict(([(reference.customer,[{reference.reference_doctype,reference.reference_name,reference.due_date,reference.total_amount,reference.outstanding_amount,reference.allocated_amount}])]))
+			# if primary customer is equal to customer selected from Primary Customer Payment Reference then it will append all values with unallocated amount
 			if reference.customer == self.primary_customer and references_has_primary_customer==False:
 				references_has_primary_customer = True
+				# if reference_dict have 1 customer with multiple invoices than create a dict with key = customer and values = multiple values
+				# example
+				# first entry: Type= Sales Invoice, Name = OAOSI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 50000, Outstanding Amount = 1000
+				# second entry: Type= Sales Invoice, Name = SI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 10000, Outstanding Amount = 500
+				# dict : {key:A J Enterprise Bihpuria Assam, values: {Name = OAOSI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 50000, Outstanding Amount = 1000},{Type= Sales Invoice, Name = SI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 10000, Outstanding Amount = 500}
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':self.unallocated_amount})	
+			# if not primary customer selected then unallocated amount will be 0
 			else:
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':0.0})
 		if references_has_primary_customer == False:
 			final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
 
+		# iterate loop over dict created from Primary Customer Payment Reference Entries and create new Payment Entry
 		for key,invoices in final_reference_dict.items():
-			payment_entry=frappe.new_doc("Payment Entry") #new payment entry(payment_entry)
+			payment_entry=frappe.new_doc("Payment Entry") #create new payment entry(payment_entry)
 			payment_entry.posting_date=nowdate()
 			payment_entry.payment_type="Receive"
 			payment_entry.company=self.company
 			payment_entry.mode_of_payment=self.mode_of_payment
-			payment_entry.party=key
+			payment_entry.party=key # key = Name of the Customer
 			payment_entry.party_type="Customer"
 			payment_entry.party_name=key
 			payment_entry.primary_customer=self.primary_customer
@@ -73,7 +84,9 @@ class PrimaryCustomerPayment(Document):
 			paid_amount = 0.0
 			unallocated_amount = 0.0
 
+			# iterate loop over multiple invoices where there are multiple customers available
 			for invoice in invoices:
+				# paid amount should be allocated amount + unallocated amount
 				paid_amount += invoice['allocated_amount'] + invoice['unallocated_amount']
 				unallocated_amount += invoice['unallocated_amount']
 				if invoice['allocated_amount']:
@@ -90,7 +103,7 @@ class PrimaryCustomerPayment(Document):
 			payment_entry.received_amount = payment_entry.paid_amount
 			payment_entry.save(ignore_permissions=True)
 			payment_entry.submit()
-
+	# it will cancel created primary customer payment entry using reference docytype and reference docname
 	def cancel_primay_customer_payment_entry(self):
 		cancel_entry=frappe.get_list("Payment Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		for row in cancel_entry:
@@ -130,11 +143,16 @@ def get_account_details(account, date, cost_center=None):
 def get_primary_customer_reference_documents(args):
 	if isinstance(args, string_types):
 		args = json.loads(args)
+	
+	# customer_list- get list of the customer those are primary customer with current company and outstanding amount > 0 
 	customer_list = frappe.get_list("Sales Invoice",{'primary_customer':args.get('primary_customer'),'company':args.get('company'),'outstanding_amount':('>',0)},'customer')
 	#customer_list = set(customer_list)
+	# unique_customer_list- it will remove duplicate entries in the customer_list
 	unique_customer_list = list(set(val for dic in customer_list for val in dic.values()))
 	#frappe.msgprint(str(unique_customer_list))
 	invoices = []
+	
+	# iterate loop over every customer from the unique_customer_list and check that diff amount > 0
 	for customer in unique_customer_list:
 		args.update({'party': customer})
 		data = get_outstanding_reference_documents(args)

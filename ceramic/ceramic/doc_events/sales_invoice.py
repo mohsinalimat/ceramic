@@ -30,6 +30,9 @@ def before_validate(self, method):
 
 				if not item.full_qty:
 					item.full_qty = item.qty
+	
+	if not self.primary_customer:
+		self.primary_customer = self.customer
 
 def before_naming(self, method):
 	if self.is_opening == "Yes":
