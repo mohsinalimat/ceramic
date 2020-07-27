@@ -342,7 +342,6 @@
    "depends_on": "eval:(doc.paid_amount && doc.received_amount)",
    "fieldname": "difference_amount",
    "fieldtype": "Currency",
-   "hidden": 1,
    "label": "Difference Amount (Company Currency)",
    "options": "Company:company:default_currency",
    "print_hide": 1,
@@ -498,7 +497,7 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "deductions",
-   "depends_on": "eval:(doc.paid_amount && doc.received_amount)",
+   "depends_on": "eval:(doc.paid_amount && doc.received_amount && doc.mode_of_payment == \"Shroff / Hawala\")",
    "fieldname": "deductions_or_loss_section",
    "fieldtype": "Section Break",
    "label": "Deductions or Loss"
@@ -533,7 +532,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-07-25 17:33:58.767950",
+ "modified": "2020-07-27 18:18:03.822238",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Primary Customer Payment",

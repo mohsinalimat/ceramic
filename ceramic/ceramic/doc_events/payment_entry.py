@@ -75,6 +75,7 @@ def on_submit(self, method):
 def on_cancel(self, method):
 	"""On Cancel Custom Function for Payment Entry"""
 	cancel_payment_entry(self)
+	validate_primary_customer_payment_entry(self)
 
 
 def on_trash(self, method):
@@ -218,6 +219,10 @@ def create_payment_entry(self):
 					else:
 						frappe.db.set_value("Purchase Invoice", item.reference_name, 'pay_amount_left', diff_value - item.allocated_amount)
 
+
+def validate_primary_customer_payment_entry(self):
+	if self.reference_doctype == "Primary Customer Payment" and self.reference_docname and not self.get('cancel_it'):
+		frappe.throw(_("Please cancel {0} before cancelling the payment entry".format(self.reference_docname)))
 
 # Cancel Invoice on Cancel
 def cancel_payment_entry(self):

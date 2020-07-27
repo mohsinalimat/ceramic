@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe,erpnext,json
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import nowdate
+from frappe.utils import nowdate, flt
 from erpnext.accounts.utils import get_balance_on,get_account_currency
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_outstanding_reference_documents
 from six import string_types
@@ -20,6 +20,7 @@ from collections import defaultdict
 class PrimaryCustomerPayment(Document):
 	def validate(self):
 		self.clear_unallocated_reference_document_rows()
+		self.set_amounts()
 	
 	# it will clear Primary Customer Payment Reference entries where allocated_amount is 0
 	def clear_unallocated_reference_document_rows(self):
@@ -30,7 +31,7 @@ class PrimaryCustomerPayment(Document):
 	def on_submit(self):
 		self.create_primay_customer_payment_entry()
 
-	def on_cancel(self):
+	def before_cancel(self):
 		self.cancel_primay_customer_payment_entry()
 	
 	def create_primay_customer_payment_entry(self):
@@ -50,7 +51,7 @@ class PrimaryCustomerPayment(Document):
 				# example
 				# first entry: Type= Sales Invoice, Name = OAOSI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 50000, Outstanding Amount = 1000
 				# second entry: Type= Sales Invoice, Name = SI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 10000, Outstanding Amount = 500
-				# dict : {key:A J Enterprise Bihpuria Assam, values: {Name = OAOSI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 50000, Outstanding Amount = 1000},{Type= Sales Invoice, Name = SI20212100129, Customer = A J Enterprise Bihpuria Assam, Total Amount = 10000, Outstanding Amount = 500}
+				# dict : {key:A J Enterprise Bihpuria Assam, values: {Name = OAOSI20212100129,Total Amount = 50000, Outstanding Amount = 1000},{Type= Sales Invoice, Name = SI20212100129, Total Amount = 10000, Outstanding Amount = 500}
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':self.unallocated_amount})	
 			# if not primary customer selected then unallocated amount will be 0
 			else:
@@ -103,20 +104,57 @@ class PrimaryCustomerPayment(Document):
 			payment_entry.received_amount = payment_entry.paid_amount
 			payment_entry.save(ignore_permissions=True)
 			payment_entry.submit()
+	
+	def set_amounts(self):
+		self.set_total_allocated_amount()
+		self.set_unallocated_amount()
+		self.set_difference_amount() 
+	
+	def set_total_allocated_amount(self):
+		total_allocated_amount= 0
+		for d in self.get("references"):
+			if d.allocated_amount:
+				total_allocated_amount += flt(d.allocated_amount)
+
+		self.total_allocated_amount = abs(total_allocated_amount)
+	
+
+	def set_unallocated_amount(self):
+		self.unallocated_amount = 0
+		if self.primary_customer:
+			total_deductions = sum([flt(d.amount) for d in self.get("deductions")])
+			if self.payment_type == "Receive" \
+				and self.total_allocated_amount < self.paid_amount + total_deductions:
+					self.unallocated_amount = (self.received_amount + total_deductions - 
+						self.total_allocated_amount)
+	
+	def set_difference_amount(self):
+		party_amount = flt(self.total_allocated_amount) + flt(self.unallocated_amount)
+
+		if self.payment_type == "Receive":
+			self.difference_amount = party_amount - flt(self.received_amount)
+
+		total_deductions = sum([flt(d.amount) for d in self.get("deductions")])
+
+		self.difference_amount = flt(self.difference_amount - total_deductions,
+			self.precision("difference_amount"))
+		
+
+
 	# it will cancel created primary customer payment entry using reference docytype and reference docname
 	def cancel_primay_customer_payment_entry(self):
 		cancel_entry=frappe.get_list("Payment Entry",{'reference_doctype': self.doctype,'reference_docname':self.name})
 		for row in cancel_entry:
 			pe_doc = frappe.get_doc("Payment Entry",row.name)
 			pe_doc.flags.ignore_permissions = True
-			try:
+			if pe_doc.docstatus == 1:
+				pe_doc.cancel_it = True
 				pe_doc.cancel()
-			except Exception as e:
-				raise e
-			pe_doc.db_set('reference_doctype','')
-			pe_doc.db_set('reference_docname','')
+				pe_doc.db_set('reference_doctype','')
+				pe_doc.db_set('reference_docname','')
 
-
+	
+		
 @frappe.whitelist()
 def get_account_details(account, date, cost_center=None):
 	frappe.has_permission('Primary Customer Payment', throw=True)

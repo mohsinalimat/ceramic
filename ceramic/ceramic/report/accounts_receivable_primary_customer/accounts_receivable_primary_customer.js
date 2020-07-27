@@ -166,3 +166,46 @@ erpnext.dimension_filters.forEach((dimension) => {
 		"options": dimension["document_type"]
 	});
 });
+
+function get_payment_remark_details(filters) {
+	frappe.call({
+		method: "ceramic.api.get_payment_remark_details",
+		args: {
+			filters: filters
+		},
+		callback: function (r) {
+			frappe.msgprint({
+				message: r.message,
+				title: filters['primary_customer'],
+				wide: true,
+			});
+		}
+	})
+}
+
+function get_picked_item_details(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty, lot_no) {
+	// docudocument.getElementById("demo").innerHTML = item_code;
+
+	frappe.call({
+		method: "ceramic.api.get_picked_item",
+		args: {
+			item_code: item_code,
+			batch_no: batch_no,
+			from_date: from_date,
+			to_date: to_date,
+			company: company,
+			bal_qty: bal_qty,
+			total_picked_qty: total_picked_qty,
+			total_remaining_qty: total_remaining_qty,
+			lot_no: lot_no
+		},
+		callback: function (r) {
+			let message = frappe.template.compile(template)({ 'data': r.message });
+			frappe.msgprint({
+				message: message,
+				title: "Lot-Wise Balance Details : " + item_code,
+				wide: true,
+			});
+		}
+	})
+}

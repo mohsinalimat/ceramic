@@ -67,7 +67,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 	company: function(frm){
 		frm.trigger('mode_of_payment')
 	},
-	
+
 	mode_of_payment: function(frm) {
 		get_payment_mode_account(frm, frm.doc.mode_of_payment, function(account){
 			//var payment_account_field = frm.doc.payment_type == "Receive" ? "paid_to" : "paid_from";
@@ -86,12 +86,27 @@ frappe.ui.form.on('Primary Customer Payment', {
 	
 	
 	primary_customer:function(frm){
+		frm.refresh_fields()
 		frm.doc.references = []
+		frm.doc.total_allocated_amount = 0
+		frm.doc.unallocated_amount = frm.doc.paid_amount
+		frm.doc.difference_amount = 0
+		if (frm.doc.mode_of_payment == "Shroff / Hawala"){
+			frm.doc.deductions = []
+			frappe.db.get_value("Company", frm.doc.company, 'abbr', function (r) {
+				let d = frm.add_child("deductions")
+				d.account = "Hawala / Shroff Commision - " + r.abbr, 
+					d.cost_center = "Main - " + r.abbr,
+					d.amount = 0
+			})
+		}
+		
 		frappe.db.get_value("Company",frm.doc.company,'default_receivable_account',function(r){
 			if(r.default_receivable_account){
 				frm.set_value('paid_from',r.default_receivable_account)
 			}
 		})
+		frm.refresh_fields()
 	},
 	
 	get_outstanding_invoice: function (frm) {
@@ -246,8 +261,11 @@ frappe.ui.form.on('Primary Customer Payment', {
 	allocate_party_amount_against_ref_docs: function(frm, paid_amount) {
 		var total_positive_outstanding_including_order = 0;
 		var total_negative_outstanding = 0;
+		var total_deductions = frappe.utils.sum($.map(frm.doc.deductions || [],
+			function(d) { return flt(d.amount) }));
 	
-		paid_amount = frm.doc.paid_amount
+		//paid_amount = frm.doc.paid_amount
+		paid_amount -= total_deductions;
 
 		$.each(frm.doc.references || [], function(i, row) {
 			if(flt(row.outstanding_amount) > 0)
@@ -312,16 +330,13 @@ frappe.ui.form.on('Primary Customer Payment', {
 	// set total allocated amount
 	set_total_allocated_amount: function(frm) {
 		var total_allocated_amount = 0.0;
-		var base_total_allocated_amount = 0.0;
 		$.each(frm.doc.references || [], function(i, row) {
 			if (row.allocated_amount) {
 				total_allocated_amount += flt(row.allocated_amount);
-				base_total_allocated_amount += flt(flt(row.allocated_amount)*flt(row.exchange_rate),
-					precision("base_paid_amount"));
+				
 			}
 		});
 		frm.set_value("total_allocated_amount", Math.abs(total_allocated_amount));
-		frm.set_value("base_total_allocated_amount", Math.abs(base_total_allocated_amount));
 
 		frm.events.set_unallocated_amount(frm);
 	},
@@ -329,16 +344,35 @@ frappe.ui.form.on('Primary Customer Payment', {
 	// set unallocated amount if primary customer and if paid amount is > total allocated amount
 	set_unallocated_amount: function(frm) {
 		var unallocated_amount = 0;
+		var total_deductions = frappe.utils.sum($.map(frm.doc.deductions || [],
+			function(d) { return flt(d.amount) }));
 
 		if(frm.doc.primary_customer) {
 			if(frm.doc.payment_type == "Receive"
-				&& frm.doc.total_allocated_amount < frm.doc.paid_amount) {
-					unallocated_amount = (frm.doc.paid_amount 
-						- frm.doc.total_allocated_amount) ;
+				&& frm.doc.total_allocated_amount < frm.doc.paid_amount + total_deductions) {
+					unallocated_amount = (frm.doc.received_amount + total_deductions
+						- frm.doc.total_allocated_amount);
 			} 
 		}
 		frm.set_value("unallocated_amount", unallocated_amount);
 		frm.trigger("set_difference_amount");
+	},
+
+	set_difference_amount: function(frm) {
+		var difference_amount = 0;
+
+		var party_amount = flt(frm.doc.total_allocated_amount) + flt(frm.doc.unallocated_amount);
+
+		if(frm.doc.payment_type == "Receive") {
+			difference_amount = party_amount - flt(frm.doc.received_amount);
+		}
+
+		var total_deductions = frappe.utils.sum($.map(frm.doc.deductions || [],
+			function(d) { return flt(d.amount) }));
+
+		frm.set_value("difference_amount", difference_amount - total_deductions);
+
+		frm.events.hide_unhide_fields(frm);
 	},
 
 	unallocated_amount: function(frm) {
@@ -393,6 +427,9 @@ frappe.ui.form.on('Primary Customer Payment', {
 
 		var party_amount = frm.doc.payment_type=="Receive" ?
 			frm.doc.paid_amount : frm.doc.received_amount;
+
+		frm.toggle_display("write_off_difference_amount", (frm.doc.difference_amount && frm.doc.primary_customer &&
+				(frm.doc.total_allocated_amount > party_amount)));
 		
 		frm.refresh_fields();
 	},
@@ -444,7 +481,62 @@ frappe.ui.form.on('Primary Customer Payment', {
 			frm.events.set_unallocated_amount(frm);
 	},
 
+	write_off_difference_amount: function(frm) {
+		frm.events.set_deductions_entry(frm, "write_off_account");
+	},
+
+	set_deductions_entry: function(frm, account) {
+		if(frm.doc.difference_amount) {
+			frappe.call({
+				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
+				args: {
+					company: frm.doc.company
+				},
+				callback: function(r, rt) {
+					if(r.message) {
+						var write_off_row = $.map(frm.doc["deductions"] || [], function(t) {
+							return t.account==r.message[account] ? t : null; });
+
+						var row = [];
+
+						var difference_amount = flt(frm.doc.difference_amount,
+							precision("difference_amount"));
+
+						if (!write_off_row.length && difference_amount) {
+							row = frm.add_child("deductions");
+							row.account = r.message[account];
+							row.cost_center = r.message["cost_center"];
+						} else {
+							row = write_off_row[0];
+						}
+
+						if (row) {
+							row.amount = flt(row.amount) + difference_amount;
+						}
+
+						refresh_field("deductions");
+						frm.refresh_fields()
+						frm.events.set_unallocated_amount(frm);
+						frm.events.set_difference_amount(frm);
+						
+					}
+				}
+			})
+		}
+	},
+
 })
+
+frappe.ui.form.on('Primary Customer Payment Deduction', {
+	amount: function(frm) {
+		frm.events.set_unallocated_amount(frm);
+	},
+
+	deductions_remove: function(frm) {
+		frm.events.set_unallocated_amount(frm);
+	}
+})
+
 frappe.ui.form.on('Primary Customer Payment Reference', {
 	reference_doctype: function(frm, cdt, cdn) {
 		var row = locals[cdt][cdn];

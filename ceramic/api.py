@@ -683,3 +683,93 @@ def sales_order_item_patch():
 			# pl.delete()
 
 # update `tabPick List Item` qty = delivered_qty + wastage_qty  WHERE qty < delivered_qty + wastage_qty
+from ceramic.ceramic.report.accounts_receivable_ceramic.accounts_receivable_ceramic import ReceivablePayableReport
+import json
+@frappe.whitelist()
+def get_payment_remark_details(filters):
+	filters = json.loads(filters)
+	args = {
+		"party_type": "Customer",
+		"naming_by": ["Selling Settings", "cust_master_name"],
+	}
+	data = ReceivablePayableReport(filters).run(args)[1]
+	new_data = {}
+
+	for x in data:
+		company = x.company
+
+		if frappe.db.get_value("Company", x.company, 'authority') == "Unauthorized":
+			company = frappe.db.get_value("Company", x.company, 'alternate_company')
+
+		if not new_data.get(company):
+			new_data[company] = []
+		
+		new_data[company].append(x)
+	
+	table = ""
+
+	for key, value in new_data.items():
+		if value:
+			table += f"<h2>{key}</h2>"
+			table += """<table class="table table-bordered" style="margin: 0; font-size:80%;">
+			<thead>
+				<tr>
+					<th>Voucher No</th>
+					<th>Posting Date</th>
+					<th>Total Outstanding</th>
+					<th>Bank Outstanding</th>
+					<th>Cash Outstanding</th>
+				<tr>
+			</thead>
+			<tbody>"""
+
+			total_outstanding = 0
+			total_bank_outstanding = 0
+			total_cash_outstanding = 0
+
+			for x in value:
+				total_outstanding += x.outstanding
+				total_bank_outstanding += x.bank_outstanding
+				total_cash_outstanding += x.cash_outstanding
+				table += f"""
+					<tr>
+						<td>{x.voucher_no}</td>
+						<td>{x.posting_date}</td>
+						<td>{x.outstanding}</td>
+						<td>{x.bank_outstanding}</td>
+						<td>{x.cash_outstanding}</td>
+					</tr>
+				"""
+			
+			table += f"""
+				<tr>
+					<td>Total</td>
+					<td></td>
+					<td>{total_outstanding}</td>
+					<td>{total_bank_outstanding}</td>
+					<td>{total_cash_outstanding}</td>
+				</tr>
+			"""
+			
+			table += """
+			</tbody>
+			</table>
+			"""
+	
+	return table
+
+	
+	# table +=
+	# 			{% for (let row of data ) { %}
+	# 				<tr class="{{ __(row['pick_list_item']) }}">
+	# 					<td>{{ __(row['customer']) }}</td>
+	# 					<td>{{ __(row['order_rank']) }}</td>
+	# 					<td>{{ __(row['sales_order_link']) }}</td>
+	# 					<td>{{ __(row['date']) }}</td>
+	# 					<td>{{ __(row['pick_list_link']) }}</td>
+	# 					<td>{{ __(row['picked_qty']) }}</td>
+	# 					<td><input type="float" style="width:50px" id="{{ row['pick_list_item'] }}"></input></td>
+	# 					<td><button style="margin-left:5px;border:none;color: #fff; background-color: red; padding: 3px 5px;border-radius: 5px;" type="button" sales-order="{{ __(row['sales_order']) }}" sales-order-item="{{ __(row['sales_order_item']) }}" pick-list="{{ __(row['pick_list']) }}" pick-list-item="{{ __(row['pick_list_item']) }}" onClick=remove_picked_item_lot_wise(this.getAttribute("sales-order"),this.getAttribute("sales-order-item"),this.getAttribute("pick-list"),this.getAttribute("pick-list-item"),document.getElementById("{{ row['pick_list_item'] }}").value)>Unpick</button></td>
+	# 				</tr>
+	# 			{% } %}
+	

@@ -8,6 +8,7 @@ from frappe.utils import flt, cint
 #from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from ceramic.ceramic.report.accounts_receivable_ceramic.accounts_receivable_ceramic import ReceivablePayableReport
 from six import iteritems
+import json
 
 def execute(filters=None):
 	args = {
@@ -15,10 +16,10 @@ def execute(filters=None):
 		"naming_by": ["Selling Settings", "cust_master_name"],
 	}
 
-	return AccountsReceivableSummary(filters).run(args)
+	return AccountsReceivablePrimaryCustomer(filters).run(args)
 
 
-class AccountsReceivableSummary(ReceivablePayableReport):
+class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 	def run(self, args):
 		self.party_type = args.get('party_type')
 		self.party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
@@ -45,7 +46,24 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			row.update(party_dict)
 			
 			self.data.append(row)
-			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party'])) 
+			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party']))
+		
+		for row in self.data:
+			filters = json.dumps({
+				'primary_customer': row.primary_customer,
+				'from_date': self.filters.get('from_date'),
+				'to_date': self.filters.get('to_date'),
+				'customer': self.filters.get('customer'),
+				'company': self.filters.get('company'),
+				'range1': self.filters.get('range1'),
+				'range2': self.filters.get('range2'),
+				'range3': self.filters.get('range3'),
+				'range4': self.filters.get('range4'),
+			})
+			row.add_remark = "<button>Add Remark</button>"
+			row.view_remark = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+				type='button' filters='{}'
+				onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Remark</button>""".format(filters)
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
@@ -135,6 +153,10 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link',
 			options='Currency', width=80)
+		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
+			width=100)
+		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button',
+			width=100)
 
 	def setup_ageing_columns(self):
 		for i, label in enumerate(["0-{range1}".format(range1=self.filters["range1"]),
