@@ -59,6 +59,8 @@ class PrimaryCustomerPayment(Document):
 		if references_has_primary_customer == False:
 			final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
 
+		
+
 		# iterate loop over dict created from Primary Customer Payment Reference Entries and create new Payment Entry
 		for key,invoices in final_reference_dict.items():
 			payment_entry=frappe.new_doc("Payment Entry") #create new payment entry(payment_entry)
@@ -76,6 +78,7 @@ class PrimaryCustomerPayment(Document):
 			payment_entry.reference_docname = self.name
 			payment_entry.reference_no = self.reference_no
 			payment_entry.reference_date = self.reference_date
+			
 			#payment_entry.paid_from_account_currency = self.paid_from_account_currency
 			#payment_entry.paid_to_account_currency = self.paid_to_account_currency
 			#payment_entry.paid_to_account_balance=self.paid_to_account_balance
@@ -84,7 +87,6 @@ class PrimaryCustomerPayment(Document):
 			#payment_entry.unallocated_amount=self.unallocated_amount
 			paid_amount = 0.0
 			unallocated_amount = 0.0
-
 			# iterate loop over multiple invoices where there are multiple customers available
 			for invoice in invoices:
 				# paid amount should be allocated amount + unallocated amount
@@ -99,6 +101,15 @@ class PrimaryCustomerPayment(Document):
 						'allocated_amount':invoice['allocated_amount'],
 						'due_date':invoice['due_date']
 					})
+				
+			for deduction in self.deductions:
+				paid_amount -= deduction.amount
+				payment_entry.append("deductions",{
+						"account": deduction.account,
+						"cost_center": deduction.cost_center,
+						"amount": deduction.amount
+					})
+
 			payment_entry.unallocated_amount = unallocated_amount
 			payment_entry.paid_amount = paid_amount
 			payment_entry.received_amount = payment_entry.paid_amount
