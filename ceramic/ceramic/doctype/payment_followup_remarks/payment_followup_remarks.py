@@ -3,7 +3,7 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-# import frappe
+import frappe
 from frappe.model.document import Document
 
 class PaymentFollowupRemarks(Document):
@@ -12,5 +12,4 @@ class PaymentFollowupRemarks(Document):
 	
 	def set_route(self):
 		'''Set route from category and title if missing'''
-		if self.get('route_redirect'):
-			self.route = '#query-report/Accounts Receivable Primary Customer'
+		self.route = '#query-report/Accounts Receivable Primary Customer'
