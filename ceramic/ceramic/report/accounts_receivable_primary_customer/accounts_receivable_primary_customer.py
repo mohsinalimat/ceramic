@@ -48,6 +48,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			self.data.append(row)
 			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party']))
 		
+		remark_map_data = self.remark_map()
+
 		for row in self.data:
 			filters = json.dumps({
 				'primary_customer': row.primary_customer,
@@ -60,10 +62,30 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range3': self.filters.get('range3'),
 				'range4': self.filters.get('range4'),
 			})
-			row.add_remark = "<button>Add Remark</button>"
-			row.view_remark = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+			row.add_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
+			type='button' primary-customer='{row.primary_customer}' user='{frappe.session.user}'
+			onClick=new_remark(this.getAttribute('primary-customer'),this.getAttribute('user'))>Add Remark</button>"""
+
+			row.view_details = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 				type='button' filters='{}'
-				onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Remark</button>""".format(filters)
+				onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Details</button>""".format(filters)
+			if remark_map_data.get(row.primary_customer):
+				row.remark_date = remark_map_data[row.primary_customer].date
+				row.remark = remark_map_data[row.primary_customer].remark
+				row.follow_up_by = remark_map_data[row.primary_customer].follow_up_by
+				row.next_follow_up_date = remark_map_data[row.primary_customer].next_follow_up_date
+	
+	def remark_map(self):
+		data = frappe.db.sql("""
+			SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date desc
+		""", as_dict = True)
+
+		remark_map = {}
+
+		for row in data:
+			remark_map[row.customer] = row
+		
+		return remark_map
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
@@ -153,9 +175,17 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link',
 			options='Currency', width=80)
+		self.add_column(label=_('Remark'), fieldname='remark', fieldtype='Small Text',
+			width=100)
+		self.add_column(label=_('Remark Date'), fieldname='remark_date', fieldtype='Date',
+			width=100)
+		self.add_column(label=_('Next Followup Date'), fieldname='next_follow_up_date', fieldtype='Date',
+			width=100)
+		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button',
+			width=100)
 		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
 			width=100)
-		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button',
+		self.add_column(label=_('View Details'), fieldname='view_details', fieldtype='button',
 			width=100)
 
 	def setup_ageing_columns(self):
