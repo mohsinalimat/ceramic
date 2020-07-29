@@ -7,4 +7,10 @@ from __future__ import unicode_literals
 from frappe.model.document import Document
 
 class PaymentFollowupRemarks(Document):
-	pass
+	def validate(self):
+		self.set_route()
+	
+	def set_route(self):
+		'''Set route from category and title if missing'''
+		if self.get('route_redirect'):
+			self.route = '#query-report/Accounts Receivable Primary Customer'

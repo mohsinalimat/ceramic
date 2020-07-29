@@ -12,7 +12,7 @@
 cur_frm.fields_dict.company.get_query = function (doc) {
 	return {
 		filters: {
-			"authority": "Authorized"
+			"authority": "Unauthorized"
 		}
 	}
 };

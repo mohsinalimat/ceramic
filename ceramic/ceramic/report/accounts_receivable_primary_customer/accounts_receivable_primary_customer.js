@@ -213,5 +213,5 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 function new_remark(primary_customer, user){
 	// frappe.ui.form.make_quick_entry("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': user});
 	// frappe.create_routes = {"Payment Followup Remarks": "query-report/Accounts%20Receivable%20Primary%20Customer"};
-	frappe.new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': user})
+	frappe.new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': user, 'route_redirect': 1})
 }
