@@ -140,17 +140,17 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('Billed Amount'), fieldname='billed_amount')
-		self.add_column(_('Cash Amount'), fieldname='cash_amount')
-		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
+		# self.add_column(_('Billed Amount'), fieldname='billed_amount')
+		# self.add_column(_('Cash Amount'), fieldname='cash_amount')
+		# self.add_column(_('Invoiced Amount'), fieldname='invoiced')
 		# if self.party_type == "Customer":
 		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
 		# else:
 		# 	# note: fieldname is still `credit_note`
 		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
-		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
-		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
-		self.add_column(_('Total Paid Amount'), fieldname='paid')
+		# self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
+		# self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
+		# self.add_column(_('Total Paid Amount'), fieldname='paid')
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),
@@ -160,18 +160,18 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 		# self.add_column(_(credit_debit_label), fieldname='credit_note')
 
-		self.setup_ageing_columns()
+		# self.setup_ageing_columns()
 
-		if self.party_type == "Customer":
-			self.add_column(label=_('Territory'), fieldname='territory', fieldtype='Link',
-				options='Territory')
-			self.add_column(label=_('Customer Group'), fieldname='customer_group', fieldtype='Link',
-				options='Customer Group')
-			if self.filters.show_sales_person:
-				self.add_column(label=_('Sales Person'), fieldname='sales_person', fieldtype='Data')
-		else:
-			self.add_column(label=_('Supplier Group'), fieldname='supplier_group', fieldtype='Link',
-				options='Supplier Group')
+		# if self.party_type == "Customer":
+		# 	self.add_column(label=_('Territory'), fieldname='territory', fieldtype='Link',
+		# 		options='Territory')
+		# 	self.add_column(label=_('Customer Group'), fieldname='customer_group', fieldtype='Link',
+		# 		options='Customer Group')
+		# 	if self.filters.show_sales_person:
+		# 		self.add_column(label=_('Sales Person'), fieldname='sales_person', fieldtype='Data')
+		# else:
+		# 	self.add_column(label=_('Supplier Group'), fieldname='supplier_group', fieldtype='Link',
+		# 		options='Supplier Group')
 
 		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link',
 			options='Currency', width=80)

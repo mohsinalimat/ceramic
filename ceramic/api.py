@@ -93,15 +93,8 @@ def _get_party_details(party=None, party_type=None, ignore_permissions=True):
 
 	party = out[party_type.lower()]
 
-	# if not ignore_permissions and not frappe.has_permission(party_type, "read", party):
-	# 	frappe.throw(_("Not permitted for {0}").format(party), frappe.PermissionError)
-
 	party = frappe.get_doc(party_type, party)
 	
-	# set_address_details(out, party, party_type)
-	# set_contact_details(out, party, party_type)
-	# set_other_values(out, party, party_type)
-
 	# sales team
 	if party_type=="Customer":
 		out["sales_team"] = [{
@@ -389,15 +382,6 @@ def sales_order_query(doctype, txt, searchfield, start, page_len, filters):
 
 from erpnext.accounts.doctype.gl_entry.gl_entry import update_against_account
 def invoice_date_patch():
-	# for doc in frappe.get_all("Sales Invoice", {'authority': 'Authorized', 'docstatus': 1}, ['name','posting_date', 'due_date', 'customer', 'si_ref']):
-	# 	doc2 = frappe.get_doc("Sales Invoice", doc.si_ref)
-		
-	# 	doc2.posting_date = doc.posting_date
-	# 	doc2.due_date = doc.due_date
-	# 	doc2.save()
-
-	# 	print(doc2.customer)
-	
 	for doc in frappe.get_all("Sales Invoice", ['name', 'posting_date', 'customer']):
 		frappe.db.sql("""update `tabGL Entry` set posting_date=%s
 			where voucher_type='Sales Invoice' and voucher_no=%s""",
@@ -711,49 +695,78 @@ def get_payment_remark_details(filters):
 	for key, value in new_data.items():
 		if value:
 			table += f"<h2>{key}</h2>"
-			table += """<table class="table table-bordered" style="margin: 0; font-size:80%;">
-			<thead>
-				<tr>
-					<th>Voucher No</th>
-					<th>Posting Date</th>
-					<th>Total Outstanding</th>
-					<th>Bank Outstanding</th>
-					<th>Cash Outstanding</th>
-				<tr>
-			</thead>
-			<tbody>"""
+			customer_wise_data = {}
+			for i in value:
+				if not customer_wise_data.get(i.customer_name):
+					customer_wise_data[i.customer_name] = []
+				
+				customer_wise_data[i.customer_name].append(i)
+			
+			company_total_outstanding = company_total_bank_outstanding = company_total_cash_outstanding = 0
+			
+			for k, v in customer_wise_data.items():
+				table += f"<p><strong>Customer : {k}</strong></p>"
+				table += """<table class="table table-bordered" style="margin: 0; font-size:80%;">
+				<thead>
+					<tr>
+						<th>Voucher No</th>
+						<th>Posting Date</th>
+						<th>Total Outstanding</th>
+						<th>Bank Outstanding</th>
+						<th>Cash Outstanding</th>
+					<tr>
+				</thead>
+				<tbody>"""
 
-			total_outstanding = 0
-			total_bank_outstanding = 0
-			total_cash_outstanding = 0
+				total_outstanding = 0
+				total_bank_outstanding = 0
+				total_cash_outstanding = 0
 
-			for x in value:
-				total_outstanding += x.outstanding
-				total_bank_outstanding += x.bank_outstanding
-				total_cash_outstanding += x.cash_outstanding
+				for x in v:
+					total_outstanding += x.outstanding
+					total_bank_outstanding += x.bank_outstanding
+					total_cash_outstanding += x.cash_outstanding
+					table += f"""
+						<tr>
+							<td>{x.voucher_no}</td>
+							<td>{frappe.format(x.posting_date, {'fieldtype': 'Date'})}</td>
+							<td align="right">{frappe.format(x.outstanding, {'fieldtype': 'Currency'})}</td>
+							<td align="right">{frappe.format(x.bank_outstanding, {'fieldtype': 'Currency'})}</td>
+							<td align="right">{frappe.format(x.cash_outstanding, {'fieldtype': 'Currency'})}</td>
+						</tr>
+					"""
+				
 				table += f"""
 					<tr>
-						<td>{x.voucher_no}</td>
-						<td>{x.posting_date}</td>
-						<td>{x.outstanding}</td>
-						<td>{x.bank_outstanding}</td>
-						<td>{x.cash_outstanding}</td>
+						<td>Total</td>
+						<td></td>
+						<td align="right">{frappe.format(total_outstanding, {'fieldtype': 'Currency'})}</td>
+						<td align="right">{frappe.format(total_bank_outstanding, {'fieldtype': 'Currency'})}</td>
+						<td align="right">{frappe.format(total_cash_outstanding, {'fieldtype': 'Currency'})}</td>
 					</tr>
 				"""
-			
+
+				company_total_cash_outstanding += total_cash_outstanding
+				company_total_bank_outstanding += total_bank_outstanding
+				company_total_outstanding += total_outstanding
+
+				
+				table += """
+				</tbody>
+				</table>
+				"""
 			table += f"""
-				<tr>
-					<td>Total</td>
-					<td></td>
-					<td>{total_outstanding}</td>
-					<td>{total_bank_outstanding}</td>
-					<td>{total_cash_outstanding}</td>
-				</tr>
-			"""
-			
-			table += """
-			</tbody>
-			</table>
+				<table class="table" style="margin: 0; font-size:80%;">
+					<tbody>
+						<tr>
+							<td>Company Total</td>
+							<td></td>
+							<td align="right">{frappe.format(company_total_outstanding, {'fieldtype': 'Currency'})}</td>
+							<td align="right">{frappe.format(company_total_bank_outstanding, {'fieldtype': 'Currency'})}</td>
+							<td align="right">{frappe.format(company_total_cash_outstanding, {'fieldtype': 'Currency'})}</td>
+						</tr>
+					</tbody>
+				</table>
 			"""
 	
 	return table
