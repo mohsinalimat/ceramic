@@ -59,6 +59,11 @@ cur_frm.set_query("account","deductions", function(doc, cdt, cdn){
 	}
 });
 
+this.frm.cscript.onload = function (frm) {
+	this.frm.set_query("primary_customer", function (doc) {
+		return { query: "erpnext.controllers.queries.customer_query" }
+	});
+}
 frappe.ui.form.on('Primary Customer Payment', {
 	 refresh: function(frm) {
 		frm.events.hide_unhide_fields(frm);
@@ -67,6 +72,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 	company: function(frm){
 		frm.trigger('mode_of_payment')
 	},
+	
 
 	mode_of_payment: function(frm) {
 		get_payment_mode_account(frm, frm.doc.mode_of_payment, function(account){
@@ -142,7 +148,6 @@ frappe.ui.form.on('Primary Customer Payment', {
 					
 					// iterate loop over the invoices
 					$.each(r.message, function (i, d) {
-						//console.log(d.voucher_type)
 						var c = frm.add_child("references");
 						c.reference_doctype = d.voucher_type;
 						c.reference_name = d.voucher_no;

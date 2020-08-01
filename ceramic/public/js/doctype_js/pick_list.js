@@ -298,6 +298,7 @@ frappe.ui.form.on('Pick List', {
 					if (r.message){
 						r.message.forEach(function(item, index){
 							var d = frm.add_child('sales_order_item')
+							console.log(item.delivered_without_pick)
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
@@ -312,6 +313,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'delivered_real_qty', item.delivered_real_qty);
 							frappe.model.set_value(d.doctype, d.name, 'wastage_qty', item.wastage_qty);
 							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
+							frappe.model.set_value(d.doctype, d.name, 'so_delivered_without_pick', item.delivered_without_pick);
 						});
 						frm.refresh_field('sales_order_item');
 					}
@@ -375,7 +377,7 @@ frappe.ui.form.on('Pick List Item', {
 	},
 	update_item: function(frm, cdt, cdn){
 		let d = locals[cdt][cdn];
-		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty), batch_no: d.batch_no, qty: d.qty, packaging_type: d.packing_type, date: d.date, so_picked_percent: d.so_picked_percent, idx: d.idx});
+		select_items({frm:frm, item_code: d.item_code, sales_order: d.sales_order, sales_order_item: d.sales_order_item, so_qty: d.so_qty, company: frm.doc.company, customer: d.customer, date: d.date, delivery_date: d.delivery_date, picked_qty: d.picked_qty, so_real_qty: d.so_real_qty, remaining_to_pick: (d.so_qty - d.picked_qty - d.so_delivered_without_pick), batch_no: d.batch_no, qty: d.qty, packaging_type: d.packing_type, date: d.date, so_picked_percent: d.so_picked_percent, idx: d.idx, delivered_without_pick: d.so_delivered_without_pick});
 	},
 });
 
@@ -435,7 +437,7 @@ frappe.ui.keys.add_shortcut({
 				d.delivery_date,
 				picked_qty: d.picked_qty,
 				so_real_qty: d.so_real_qty,
-				remaining_to_pick: (d.so_qty - d.picked_qty),
+				remaining_to_pick: (d.so_qty - d.picked_qty - d.so_delivered_without_pick),
 				batch_no: d.batch_no,
 				qty: d.qty,
 				packaging_type: d.packing_type,
@@ -477,7 +479,7 @@ frappe.ui.keys.add_shortcut({
 					d.delivery_date,
 					picked_qty: d.picked_qty,
 					so_real_qty: d.so_real_qty,
-					remaining_to_pick: (d.so_qty - d.picked_qty),
+					remaining_to_pick: (d.so_qty - d.picked_qty - d.so_delivered_without_pick),
 					batch_no: d.batch_no,
 					qty: d.qty,
 					packaging_type: d.packing_type,
@@ -520,7 +522,7 @@ frappe.ui.keys.add_shortcut({
 					d.delivery_date,
 					picked_qty: d.picked_qty,
 					so_real_qty: d.so_real_qty,
-					remaining_to_pick: (d.so_qty - d.picked_qty),
+					remaining_to_pick: (d.so_qty - d.picked_qty - d.delivered_real_qty),
 					batch_no: d.batch_no,
 					qty: d.qty,
 					packaging_type: d.packing_type,

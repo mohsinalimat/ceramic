@@ -14,6 +14,7 @@
   "sales_order",
   "sales_order_item",
   "picked_qty",
+  "delivered_without_pick",
   "delivered_qty",
   "wastage_qty",
   "delivered_real_qty",
@@ -133,10 +134,17 @@
    "in_list_view": 1,
    "label": "Packing Type",
    "options": "Packing Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "delivered_without_pick",
+   "fieldtype": "Float",
+   "label": "Delivered Without Pick",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2020-06-30 16:22:39.963201",
+ "modified": "2020-08-01 12:21:08.980136",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Sales Order Item Pick List",

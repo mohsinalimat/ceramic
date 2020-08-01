@@ -214,7 +214,6 @@ function remove_picked_item_lot_wise(sales_order, sales_order_item, pick_list, p
 			unpick_qty:unpick_qty
 		},
 		callback: function (r) {
-			console.log(r.message)
 			$('.' + pick_list_item).hide()
 		}
 	})

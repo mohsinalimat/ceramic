@@ -269,7 +269,7 @@ def get_tax_template(tax_category, company, tax_paid=0):
 @frappe.whitelist()
 def make_pick_list(source_name, target_doc=None):
 	def update_item_quantity(source, target, source_parent):
-		target.qty = flt(source.qty) - flt(source.picked_qty)
+		target.qty = flt(source.qty) - flt(source.picked_qty) - flt(source.delivered_without_pick)
 		target.so_qty = flt(source.qty)
 		target.so_real_qty = flt(source.real_qty)
 		target.stock_qty = (flt(source.qty) - flt(source.picked_qty)) * flt(source.conversion_factor)
@@ -281,6 +281,7 @@ def make_pick_list(source_name, target_doc=None):
 		target.so_picked_percent = source_parent.per_picked
 		target.warehouse = None
 		target.order_item_priority = source.order_item_priority
+		target.so_delivered_without_pick = source.delivered_without_pick
 
 	doc = get_mapped_doc('Sales Order', source_name, {
 		'Sales Order': {
@@ -361,7 +362,7 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 						target.append('items',{
 							'item_code': pick_doc.item_code,
 							'qty': pick_doc.qty - pick_doc.delivered_qty,
-							'real_qty': real_delivered_qty,
+							'real_qty': real_delivered_qty if i.qty != i.real_qty else pick_doc.qty - pick_doc.delivered_qty,
 							'rate': i.rate,
 							'discounted_rate': i.discounted_rate,
 							'against_sales_order': source.name,
@@ -379,8 +380,8 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 			else:
 				target.append('items',{
 					'item_code': i.item_code,
-					'qty': i.qty,
-					'real_qty': i.qty,
+					'qty': i.qty - i.delivered_qty,
+					'real_qty': i.qty - i.delivered_real_qty if i.qty != i.real_qty else i.qty - i.delivered_qty,
 					'rate': i.rate,
 					'discounted_rate': i.discounted_rate,
 					'against_sales_order': source.name,
@@ -388,7 +389,46 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 					'warehouse': i.warehouse,
 					'item_series': i.item_series
 				})
+			
+		target_items = []
+		target_item_dict = {}
 
+		if not target.get('items'):
+			target.items = []
+
+		for i in target.items:
+			if not target_item_dict.get(i.so_detail):
+				target_item_dict[i.so_detail] = 0
+			
+			target_item_dict[i.so_detail] += i.qty
+
+		
+		for i in source.items:
+			if target_item_dict.get(i.name):
+				if i.qty > target_item_dict.get(i.name):
+					target.append('items',{
+					'item_code': i.item_code,
+					'qty': i.qty - i.delivered_qty - target_item_dict[i.name],
+					'real_qty': i.qty - i.delivered_real_qty if i.qty != i.real_qty else i.qty - i.delivered_qty - target_item_dict[i.name],
+					'rate': i.rate,
+					'discounted_rate': i.discounted_rate,
+					'against_sales_order': source.name,
+					'so_detail': i.name,
+					'warehouse': i.warehouse,
+					'item_series': i.item_series
+				})
+			else:
+				target.append('items',{
+					'item_code': i.item_code,
+					'qty': i.qty - i.delivered_qty,
+					'real_qty': i.qty - i.delivered_real_qty,
+					'rate': i.rate,
+					'discounted_rate': i.discounted_rate,
+					'against_sales_order': source.name,
+					'so_detail': i.name,
+					'warehouse': i.warehouse,
+					'item_series': i.item_series
+				})
 	mapper = {
 		"Sales Order": {
 			"doctype": "Delivery Note",

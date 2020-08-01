@@ -85,19 +85,6 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 		}
 	},
 
-	// validate: function(frm){
-	// 	if (frm.doc.is_item_series) {
-	// 		console.log("item is series item")
-	// 		frm.doc.item_series = ''
-	// 	} 
-	// 	else {
-	// 		if (!frm.doc.item_series) {
-	// 			msgprint("Please Select Item Series");
-	// 			frappe.validated = false;
-	// 		}
-	// 	}
-	// },
-
 	item_group: function(frm){
 		if (frm.doc.__islocal) {
 			if (frm.doc.is_item_series) {

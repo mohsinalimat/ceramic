@@ -57,7 +57,7 @@ class PrimaryCustomerPayment(Document):
 			else:
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':0.0})
 		if references_has_primary_customer == False:
-			if self.unallocated_amount > 0:
+			if self.unallocated_amount>0:
 				final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
 
 		
@@ -109,7 +109,6 @@ class PrimaryCustomerPayment(Document):
 						"cost_center": deduction.cost_center,
 						"amount": deduction.amount
 					})
-
 			payment_entry.unallocated_amount = unallocated_amount
 			payment_entry.paid_amount = paid_amount
 			payment_entry.received_amount = payment_entry.paid_amount
