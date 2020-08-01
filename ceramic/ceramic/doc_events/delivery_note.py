@@ -84,7 +84,7 @@ def before_submit(self, method):
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			wastage_qty = item.wastage_qty + pick_list_item.wastage_qty
-			if delivered_qty > pick_list_item.qty:
+			if delivered_qty + wastage_qty > pick_list_item.qty:
 				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'wastage_qty', flt(wastage_qty))

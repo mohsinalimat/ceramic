@@ -287,8 +287,7 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
-	before_validate2: function (frm) {
-		console.log("Before Validate get price");
+	before_validate: function (frm) {
 		frm.doc.items.forEach(function (d) { 
 			frappe.call({
 				method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',

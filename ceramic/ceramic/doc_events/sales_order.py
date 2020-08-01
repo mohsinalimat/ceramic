@@ -133,7 +133,8 @@ def delete_pick_list(self):
 	for item in pick_list_list:
 		pl = frappe.get_doc("Pick List Item", item.name)
 		if not frappe.db.exists("Sales Order Item", pl.sales_order_item):
-			pl.cancel()
+			if pl.docstatus == 1:
+				pl.cancel()
 			pl.delete()
 	
 def on_cancel(self, method):

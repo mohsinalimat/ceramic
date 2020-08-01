@@ -57,10 +57,10 @@ class PrimaryCustomerPayment(Document):
 			else:
 				final_reference_dict[reference.customer].append({'reference_doctype':reference.reference_doctype,'reference_name':reference.reference_name,'due_date':reference.due_date,'total_amount':reference.total_amount,'outstanding_amount':reference.outstanding_amount,'allocated_amount':reference.allocated_amount,'unallocated_amount':0.0})
 		if references_has_primary_customer == False:
-			final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
+			if self.unallocated_amount > 0:
+				final_reference_dict[self.primary_customer].append({'allocated_amount':0.0,'unallocated_amount':self.unallocated_amount})
 
 		
-
 		# iterate loop over dict created from Primary Customer Payment Reference Entries and create new Payment Entry
 		for key,invoices in final_reference_dict.items():
 			payment_entry=frappe.new_doc("Payment Entry") #create new payment entry(payment_entry)

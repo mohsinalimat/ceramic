@@ -7,9 +7,4 @@ import frappe
 from frappe.model.document import Document
 
 class PaymentFollowupRemarks(Document):
-	def validate(self):
-		self.set_route()
-	
-	def set_route(self):
-		'''Set route from category and title if missing'''
-		self.route = '#query-report/Accounts Receivable Primary Customer'
+	pass

@@ -22,8 +22,8 @@ def update_batch(self):
 			batch.lot_no = row.lot_no
 			batch.packing_type = row.packing_type
 			# batch.posting_date = datetime.datetime.strptime(self.posting_date, "%Y-%m-%d").strftime("%y%m%d")
-			# batch.reference_doctype = self.doctype
-			# batch.reference_name = self.name
+			batch.reference_doctype = ''
+			batch.reference_name = ''
 			batch.save(ignore_permissions=True)
 
 def delete_batches(self, warehouse):

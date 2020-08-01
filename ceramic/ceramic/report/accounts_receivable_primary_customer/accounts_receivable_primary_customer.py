@@ -63,8 +63,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range4': self.filters.get('range4'),
 			})
 			row.add_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
-			type='button' primary-customer='{row.primary_customer}' user='{frappe.session.user}'
-			onClick=new_remark(this.getAttribute('primary-customer'),this.getAttribute('user'))>Add Remark</button>"""
+			type='button' primary-customer='{row.primary_customer}'
+			onClick=new_remark(this.getAttribute('primary-customer'))>Add Remark</button>"""
 
 			row.view_details = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 				type='button' filters='{}'
