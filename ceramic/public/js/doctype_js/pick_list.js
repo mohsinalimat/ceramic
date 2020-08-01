@@ -298,6 +298,7 @@ frappe.ui.form.on('Pick List', {
 					if (r.message){
 						r.message.forEach(function(item, index){
 							var d = frm.add_child('sales_order_item')
+							console.log(item.delivered_without_pick)
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
