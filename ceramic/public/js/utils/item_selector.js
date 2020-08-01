@@ -143,7 +143,7 @@ ItemSelector = Class.extend({
 					let previously_picked = this.layout.get_value('previously_picked') || 0;
 					let picked_qty = this.layout.get_value('picked_qty') || 0;
 					let so_qty = this.layout.get_value('so_qty') || 0;
-					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty));
+					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty - (me.delivered_without_pick || 0)));
 				}
 			},
 			{
