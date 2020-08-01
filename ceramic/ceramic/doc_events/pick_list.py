@@ -162,7 +162,7 @@ def update_sales_order(self, method):
 				so_qty, so_picked_qty, so_delivered_without_pick = frappe.db.get_value("Sales Order Item", item.sales_order_item, ['qty', 'picked_qty', 'delivered_without_pick'])
 				picked_qty = so_picked_qty + item.qty + so_delivered_without_pick
 				
-				if picked_qty > qty:
+				if picked_qty > so_qty:
 					frappe.throw("Can not pick item {} in row {} more than {}".format(item.item_code, item.idx, item.qty - item.picked_qty))
 
 				frappe.db.set_value("Sales Order Item", item.sales_order_item, 'picked_qty', picked_qty)
