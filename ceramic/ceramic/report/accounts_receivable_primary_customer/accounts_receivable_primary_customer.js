@@ -210,8 +210,8 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 	})
 }
 
-function new_remark(primary_customer, user){
-	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': user})
+function new_remark(primary_customer){
+	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
 }
 
 new_doc = function (doctype, opts, init_callback) {

@@ -220,6 +220,9 @@ cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (do
 	}
 }
 frappe.ui.form.on('Delivery Note', {
+	refresh: function(frm) {
+		
+	},
 	onload: function (frm) {
 		if (frm.doc__islocal) {
 			frappe.db.get_value("Company", frm.doc.company, 'alternate_company', function (r) {

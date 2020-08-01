@@ -12,8 +12,8 @@ def before_validate(self, method):
 		item.discounted_amount = item.discounted_rate * item.real_qty
 		item.discounted_net_amount = item.discounted_amount
 
-		if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
-			frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
+		# if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
+			# frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 
 		if (not item.rate) and (item.so_detail):
 			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'rate')
@@ -43,12 +43,13 @@ def validate_item_from_so(self):
 
 def validate_item_from_picklist(self):
 	for row in self.items:
-		if frappe.db.exists("Pick List Item",row.pl_detail):
-			picked_qty = flt(frappe.db.get_value("Pick List Item",row.pl_detail,"qty"))
-			if flt(row.qty) > picked_qty:
-				frappe.throw(_(f"Row: {row.idx}: Delivered Qty {frappe.bold(row.qty)} can not be higher than picked Qty {frappe.bold(picked_qty)} for item {frappe.bold(row.item_code)}."))
-		else:
-			frappe.throw(_(f"Row: {row.idx}: The item {frappe.bold(row.item_code)} has been unpicked from picklist {frappe.bold(row.against_pick_list)}"))
+		if row.pl_detail:
+			if frappe.db.exists("Pick List Item",row.pl_detail):
+				picked_qty = flt(frappe.db.get_value("Pick List Item",row.pl_detail,"qty"))
+				if flt(row.qty) > picked_qty:
+					frappe.throw(_(f"Row: {row.idx}: Delivered Qty {frappe.bold(row.qty)} can not be higher than picked Qty {frappe.bold(picked_qty)} for item {frappe.bold(row.item_code)}."))
+			else:
+				frappe.throw(_(f"Row: {row.idx}: The item {frappe.bold(row.item_code)} has been unpicked from picklist {frappe.bold(row.against_pick_list)}"))
 
 
 def update_discounted_net_total(self):
@@ -73,19 +74,39 @@ def calculate_totals(self):
 	self.total_real_qty = sum([row.real_qty for row in self.items])
 	self.total_net_weight = sum([row.total_weight for row in self.items])
 
-@frappe.whitelist()
-def before_submit(self, method):
+def check_invoice_company(self):
 	if self.invoice_company:
 		if frappe.db.get_value("Company",self.invoice_company,'authority') == "Unauthorized":
 			frappe.throw(_("Invoice company should be authoried company"))
 
+def check_item_without_pick(self):
+	
+	item_without_pick_list_dict = {}
+	for row in self.items:
+		if not row.pl_detail:
+			if not item_without_pick_list_dict.get(row.so_detail):
+				item_without_pick_list_dict[row.so_detail] = 0
+			
+			item_without_pick_list_dict[row.so_detail] += row.qty
+
+	for key, row in item_without_pick_list_dict.items():
+		item_code, parent, so_qty, so_picked_qty, so_delivered_qty, so_delivered_without_pick = frappe.db.get_value("Sales Order Item", key, ['item_code', 'parent', 'qty', 'picked_qty', 'delivered_qty', 'delivered_without_pick'])
+		
+		allowed_qty = so_qty - so_picked_qty - so_delivered_without_pick
+
+		frappe.msgprint(str(allowed_qty))
+		
+		if allowed_qty < row:
+			frappe.throw(f"You can not deliver more than {allowed_qty} without Pick List for Item {item_code} for Sales Order {parent}.")
+
+def update_status_pick_list_and_sales_order(self):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			wastage_qty = item.wastage_qty + pick_list_item.wastage_qty
-			if delivered_qty > pick_list_item.qty:
-				frappe.throw(f"Row {item.idx}: You can not deliver more tha picked qty")
+			if delivered_qty + wastage_qty > pick_list_item.qty:
+				frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'wastage_qty', flt(wastage_qty))
 
@@ -98,12 +119,20 @@ def before_submit(self, method):
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 		
+		if not item.against_pick_list and item.against_sales_order:
+			so_delivered_without_pick = frappe.db.get_value("Sales Order Item", item.so_detail, 'delivered_without_pick')
+			frappe.db.set_value("Sales Order Item", item.so_detail, 'delivered_without_pick', so_delivered_without_pick + item.qty)
+		
 		if item.pl_detail:
 			pick_list_batch_no = frappe.db.get_value("Pick List Item", item.pl_detail, 'batch_no')
 
 			if item.batch_no != pick_list_batch_no:
 				frappe.throw(_(f"Row: {item.idx} : Batch No {frappe.bold(item.batch_no)} is Not same as Pick List Batch No {frappe.bold(pick_list_batch_no)}."))
-	update_status_pick_list(self)
+
+def before_submit(self, method):
+	check_invoice_company(self)
+	check_item_without_pick(self)
+	update_status_pick_list_and_sales_order(self)
 
 def update_status_pick_list(self):
 	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
@@ -182,7 +211,10 @@ def on_cancel(self, method):
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
-			
+		
+		if not item.against_pick_list and item.against_sales_order:
+			so_delivered_without_pick = frappe.db.get_value("Sales Order Item", item.so_detail, 'delivered_without_pick')
+			frappe.db.set_value("Sales Order Item", item.so_detail, 'delivered_without_pick', item.qty - so_delivered_without_pick)
 	update_status_pick_list(self)
 	cancel_wastage_entry(self)
 

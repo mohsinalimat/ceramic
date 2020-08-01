@@ -88,12 +88,8 @@ frappe.ui.form.on('Work Order Finish', {
 							let item_row = frm.add_child("items");
 							frappe.model.set_value(item_row.doctype, item_row.name , 'item_code', new_name);
 							frappe.model.set_value(item_row.doctype, item_row.name , 'qty', 1);
-							// console.log(item_row.doctype);
-							// console.log(item_row.name);
-							// item_row.item_code = new_name;
 							get_item_details(item_row.item_code).then(data => {
 								frappe.model.set_value(item_row.doctype, item_row.name , 'uom', data.stock_uom);
-								// frappe.model.set_value(item_row.doctype, item_row.name , 'stock_uom', data.stock_uom);
 								frappe.model.set_value(item_row.doctype, item_row.name , 'conversion_factor', 1);
 							});
 						}
@@ -109,11 +105,9 @@ frappe.ui.form.on('Work Order Finish', {
 						let item_row = frm.add_child("items");
 						frappe.model.set_value(item_row.doctype, item_row.name , 'item_code', new_name);
 						frappe.model.set_value(item_row.doctype, item_row.name , 'qty', 1);
-						// console.log(item_row.doctype);
-						// console.log(item_row.name);
+						
 						get_item_details(item_row.item_code).then(data => {
 							frappe.model.set_value(item_row.doctype, item_row.name , 'uom', data.stock_uom);
-							// frappe.model.set_value(item_row.doctype, item_row.name , 'stock_uom', data.stock_uom);
 							frappe.model.set_value(item_row.doctype, item_row.name , 'conversion_factor', 1);
 						});
 					});

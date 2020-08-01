@@ -187,7 +187,7 @@ pickListItem = Class.extend({
 						'delivered_qty': value.delivered_qty,
 						'wastage_qty': value.wastage_qty,
 						'pick_list_item': value.pick_list_item,
-						'picked_qty': value.qty
+						'picked_qty': value.picked_qty
 					})
 				});
 
@@ -384,7 +384,7 @@ pickListItem = Class.extend({
 						'docname':d.sales_order_item,
 						'idx':d.idx,
 						'real_qty':d.real_qty + d.delivered_real_qty,
-						'qty':d.qty + d.delivered_qty + d.wastage_qty
+						'qty':d.qty + d.delivered_qty + d.wastage_qty + d.delivered_without_pick
 					})
 				});
 			},
@@ -400,10 +400,11 @@ pickListItem = Class.extend({
 						let items = []
 						me.dialog.fields_dict.picked_item_location.df.data.forEach(function(row, int){
 							items.push({
-								picked_qty: flt(flt(row.picked_qty) + flt(row.waste_qty) + flt(row.delivered_qty)),
+								picked_qty: flt(flt(row.picked_qty) + flt(row.wastage_qty) + flt(row.delivered_qty)),
 								pick_list_item: row.pick_list_item
 							})
 						})
+						console.log(items)
 						frappe.call({
 							method: 'ceramic.ceramic.doc_events.pick_list.update_pick_list',
 							freeze: true,
