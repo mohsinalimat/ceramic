@@ -194,6 +194,7 @@ frappe.ui.form.on('Pick List', {
 					r.message.forEach(function(item, index){
 						if ((item.so_qty - item.picked_qty) > 0.0){
 							var d = frm.add_child('locations')
+							console.log(item.delivered_without_pick)
 							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty)
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
@@ -209,6 +210,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
 							frappe.model.set_value(d.doctype, d.name, 'order_item_priority', item.order_item_priority);
 							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
+							frappe.model.set_value(d.doctype, d.name, 'so_delivered_without_pick', item.delivered_without_pick);
 						}
 					});
 					frm.refresh_field('locations');
@@ -298,7 +300,6 @@ frappe.ui.form.on('Pick List', {
 					if (r.message){
 						r.message.forEach(function(item, index){
 							var d = frm.add_child('sales_order_item')
-							console.log(item.delivered_without_pick)
 							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
 							frappe.model.set_value(d.doctype, d.name, 'packing_type', item.packing_type);
 							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
@@ -313,7 +314,7 @@ frappe.ui.form.on('Pick List', {
 							frappe.model.set_value(d.doctype, d.name, 'delivered_real_qty', item.delivered_real_qty);
 							frappe.model.set_value(d.doctype, d.name, 'wastage_qty', item.wastage_qty);
 							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
-							frappe.model.set_value(d.doctype, d.name, 'so_delivered_without_pick', item.delivered_without_pick);
+							frappe.model.set_value(d.doctype, d.name, 'delivered_without_pick', item.delivered_without_pick);
 						});
 						frm.refresh_field('sales_order_item');
 					}
