@@ -8,6 +8,9 @@ from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_valu
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
+
+	if self.invoice_company == self.company or not self.invoice_company:
+		self.invoice_company = frappe.db.get_value("Company", self.company, "alternate_company")
 	for item in self.items:
 		item.discounted_amount = item.discounted_rate * item.real_qty
 		item.discounted_net_amount = item.discounted_amount
@@ -93,8 +96,6 @@ def check_item_without_pick(self):
 		item_code, parent, so_qty, so_picked_qty, so_delivered_qty, so_delivered_without_pick = frappe.db.get_value("Sales Order Item", key, ['item_code', 'parent', 'qty', 'picked_qty', 'delivered_qty', 'delivered_without_pick'])
 		
 		allowed_qty = so_qty - so_picked_qty - so_delivered_without_pick
-
-		frappe.msgprint(str(allowed_qty))
 		
 		if allowed_qty < row:
 			frappe.throw(f"You can not deliver more than {allowed_qty} without Pick List for Item {item_code} for Sales Order {parent}.")
@@ -103,6 +104,8 @@ def update_status_pick_list_and_sales_order(self):
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
+			if item.batch_no != pick_list_item.batch_no:
+				frappe.throw(f"Row: {item.idx} You can not change batch as pick list is already made.")
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			wastage_qty = item.wastage_qty + pick_list_item.wastage_qty
 			if delivered_qty + wastage_qty > pick_list_item.qty:

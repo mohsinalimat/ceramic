@@ -55,6 +55,8 @@ def before_validate(self,method):
 
 	for item in self.items:
 		item.qty = flt(item.qty)
+	
+	validate_product_price(self)
 
 def before_submit(self,method):
 	StockEntry.update_work_order = update_work_order
@@ -65,6 +67,17 @@ def before_cancel(self,method):
 	
 def delete_auto_created_batches(self):
 	pass
+
+def validate_product_price(self):
+	if self.purpose == "Material Receipt":
+		for row in self.items:
+			item_group = frappe.db.get_value("Item", row.item_code,'item_group')
+			item_group = row.item_group or item_group
+			rate = frappe.db.get_value("Item Group",item_group,'production_price')
+			if not rate:
+				frappe.throw(_(f"Price not found for item <b>{row.item_code}</b> in item group <b>{item_group}</b>")) 
+			else:
+				return rate
 
 def validate_finished_goods(self):
 	"""validation: finished good quantity should be same as manufacturing quantity"""
@@ -131,6 +144,6 @@ def get_product_price(item_code):
 	item_group = frappe.db.get_value("Item", item_code,'item_group')
 	rate = frappe.db.get_value("Item Group",item_group,'production_price')
 	if not rate:
-		frappe.throw(_("Price not found for item <b>{}</b> in item group <b>{}/b>").format(item_code,item_group))
+		return f"Price not found for item <b>{item_code}</b> in item group <b>{item_group}</b>"
 	else:
 		return rate

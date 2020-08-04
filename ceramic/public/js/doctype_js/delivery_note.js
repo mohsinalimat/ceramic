@@ -251,9 +251,11 @@ frappe.ui.form.on('Delivery Note', {
 		}
 	},
 	customer: function (frm) {
-		frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
-		    frm.set_value("primary_customer", r.message.primary_customer)
-		});
+		if (frm.doc.customer){
+			frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r){
+				frm.set_value("primary_customer", r.message.primary_customer)
+			});
+		}
 	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from && frm.doc.__islocal){
@@ -335,6 +337,9 @@ frappe.ui.form.on('Delivery Note', {
 				frm.refresh_field("taxes");
 			}
 		})
+	},
+	items: function(frm){
+		
 	}
 });
 frappe.ui.form.on("Delivery Note Item", {

@@ -80,29 +80,32 @@ frappe.ui.form.on('Stock Entry', {
 		frm.trigger("get_product_price");
 		frm.trigger("set_batch_no");
 	},
-	set_batch_no: (function (frm){
+	set_batch_no: (function (frm,cdt,cdn){
 		if (frm.doc.purpose == "Material Receipt"){
 			frm.doc.items.forEach(function (frm) {
+
 				d = locals[cdt][cdn];
-				frappe.call({
-					method: "ceramic.query.get_batch",
-					args: {
-						'args': {
-							'item_code': d.item_code,
-							'lot_no': d.lot_no,
-							'packing_type': d.packing_type
+				if (d.packing_type && d.lot_no) {
+					frappe.call({
+						method: "ceramic.query.get_batch",
+						args: {
+							'args': {
+								'item_code': d.item_code,
+								'lot_no': d.lot_no,
+								'packing_type': d.packing_type
+							},
 						},
-					},
-					callback: function (r) {
-						console.log(r.message)
-						if (r.message) {
-							frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message);
+						callback: function (r) {
+							console.log(r.message)
+							if (r.message) {
+								frappe.model.set_value(d.doctype, d.name, 'batch_no', r.message);
+							}
+							else{
+								frappe.model.set_value(d.doctype, d.name, 'batch_no', "");
+							}
 						}
-						else{
-							frappe.model.set_value(d.doctype, d.name, 'batch_no', "");
-						}
-					}
-				});
+					});
+				}
 			})
 		}
 	}),
@@ -287,7 +290,7 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
-	before_validate: function (frm) {
+	before_validate1: function (frm) {
 		frm.doc.items.forEach(function (d) { 
 			frappe.call({
 				method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
