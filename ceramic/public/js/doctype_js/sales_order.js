@@ -65,7 +65,7 @@ erpnext.utils.update_child_items = function (opts) {
 					fieldname: "real_qty",
 					default: 0,
 					read_only: 0,
-					in_list_view: 1,
+					in_list_view: 0,
 					columns: 1,
 					label: __('Real Qty')
 				}, {
@@ -91,7 +91,6 @@ erpnext.utils.update_child_items = function (opts) {
 		],
 		primary_action: function () {
 			const trans_items = this.get_values()["trans_items"];
-			console.log(trans_items);
 			frappe.call({
 				method: 'ceramic.update_item.update_child_qty_rate',
 				freeze: true,
@@ -562,6 +561,10 @@ frappe.ui.form.on('Sales Order', {
 	},
 	onload: function (frm) {
 		frm.trigger('naming_series');
+		if(frm.doc.__islocal){
+			frm.trigger('set_bank_account')
+		
+		}
 		if (frm.doc.per_delivered > 0) {
 			cur_frm.set_df_property("tax_category", "allow_on_submit", 0);
 			cur_frm.set_df_property("tax_paid", "allow_on_submit", 0);
@@ -665,6 +668,26 @@ frappe.ui.form.on('Sales Order', {
 			frm.set_value('primary_customer', frm.doc.customer)
 		}
 	},
+	set_bank_account: function(frm){
+		frappe.db.get_value("Company",frm.doc.company, ['authority','alternate_company'],function(d)
+		{	
+			if( d.authority == 'Authorized')
+			{
+			frappe.db.get_value("Bank Account",{'company':frm.doc.company,'is_default':1},'name' ,function(r){
+			frm.set_value('bank_account', r.name);
+			})
+			
+			}
+			else if( d.authority == 'Unauthorized') 
+			{
+				frappe.db.get_value("Bank Account",{'company':d.alternate_company,'is_default':1}, 'name' ,function(s){
+				frm.set_value('bank_account', s.name);
+			})
+			}
+		
+	})
+
+	},
 	// naming_series: function (frm) {
 	// 	if (frm.doc.__islocal && frm.doc.company && !frm.doc.amended_from) {
 	// 		frappe.call({
@@ -682,6 +705,7 @@ frappe.ui.form.on('Sales Order', {
 	// },
 	company: function (frm) {
 		frm.trigger('naming_series');
+		frm.trigger('set_bank_account');
 	},
 	delivery_date: function (frm) {
 		$.each(frm.doc.items || [], function (i, d) {

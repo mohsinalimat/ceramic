@@ -11,7 +11,7 @@ import datetime
 
 def before_validate(self, method):
 	ignore_permission(self)
-	# setting_rate_qty(self)
+	setting_real_qty(self)
 	
 	if not self.primary_customer:
 		self.primary_customer = self.customer
@@ -28,7 +28,7 @@ def on_submit(self, method):
 	update_order_rank(self)
 
 def update_order_rank(self):
-	order_rank = frappe.db.sql(f"select order_rank, ABS(order_item_priority - {self.order_item_priority}) as difference from `tabSales Order` WHERE status not in ('Completed', 'Draft', 'Cancelled') order by difference LIMIT 1;")[0][0] or 0
+	order_rank = frappe.db.sql(f"select order_rank, ABS(order_item_priority - {self.order_item_priority}) as difference from `tabSales Order` WHERE status not in ('Completed', 'Draft', 'Cancelled') AND order_rank > 0 HAVING difference > 0 order by difference LIMIT 1;")[0][0] or 0
 	self.db_set('order_rank', order_rank)
 
 def ignore_permission(self):
@@ -40,13 +40,12 @@ def ignore_permission(self):
 	if self._action == "update_after_submit":
 		self.flags.ignore_validate_update_after_submit = True
 
-def setting_rate_qty(self):
-	""" This function is use to set rate and discounted rate on save """
+def setting_real_qty(self):
+	""" This function is use to set real qty on save """
 
-	# for item in self.items:
-	# 	if not item.rate:
-	# 		item.rate = get_rate_discounted_rate(item.item_code, self.customer, self.company, self.name)['rate']
-	pass
+	for item in self.items:
+		if not item.real_qty:
+			item.real_qty = item.qty
 
 def calculate_order_priority(self):
 	""" This function is use to calculate priority of order with logic """
@@ -106,7 +105,7 @@ def checking_real_qty(self):
 
 	
 def before_validate_after_submit(self, method):
-	# setting_rate_qty(self)
+	setting_real_qty(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
@@ -115,7 +114,7 @@ def validate_after_submit(self, method):
 	update_discounted_net_total(self)
 
 def before_update_after_submit(self, method):
-	# setting_rate_qty(self)
+	setting_real_qty(self)
 	calculate_order_priority(self)
 	update_discounted_amount(self)
 	update_idx(self)
@@ -126,6 +125,7 @@ def before_update_after_submit(self, method):
 def on_update_after_submit(self, method):
 	delete_pick_list(self)
 	update_sales_order_total_values(self)
+	update_order_rank(self)
 
 def delete_pick_list(self):
 	pick_list_list = frappe.get_list("Pick List Item", {'sales_order': self.name})

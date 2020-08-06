@@ -77,7 +77,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 	
 	def remark_map(self):
 		data = frappe.db.sql("""
-			SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date desc
+			SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date asc
 		""", as_dict = True)
 
 		remark_map = {}

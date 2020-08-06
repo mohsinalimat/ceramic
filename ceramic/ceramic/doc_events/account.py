@@ -55,10 +55,7 @@ def update_account(self):
 			a.root_type = self.root_type
 			a.disabled = self.disabled
 
-			try:
-				a.save()
-			except Exception as e:
-				frappe.throw(_(e))
+			a.save()
 
 def delete_account(self):
 	""" Function to delete account in alternate company """
@@ -74,8 +71,5 @@ def delete_account(self):
 			account_name = self.account_name + "Deleted"
 			self.db_set("account_name", account_name)
 
-			try:
-				account.flags.ignore_permissions = True
-				account.delete()
-			except Exception as e:
-				frappe.throw(_(e))
+			account.flags.ignore_permissions = True
+			account.delete()

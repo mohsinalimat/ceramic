@@ -550,7 +550,8 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				frappe.throw(_("You can not cancel this Sales Order, Delivery Note already there for this Sales Order."))
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', (flt(picked_qty)- flt(diff_qty)))
+			soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
+			# frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', (flt(picked_qty)- flt(diff_qty)))
 		
 			if not doc.delivered_qty and not doc.wastage_qty:
 				doc.cancel()
@@ -609,11 +610,13 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		for pl in data:
 			
 			doc = frappe.get_doc("Pick List Item", pl.name)
+			soi_doc = frappe.get_doc("Sales Order Item", pl.sales_order_item)
 			diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
 			doc.db_set('qty', doc.qty - diff_qty)
 
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
+			
+			soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
 			
 			if not unpick_qty:
 				if not doc.delivered_qty and not doc.wastage_qty:
@@ -632,11 +635,12 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
+			soi_doc = frappe.get_doc("Sales Order Item", pl.sales_order_item)
 			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
 			doc.db_set('qty', doc.qty - diff_qty)
-
 			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
+			soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
+			# frappe.db.set_value("Sales Order Item", doc.sales_order_item, 'picked_qty', flt(picked_qty) - flt(diff_qty))
 
 			if not unpick_qty:
 				if not doc.delivered_qty and not doc.wastage_qty:

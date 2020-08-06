@@ -68,7 +68,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		# 	frappe.throw(_("Cannot change qty as delivery note is already made"))
 
 		child_item.qty = flt(d.get("qty"))
-		child_item.real_qty = flt(d.get("real_qty"))
+		child_item.real_qty = flt(d.get("qty"))
 		precision = child_item.precision("rate") or 2
 		
 		if parent_doctype == "Sales Order" and d.get("item_code") != child_item.item_code:
