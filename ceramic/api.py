@@ -646,12 +646,13 @@ def update_so_wastage_qty():
 		wastage_qty, picked_qty = frappe.db.get_value("Pick List Item", {'docstatus': 1, 'sales_order_item': i.name}, ['sum(wastage_qty)', 'sum(qty)'])
 
 		if wastage_qty or picked_qty:
-			print(doc.parent)
 			if wastage_qty != doc.wastage_qty:
+				print(f"Wastage Qty: {doc.parent}")
 				doc.db_set('wastage_qty', wastage_qty or 0.0, update_modified = False)
 			if picked_qty != doc.picked_qty:
+				print(f"Picked Qty: {doc.parent}")
 				doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
-	
+
 	frappe.db.commit()
 
 def sales_order_item_patch():

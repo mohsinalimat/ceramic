@@ -680,8 +680,8 @@ frappe.ui.form.on('Sales Order', {
 			}
 			else if( d.authority == 'Unauthorized') 
 			{
-				frappe.db.get_value("Bank Account",{'company':d.alternate_company,'is_default':1}, 'name' ,function(s){
-				frm.set_value('bank_account', s.name);
+			frappe.db.get_value("Bank Account",{'company':d.alternate_company,'is_default':1}, 'name' ,function(s){
+			frm.set_value('bank_account', s.name);
 			})
 			}
 		

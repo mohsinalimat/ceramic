@@ -18,8 +18,7 @@
    "fieldname": "date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Date",
-   "reqd": 1
+   "label": "Date"
   },
   {
    "fieldname": "customer",
@@ -55,11 +54,10 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Naming Series",
-   "options": "PFR-",
-   "reqd": 1
+   "options": "PFR-"
   }
  ],
- "modified": "2020-07-29 15:57:50.426284",
+ "modified": "2020-08-06 18:51:54.795145",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Payment Followup Remarks",

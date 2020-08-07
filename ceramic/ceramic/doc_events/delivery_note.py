@@ -339,7 +339,8 @@ def create_invoice(source_name, target_doc=None):
 		target_doc.income_account = doc.default_income_account
 		target_doc.expense_account = doc.default_expense_account
 		target_doc.cost_center = doc.cost_center
-		target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
+		if source_doc.warehouse:
+			target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
 
 
 	doc = get_mapped_doc("Delivery Note", source_name, {

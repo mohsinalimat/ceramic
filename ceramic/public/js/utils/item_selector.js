@@ -93,8 +93,8 @@ ItemSelector = Class.extend({
 					let previously_picked = this.layout.get_value('previously_picked') || 0;
 					let picked_qty = this.layout.get_value('picked_qty') || 0;
 					let so_qty = this.layout.get_value('so_qty') || 0;
-					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty - so_delivered_without_pick));
-					console.log(so_delivered_without_pick)
+					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty - (me.so_delivered_without_pick || 0)));
+					cur_dialog.set_value('so_real_qty', so_qty);
 				}
 			},
 			{
@@ -121,6 +121,7 @@ ItemSelector = Class.extend({
 				fieldname: 'so_real_qty',
 				reqd: 0,
 				default: me.so_real_qty,
+				hidden: 1,
 				read_only: 0,
 			},
 			{
