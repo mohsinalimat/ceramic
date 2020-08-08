@@ -512,3 +512,72 @@ def cancel_wastage_entry(self):
 		se.db_set('reference_doctype','')
 		se.db_set('reference_docname','')
 		se.delete()
+
+@frappe.whitelist()
+def get_rate_discounted_rate(item_code, customer, company, so_number = None):
+	""" This function is use to get discounted rate and rate """
+	item_group, tile_quality = frappe.get_value("Item", item_code, ['item_group', 'tile_quality'])
+	# parent_item_group = frappe.get_value("Item Group", item_group, 'parent_item_group')
+
+	count = frappe.db.sql(f"""
+		SELECT 
+			COUNT(*) 
+		FROM 
+			`tabDelivery Note Item` as soi 
+		JOIN 
+			`tabDelivery Note` as so ON so.`name` = soi.`parent`
+		WHERE 
+			soi.`item_group` = '{item_group}' AND
+			soi.`docstatus` = 1 AND
+			so.customer = '{customer}' AND
+			soi.`tile_quality` = '{tile_quality}' AND
+			so.`company` = '{company}'
+		LIMIT 1
+	""")
+	where_clause = ''
+	if count[0][0]:
+		where_clause = f"soi.item_group = '{item_group}' AND"
+	
+	data = None
+
+	if so_number:
+		data = frappe.db.sql(f"""
+			SELECT 
+				soi.`rate` as `rate`, soi.`discounted_rate` as `discounted_rate`
+			FROM 
+				`tabDelivery Note Item` as soi 
+			JOIN
+				`tabDelivery Note` as so ON soi.parent = so.name
+			WHERE
+				{where_clause}
+				soi.`tile_quality` = '{tile_quality}' AND
+				so.`customer` = '{customer}' AND
+				so.`company` = '{company}' AND
+				so.`docstatus` != 2 AND
+				so.`name` = '{so_number}'
+			ORDER BY
+				soi.`creation` DESC
+			LIMIT 
+				1
+		""", as_dict = True)
+
+	if not data:
+		data = frappe.db.sql(f"""
+			SELECT 
+				soi.`rate` as `rate`, soi.`discounted_rate` as `discounted_rate`
+			FROM 
+				`tabDelivery Note Item` as soi JOIN
+				`tabDelivery Note` as so ON soi.parent = so.name
+			WHERE
+				{where_clause}
+				soi.`tile_quality` = '{tile_quality}' AND
+				so.`customer` = '{customer}' AND
+				so.`company` = '{company}' AND
+				so.`docstatus` != 2
+			ORDER BY
+				soi.`creation` DESC
+			LIMIT 
+				1
+		""", as_dict = True)
+
+	return data[0] if data else {'rate': 0, 'discounted_rate': 0}

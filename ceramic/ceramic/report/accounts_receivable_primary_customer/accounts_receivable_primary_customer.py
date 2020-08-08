@@ -160,7 +160,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 		# self.add_column(_(credit_debit_label), fieldname='credit_note')
 
-		# self.setup_ageing_columns()
+		self.setup_ageing_columns()
 
 		# if self.party_type == "Customer":
 		# 	self.add_column(label=_('Territory'), fieldname='territory', fieldtype='Link',
