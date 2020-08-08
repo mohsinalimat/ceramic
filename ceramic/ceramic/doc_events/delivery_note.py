@@ -24,10 +24,13 @@ def before_validate(self, method):
 		if (not item.discounted_rate) and (item.so_detail):
 			item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
 	validate_item_from_so(self)
-	so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
-	so_doc.db_set("customer",self.customer)
-	so_doc.db_set("title",self.customer)
-	so_doc.db_set("customer_name",self.customer_name)
+	sales_order_list = list(set([x.against_sales_order for x in self.items if x.against_sales_order]))
+
+	for x in sales_order_list:
+		so_doc = frappe.get_doc("Sales Order",x)
+		so_doc.db_set("customer",self.customer)
+		so_doc.db_set("title",self.customer)
+		so_doc.db_set("customer_name",self.customer_name)
 
 def validate(self, method):
 	validate_item_from_picklist(self)
@@ -40,8 +43,6 @@ def validate_item_from_so(self):
 			so_item = frappe.db.get_value("Sales Order Item",row.so_detail,"item_code")
 			if row.item_code != so_item:
 				frappe.throw(_(f"Row: {row.idx}: Not allowed to change item {frappe.bold(row.item_code)}."))
-		else:
-			frappe.throw(_(f"Row: {row.idx}: Sales Order reference Not found against item {frappe.bold(row.item_code)}, please delivery note again"))
 
 
 def validate_item_from_picklist(self):
@@ -86,7 +87,7 @@ def check_item_without_pick(self):
 	
 	item_without_pick_list_dict = {}
 	for row in self.items:
-		if not row.pl_detail:
+		if not row.pl_detail and row.so_detail:
 			if not item_without_pick_list_dict.get(row.so_detail):
 				item_without_pick_list_dict[row.so_detail] = 0
 			

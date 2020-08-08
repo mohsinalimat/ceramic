@@ -617,7 +617,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		for pl in data:
 			
 			doc = frappe.get_doc("Pick List Item", pl.name)
-			soi_doc = frappe.get_doc("Sales Order Item", pl.sales_order_item)
+			soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
 			diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
 			doc.db_set('qty', doc.qty - diff_qty)
 
