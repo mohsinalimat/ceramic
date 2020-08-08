@@ -638,20 +638,18 @@ def test():
 # console patches
 from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
 def update_so_wastage_qty():
-	sales_order_item_list = frappe.get_list("Sales Order Item", {'docstatus': 1})
+	sales_order_item_list = frappe.get_list("Sales Order Item", {'docstatus': 1}, ['name', 'wastage_qty', 'picked_qty'])
 
 	for i in sales_order_item_list:
-		doc = frappe.get_doc("Sales Order Item", i.name)
-
-		wastage_qty, picked_qty = frappe.db.get_value("Pick List Item", {'docstatus': 1, 'sales_order_item': i.name}, ['sum(wastage_qty)', 'sum(qty)'])
-
-		if wastage_qty or picked_qty:
-			if wastage_qty != doc.wastage_qty:
-				print(f"Wastage Qty: {doc.parent}")
-				doc.db_set('wastage_qty', wastage_qty or 0.0, update_modified = False)
-			if picked_qty != doc.picked_qty:
-				print(f"Picked Qty: {doc.parent}")
-				doc.db_set('picked_qty', picked_qty or 0.0, update_modified = False)
+		qty = frappe.db.get_value("Pick List Item", {'docstatus': 1, 'sales_order_item': i.name}, ['sum(wastage_qty)', 'sum(qty)'])
+		wastage_qty = qty[0] or 0
+		picked_qty = qty[1] or 0
+		if (wastage_qty or 0) != i.wastage_qty:
+			print(f"Wastage Qty: {doc.parent}")
+			frappe.db.set_value('Sales Order Item', i.name, 'wastage_qty', wastage_qty or 0.0, update_modified = False)
+		if (picked_qty or 0) != i.picked_qty:
+			print(f"Picked Qty: {doc.parent}")
+			frappe.db.set_value('Sales Order Item', i.name, 'picked_qty', picked_qty or 0.0, update_modified = False)
 
 	frappe.db.commit()
 

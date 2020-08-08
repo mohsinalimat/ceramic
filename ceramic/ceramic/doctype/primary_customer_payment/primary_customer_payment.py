@@ -64,7 +64,7 @@ class PrimaryCustomerPayment(Document):
 		# iterate loop over dict created from Primary Customer Payment Reference Entries and create new Payment Entry
 		for key,invoices in final_reference_dict.items():
 			payment_entry=frappe.new_doc("Payment Entry") #create new payment entry(payment_entry)
-			payment_entry.posting_date=nowdate()
+			payment_entry.posting_date = self.posting_date
 			payment_entry.payment_type="Receive"
 			payment_entry.company=self.company
 			payment_entry.mode_of_payment=self.mode_of_payment
