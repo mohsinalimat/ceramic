@@ -349,5 +349,31 @@ frappe.ui.form.on("Delivery Note Item", {
 	},
 	real_qty: function (frm, cdt, cdn) {
 		frm.events.calculate_total(frm)
-	}
+	},
+	qty: function (frm, cdt, cdn) {
+		let d = locals[cdt][cdn];
+		if (!d.against_sales_invoice && !d.against_pick_list){
+			frappe.call({
+				method: "ceramic.ceramic.doc_events.delivery_note.get_rate_discounted_rate",
+				args: {
+					"item_code": d.item_code,
+					"customer": frm.doc.customer,
+					"company": frm.doc.company,
+					"so_number": frm.doc.name || null
+				},
+				callback: function (r) {
+					if (r.message) {
+						if (!d.rate){
+							frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
+						}
+						if (!d.discounted_rate){
+							frappe.model.set_value(cdt, cdn, 'discounted_rate', r.message.discounted_rate);
+						}
+					}
+				}
+			});
+		}
+
+		// this.calculate_taxes_and_totals();
+	},
 });
