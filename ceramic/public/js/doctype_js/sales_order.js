@@ -706,6 +706,7 @@ frappe.ui.form.on('Sales Order', {
 	company: function (frm) {
 		frm.trigger('naming_series');
 		frm.trigger('set_bank_account');
+		frm.trigger('order_priority');
 	},
 	delivery_date: function (frm) {
 		$.each(frm.doc.items || [], function (i, d) {
@@ -774,21 +775,26 @@ frappe.ui.form.on('Sales Order', {
 			}
 		})
 	},
+	transaction_date: function(frm){
+		frm.trigger('order_priority')
+	},
 	order_priority: function(frm){
-		console.log('123')
-		frappe.call({
-			method: "ceramic.ceramic.doc_events.sales_order.update_order_rank_",
-			args: {
-				'date': frm.doc.transaction_date,
-				'order_priority': frm.doc.order_priority
-			},
-			callback: function (r) {
-				if (r.message){
-					frm.set_value('order_item_priority', r.message.order_item_priority)
-					frm.set_value('order_rank', r.message.order_rank)
+		if (frm.doc.order_priority && frm.doc.company && frm.doc.transaction_date){
+			frappe.call({
+				method: "ceramic.ceramic.doc_events.sales_order.update_order_rank_",
+				args: {
+					'date': frm.doc.transaction_date,
+					'order_priority': frm.doc.order_priority,
+					'company': frm.doc.company
+				},
+				callback: function (r) {
+					if (r.message){
+						frm.set_value('order_item_priority', r.message.order_item_priority)
+						frm.set_value('order_rank', r.message.order_rank)
+					}
 				}
-			}
-		})
+			})
+		}
 	}
 });
 frappe.ui.form.on("Sales Order Item", {
