@@ -33,7 +33,7 @@ def update_payment_entries(self):
 		for item in self.references:
 			if item.reference_doctype == "Sales Invoice":
 				pay_amount_left = real_difference_amount = frappe.db.get_value("Sales Invoice", item.reference_name, 'real_difference_amount')
-				allocated_amount = frappe.get_value("Payment Entry References", {'voucher_no': item.voucher_no, 'docstatus': 1}, "sum(allocated_amount)")
+				allocated_amount = frappe.get_value("Payment Entry Reference", {'reference_name': item.reference_name, 'docstatus': 1}, "sum(allocated_amount)")
 				diff_value = pay_amount_left - allocated_amount
 				if diff_value > real_difference_amount:
 					frappe.throw("Allocated Amount Cannot be Greater Than Difference Amount {}".format(diff_value))
@@ -42,7 +42,7 @@ def update_payment_entries(self):
 			
 			if item.reference_doctype == "Purchase Invoice":
 				pay_amount_left = real_difference_amount = frappe.db.get_value("Purchase Invoice", item.reference_name, 'real_difference_amount')
-				allocated_amount = frappe.get_value("Payment Entry References", {'voucher_no': item.voucher_no, 'docstatus': 1}, "sum(allocated_amount)")
+				allocated_amount = frappe.get_value("Payment Entry Reference", {'reference_name': item.reference_name, 'docstatus': 1}, "sum(allocated_amount)")
 				diff_value = pay_amount_left - allocated_amount
 				
 				if diff_value > real_difference_amount:

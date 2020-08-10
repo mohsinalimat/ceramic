@@ -672,7 +672,7 @@ import json
 @frappe.whitelist()
 def get_payment_remark(primary_customer):
 	data = frappe.db.sql(f"""
-		SELECT * FROM `tabPayment Followup Remarks` WHERE Customer = '{primary_customer}' ORDER By date ASC LIMIT 10	
+		SELECT * FROM `tabPayment Followup Remarks` WHERE Customer = '{primary_customer}' ORDER By date DESC LIMIT 10	
 	""", as_dict = 1)
 
 	table = """<table class="table table-bordered" style="margin: 0; font-size:80%;">
@@ -758,6 +758,10 @@ def get_payment_remark_details(filters):
 					total_outstanding += x.outstanding
 					total_bank_outstanding += x.bank_outstanding
 					total_cash_outstanding += x.cash_outstanding
+
+					company_total_cash_outstanding += x.cash_outstanding
+					company_total_bank_outstanding += x.bank_outstanding
+					company_total_outstanding += x.outstanding
 					table += f"""
 						<tr>
 							<td>{x.voucher_no}</td>
@@ -777,11 +781,6 @@ def get_payment_remark_details(filters):
 						<td align="right">{frappe.format(total_cash_outstanding, {'fieldtype': 'Currency'})}</td>
 					</tr>
 				"""
-
-				company_total_cash_outstanding += total_cash_outstanding
-				company_total_bank_outstanding += total_bank_outstanding
-				company_total_outstanding += total_outstanding
-
 				
 				table += """
 				</tbody>
