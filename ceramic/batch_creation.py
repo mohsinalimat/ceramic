@@ -65,3 +65,5 @@ def make_batches(self, warehouse_field):
 						lot_no=d.lot_no,
 						supplier=getattr(self, 'supplier', None)
 					)).insert().name
+					
+
