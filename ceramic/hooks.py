@@ -165,7 +165,7 @@ doctype_list_js = {
 
 scheduler_events = {
 	"daily": [
-		"ceramic.ceramic.doc_events.sales_order.shedule_so"
+		"ceramic.ceramic.doc_events.sales_order.schedule_daily"
 	]
 }
 
