@@ -183,35 +183,24 @@ function get_payment_remark_details(filters) {
 	})
 }
 
-function get_picked_item_details(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty, lot_no) {
-	// docudocument.getElementById("demo").innerHTML = item_code;
+function new_remark(primary_customer){
+	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
+}
 
+function view_remark(primary_customer){
 	frappe.call({
-		method: "ceramic.api.get_picked_item",
+		method: "ceramic.api.get_payment_remark",
 		args: {
-			item_code: item_code,
-			batch_no: batch_no,
-			from_date: from_date,
-			to_date: to_date,
-			company: company,
-			bal_qty: bal_qty,
-			total_picked_qty: total_picked_qty,
-			total_remaining_qty: total_remaining_qty,
-			lot_no: lot_no
+			primary_customer: primary_customer
 		},
 		callback: function (r) {
-			let message = frappe.template.compile(template)({ 'data': r.message });
 			frappe.msgprint({
-				message: message,
-				title: "Lot-Wise Balance Details : " + item_code,
+				message: r.message,
+				title: "Payment Remarks : " + primary_customer,
 				wide: true,
 			});
 		}
 	})
-}
-
-function new_remark(primary_customer){
-	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
 }
 
 new_doc = function (doctype, opts, init_callback) {
@@ -223,6 +212,5 @@ new_doc = function (doctype, opts, init_callback) {
 			frappe.ui.form.make_quick_entry(doctype, () => {}, init_callback, null, true)
 				.then(() => resolve());
 		});
-
 	});
 }
