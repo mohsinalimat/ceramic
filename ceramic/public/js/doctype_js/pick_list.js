@@ -466,7 +466,8 @@ frappe.ui.keys.add_shortcut({
 			let next_locations = cur_frm.doc.locations[next - 1]
 			if (next_locations){
 				// cur_frm.get_field('items').grid.get_field("item_code").'$input'.focus()
-				cur_dialog.cancel();
+				// cur_dialog.cancel();
+				$("button.btn.btn-primary.btn-sm:contains(Add)")[($("button.btn.btn-primary.btn-sm:contains(Add)").length - 1)].click()
 				var d = locals[next_locations.doctype][next_locations.name];
 				select_items({
 					frm:cur_frm,
@@ -509,7 +510,8 @@ frappe.ui.keys.add_shortcut({
 			let previous_locations = cur_frm.doc.locations[previous - 1]
 			if (previous_locations){
 				// cur_frm.get_field('items').grid.get_field("item_code").'$input'.focus()
-				cur_dialog.cancel();
+				// cur_dialog.cancel();
+				$("button.btn.btn-primary.btn-sm:contains(Add)")[($("button.btn.btn-primary.btn-sm:contains(Add)").length - 1)].click()
 				var d = locals[previous_locations.doctype][previous_locations.name];
 				select_items({
 					frm:cur_frm,
