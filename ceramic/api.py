@@ -668,6 +668,39 @@ def sales_order_item_patch():
 # update `tabPick List Item` qty = delivered_qty + wastage_qty  WHERE qty < delivered_qty + wastage_qty
 from ceramic.ceramic.report.accounts_receivable_ceramic.accounts_receivable_ceramic import ReceivablePayableReport
 import json
+
+@frappe.whitelist()
+def get_payment_remark(primary_customer):
+	data = frappe.db.sql(f"""
+		SELECT * FROM `tabPayment Followup Remarks` WHERE Customer = '{primary_customer}' ORDER By date ASC LIMIT 10	
+	""", as_dict = 1)
+
+	table = """<table class="table table-bordered" style="margin: 0; font-size:80%;">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Remark</th>
+				<th>Next Follow Up Date</th>
+				<th>Follow Up By</td>
+			<tr>
+		</thead>
+	<tbody>"""
+	for i in data:
+		table += f"""
+			<tr>
+				<td>{frappe.format(i.date, {'fieldtype': 'Date'})}</td>
+				<td>{i.remark}</td>
+				<td>{frappe.format(i.next_follow_up_date, {'fieldtype': 'Date'})}</td>
+				<td>{frappe.format(i.follow_up_by, {'fieldtype': 'Data'})}</td>
+			</tr>
+		"""
+	
+	table += """
+	</tbody></table>
+	"""
+
+	return table
+
 @frappe.whitelist()
 def get_payment_remark_details(filters):
 	filters = json.loads(filters)

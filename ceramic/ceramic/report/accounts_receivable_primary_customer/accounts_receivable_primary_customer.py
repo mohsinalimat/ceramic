@@ -66,6 +66,10 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			type='button' primary-customer='{row.primary_customer}'
 			onClick=new_remark(this.getAttribute('primary-customer'))>Add Remark</button>"""
 
+			row.view_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
+			type='button' primary-customer='{row.primary_customer}'
+			onClick=view_remark(this.getAttribute('primary-customer'))>View Remark</button>"""
+
 			row.view_details = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 				type='button' filters='{}'
 				onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Details</button>""".format(filters)
@@ -184,6 +188,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button',
 			width=100)
 		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
+			width=100)
+		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button',
 			width=100)
 		self.add_column(label=_('View Details'), fieldname='view_details', fieldtype='button',
 			width=100)
