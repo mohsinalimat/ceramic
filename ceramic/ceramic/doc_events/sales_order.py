@@ -52,12 +52,12 @@ def calculate_order_priority(self):
 
 	for item in self.items:
 		try:
-			days = ((datetime.date.today() - datetime.datetime.strptime(self.transaction_date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 15
+			days = ((datetime.date.today() - datetime.datetime.strptime(self.transaction_date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 1
 		except:
-			days = ((datetime.date.today() - self.transaction_date) // datetime.timedelta(days = 1)) + 15
+			days = ((datetime.date.today() - self.transaction_date) // datetime.timedelta(days = 1)) + 1
 		days = 1 if days <= 0 else days
-		item.order_item_priority = round(math.log(days, 1.1) * cint(self.order_priority))
-	
+		base_factor = 4
+		item.order_item_priority = cint((days * (base_factor ** (cint(self.order_priority) - 1))) + cint(self.order_priority))
 	if self.items[0]:
 		self.order_item_priority = self.items[0].order_item_priority
 
@@ -451,9 +451,9 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 	return target_doc
 
 # shedule function
-def shedule_so():
+def schedule_daily():
 	calculate_order_item_priority()
-	calculate_order_item_priority_so()
+	calculate_order_rank()
 
 def calculate_order_item_priority():
 	data = frappe.db.sql(f"""
@@ -468,14 +468,18 @@ def calculate_order_item_priority():
 	""", as_dict = 1)
 
 	for soi in data:
-		days = ((datetime.date.today() - soi.transaction_date) // datetime.timedelta(1)) + 15
-		order_item_priority = round(math.log(days, 1.1) * cint(soi.order_priority))
+		days = ((datetime.date.today() - soi.transaction_date) // datetime.timedelta(1)) + 1
+		base_factor = 4
+		order_item_priority = cint((days * (base_factor ** (cint(soi.order_priority) - 1))) + cint(soi.order_priority))
 
 		frappe.db.set_value("Sales Order Item", soi.name, 'order_item_priority', order_item_priority, update_modified = True)
 
 	frappe.db.commit()
 
-def calculate_order_item_priority_so():
+def calculate_order_rank():
+	companies_list = frappe.get_list("Company", {'authority': 'Unauthorized'})
+
+	
 	data = frappe.db.sql(f"""
 		SELECT
 			so.name as so_name From `tabSales Order` as so
@@ -488,24 +492,38 @@ def calculate_order_item_priority_so():
 	for soi in data:
 		doc = frappe.get_doc("Sales Order", soi.so_name)
 		doc.db_set('order_item_priority', doc.items[0].order_item_priority, update_modified = False)
+	
+	for i in companies_list:
+		print(i.name)
+		priority = frappe.db.sql(f"""
+			select 
+				name, row_number() over(order by order_item_priority desc, transaction_date desc) as rank
+			from
+				`tabSales Order` 
+			WHERE
+				docstatus = 1 and 
+				status not in ('Closed', 'Stoped', 'Completed', 'Hold') and 
+				per_delivered < 100 
+				AND company = '{i.name}'
+			order by 
+				order_item_priority desc
+		""", as_dict = True)
 
-	priority = frappe.db.sql("""
-		select name, row_number() over(order by order_item_priority desc, transaction_date desc) as rank from `tabSales Order` WHERE docstatus = 1 and status not in ('Closed', 'Stoped', 'Completed', 'Hold') and per_delivered < 100 order by order_item_priority desc;
-	""", as_dict = True)
-
-	for item in priority:
-		frappe.db.set_value("Sales Order", item.name, 'order_rank', item.rank, update_modified = False)
+		for item in priority:
+			print(item.name, item.rank)
+			frappe.db.set_value("Sales Order", item.name, 'order_rank', item.rank, update_modified = False)
 
 	frappe.db.commit()
 
 @frappe.whitelist()
-def update_order_rank_(date, order_priority):
+def update_order_rank_(date, order_priority, company):
 	try:
-		days = ((datetime.date.today() - datetime.datetime.strptime(date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 15
+		days = ((datetime.date.today() - datetime.datetime.strptime(date, '%Y-%m-%d').date()) // datetime.timedelta(days = 1)) + 1
 	except:
-		days = ((datetime.date.today() - date) // datetime.timedelta(days = 1)) + 15
+		days = ((datetime.date.today() - date) // datetime.timedelta(days = 1)) + 1
 	days = 1 if days <= 0 else days
-	order_item_priority = round(math.log(days, 1.1) * cint(order_priority))
+	base_factor = 4
+	order_item_priority = cint((days * (base_factor ** (cint(order_priority) - 1))) + cint(order_priority))
 
 	order_rank = frappe.db.sql(f"""
 	select 
@@ -515,11 +533,13 @@ def update_order_rank_(date, order_priority):
 	WHERE
 		status not in ('Completed', 'Draft', 'Cancelled', 'Hold') 
 		AND order_rank > 0
+		AND company = '{company}'
 	HAVING
 		difference > 0 
 	ORDER BY
 		difference LIMIT 1
 	""")[0][0] or 0
+
 	return {'order_item_priority': order_item_priority, 'order_rank': order_rank}
 
 @frappe.whitelist()
