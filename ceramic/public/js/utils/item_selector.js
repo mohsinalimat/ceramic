@@ -171,9 +171,11 @@ ItemSelector = Class.extend({
 			me.values = me.dialog.get_values();
 
 			let picked_qty = me.values.picked_qty + me.picked_qty
-			let so_qty = me.values.so_qty
-
-			if (so_qty >= picked_qty){
+			let so_qty = flt(me.values.so_qty)
+			if (picked_qty == 0){
+				me.dialog.hide();
+			}
+			else if (so_qty >= picked_qty){
 				me.set_item_locations_in_frm();
 				me.dialog.hide();
 			} else {
