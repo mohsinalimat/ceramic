@@ -184,18 +184,27 @@ def get_opening(filters):
 	if filters.get('party'):
 		conditions += f" AND gle.`party` = '{filters.party}'"
 	else:
-		conditions += " AND party_type in ('Customer', 'Supplier')"
+		conditions += " AND gle.party_type in ('Customer', 'Supplier')"
 	
 	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
+
+	having_cond = ''
+	if filters.get('primary_customer'):
+		having_cond = f" HAVING primary_customer = '{filters.primary_customer}'"
 	
 	total_data = frappe.db.sql(f"""
 		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance
+			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance,
+			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
 		FROM
-			`tabGL Entry` as gle 
+			`tabGL Entry` as gle
+			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
 			gle.`company` = '{filters.company}' AND
-			gle.`posting_date` < '{filters.from_date}' {conditions}
+			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
 	""", as_dict = True)[0]
 	
 	authorized_data =  frappe.db.sql(f"""
@@ -318,13 +327,13 @@ def get_conditions(filters):
 		conditions += f" gle.company IN ('{filters.company}', '{alternate_company}')"
 	
 	if filters.get("party_type"):
-		conditions += f" AND party_type='{filters.party_type}'"
+		conditions += f" AND gle.party_type='{filters.party_type}'"
 	else:
-		conditions += " AND party_type in ('Customer', 'Supplier')"
+		conditions += " AND gle.party_type in ('Customer', 'Supplier')"
 	
 	if filters.get('party'):
 		# frappe.throw(filters.party)
-		conditions += f" AND party='{filters.party}'"
+		conditions += f" AND gle.party='{filters.party}'"
 
 	return conditions
 

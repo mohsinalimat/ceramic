@@ -43,6 +43,13 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"fieldtype": "Dynamic Link",
 			"options": "party_type",
 			"width": "80px"
+		},
+		{
+			"fieldname":"primary_customer",
+			"label": __("Primary Customer"),
+			"fieldtype": "Link",
+			"options": "Customer",
+			"width": "80px"
 		}
 	]
 }
