@@ -205,17 +205,32 @@ def get_opening(filters):
 		WHERE 
 			gle.`company` = '{filters.company}' AND
 			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
-	""", as_dict = True)[0]
-	
+	""", as_dict = True)
+
 	authorized_data =  frappe.db.sql(f"""
 		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance
+			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance,
+			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
 		FROM
-			`tabGL Entry` as gle 
+			`tabGL Entry` as gle
+			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
 			gle.`company` = '{alternate_company}' AND
-			gle.`posting_date` < '{filters.from_date}' {conditions}
-	""", as_dict = True)[0]
+			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
+	""", as_dict = True)
+
+	if not total_data:
+		total_data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None}
+	else:
+		total_data = total_data[0]
+
+	if not authorized_data:
+		authorized_data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None}
+	else:
+		authorized_data = authorized_data[0]
 
 	data = []
 
@@ -287,17 +302,26 @@ def get_result(filters, account_details):
 	if filters.get('party'):
 		conditions += f" AND gle.`party` = '{filters.party}'"
 	
+	having_cond = ''
+	if filters.get('primary_customer'):
+		having_cond = f" HAVING primary_customer = '{filters.primary_customer}'"
+	
 	return frappe.db.sql(f"""
 		SELECT 
-			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, (sum(gle.debit) - sum(gle.credit)) AS balance, gle.cost_center, gle.company
-		FROM 
+			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, (sum(gle.debit) - sum(gle.credit)) AS balance, gle.cost_center, gle.company,
+			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
+		FROM
 			`tabGL Entry` as gle
+			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
 			{conditions}
 		GROUP BY
-			gle.voucher_no, gle.party
+			gle.voucher_no, gle.party {having_cond}
 		ORDER BY
-			gle.party
+			gle.party 
 	""", as_dict = True)
 
 def date_conditions(filters):
