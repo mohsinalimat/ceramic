@@ -39,7 +39,7 @@ def execute(filters=None):
 						onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"), this.getAttribute("bal-qty"), this.getAttribute("total-picked-qty"), this.getAttribute("total-remaining-qty"), this.getAttribute("lot-no"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'), flt(qty_dict.bal_qty, float_precision), picked_qty, flt(qty_dict.bal_qty, float_precision) - picked_qty, qty_dict.lot_no)
 				# # frappe.throw(str(detail_button))
 				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
-					data.append({
+					data.append(sub_data = {
 						'item_code': item,
 						'lot_no': qty_dict.lot_no,
 						'packing_type': qty_dict.packing_type,
@@ -106,7 +106,21 @@ def get_columns(filters):
 			"fieldname": "picked_detail",
 			"fieldtype": "Data",
 			"width": 70
-		},
+		}
+	]
+
+	if filters.get('sales_order'):
+		columns += [
+		{
+			"label": _("Sales Order Picked Qty"),
+			"fieldname": "so_picked_qty",
+			"fieldtype": "Float",
+			"width": 70,
+			"default": 0
+		}
+	]
+
+	columns += [
 		{
 			"label": _("Batch"),
 			"fieldname": "batch_no",
@@ -156,7 +170,7 @@ def get_columns(filters):
 			"fieldname": "image",
 			"fieldtype": "data",
 			"width": 80
-		},
+		}
 	]
 
 	return columns

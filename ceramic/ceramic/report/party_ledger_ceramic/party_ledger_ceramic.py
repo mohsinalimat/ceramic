@@ -176,6 +176,7 @@ def generate_data(filters, res):
 		"total_balance": total_balance_total
 	}]
 	return data
+
 def get_opening(filters):
 	conditions = ""
 	if filters.get('party_type'):
@@ -183,8 +184,6 @@ def get_opening(filters):
 	
 	if filters.get('party'):
 		conditions += f" AND gle.`party` = '{filters.party}'"
-	else:
-		conditions += " AND gle.party_type in ('Customer', 'Supplier')"
 	
 	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
 
