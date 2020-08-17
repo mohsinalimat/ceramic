@@ -39,7 +39,11 @@ def execute(filters=None):
 						onClick='get_picked_item_details(this.getAttribute("item-code"), this.getAttribute("batch-no"), this.getAttribute("company"), this.getAttribute("from-date"), this.getAttribute("to-date"), this.getAttribute("bal-qty"), this.getAttribute("total-picked-qty"), this.getAttribute("total-remaining-qty"), this.getAttribute("lot-no"))'>View</button>""".format(item, batch, filters.get('company'), filters.get('from_date'), filters.get('to_date'), flt(qty_dict.bal_qty, float_precision), picked_qty, flt(qty_dict.bal_qty, float_precision) - picked_qty, qty_dict.lot_no)
 				# # frappe.throw(str(detail_button))
 				if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
-					data.append(sub_data = {
+					if filters.get('sales_order'):
+						so_picked_qty = frappe.db.get_value("Pick List Item", {'sales_order': filters.sales_order, 'item_code': item, 'batch_no': batch}, 'sum(qty - delivered_qty - wastage_qty)') or 0.0
+					else:
+						so_picked_qty = 0.0
+					data.append({
 						'item_code': item,
 						'lot_no': qty_dict.lot_no,
 						'packing_type': qty_dict.packing_type,
@@ -54,7 +58,8 @@ def execute(filters=None):
 						'item_group': qty_dict.item_group,
 						'tile_quality': qty_dict.tile_quality,
 						'item_design': qty_dict.item_design,
-						'image': qty_dict.image
+						'image': qty_dict.image,
+						'so_picked_qty': so_picked_qty
 					})
 
 	return columns, data
