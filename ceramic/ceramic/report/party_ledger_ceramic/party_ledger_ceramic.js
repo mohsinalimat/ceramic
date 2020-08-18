@@ -10,13 +10,13 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"options": "Company",
 			"default": frappe.defaults.get_user_default("Company"),
 			"reqd": 1,
-			"get_data": function (text) {
-				return frappe.db.get_link_options('Company', text, {
-					authority : 'Unauthorized'
-				})
-			},
-			"change": function () {
-				frappe.query_report.refresh();
+			get_query: () => {
+				var company = frappe.query_report.get_filter_value('company');
+				return {
+					filters: {
+						'authority': 'Unauthorized'
+					}
+				}
 			}
 		},
 		{
@@ -41,13 +41,12 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"fieldtype": "Link",
 			"options": "Party Type",
 			"default": "Customer",
-			"get_data": function (text) {
-				return frappe.db.get_link_options('Party Type', text, {
-					name : ['in', ['Customer', 'Supplier']]
-				})
-			},
-			on_change: function() {
-				frappe.query_report.set_filter_value('party', "");
+			get_query: () => {
+				return {
+					filters: {
+						name : ['in', ['Customer', 'Supplier']]
+					}
+				}
 			}
 		},
 		{
@@ -62,7 +61,14 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"label": __("Primary Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
-			"width": "80px"
+			"width": "80px",
+			get_query: () => {
+				return {
+					filters: {
+						'is_primary_customer': 1
+					}
+				}
+			}
 		}
 	]
 }
