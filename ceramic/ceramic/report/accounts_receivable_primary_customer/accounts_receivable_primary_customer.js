@@ -183,6 +183,14 @@ function get_payment_remark_details(filters) {
 	})
 }
 
+function view_receivable_report(primary_customer, company) {
+	console.log(company)
+	frappe.set_route("query-report", "Party Ledger Ceramic", {
+		"company": company,
+		"primary_customer": primary_customer
+	})
+}
+
 function new_remark(primary_customer){
 	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
 }

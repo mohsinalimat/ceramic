@@ -196,8 +196,6 @@ def get_opening(filters):
 			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
 	""", as_dict = True)
 
-	frappe.msgprint(str(total_data))
-
 	authorized_data =  frappe.db.sql(f"""
 		SELECT 
 			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance,
@@ -382,10 +380,11 @@ def get_columns(filters):
 			"width": 120
 		},
 		{
-			"label": _("Party Type"),
-			"fieldname": "party_type",
-			"Link": "Party Type",
-			"width": 100
+			"label": _("Party"),
+			"fieldname": "party",
+			"field_type": "Dynamic Link",
+			"options": "party_type",
+			"width": 150
 		},
 		{
 			"label": _("Account"),
@@ -450,11 +449,10 @@ def get_columns(filters):
 			"width": 130
 		},
 		{
-			"label": _("Party"),
-			"fieldname": "party",
-			"field_type": "Dynamic Link",
-			"options": "party_type",
-			"width": 150
+			"label": _("Party Type"),
+			"fieldname": "party_type",
+			"Link": "Party Type",
+			"width": 100
 		},
 	]
 

@@ -62,6 +62,10 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range3': self.filters.get('range3'),
 				'range4': self.filters.get('range4'),
 			})
+			row.view_receivable = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
+			type='button' primary-customer='{row.primary_customer}' company='{self.filters.company}'
+			onClick=view_receivable_report(this.getAttribute('primary-customer'),this.getAttribute('company'))>View Receivable</button>"""
+
 			row.add_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
 			type='button' primary-customer='{row.primary_customer}'
 			onClick=new_remark(this.getAttribute('primary-customer'))>Add Remark</button>"""
@@ -186,6 +190,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(label=_('Next Followup Date'), fieldname='next_follow_up_date', fieldtype='Date',
 			width=100)
 		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button',
+			width=100)
+		self.add_column(label=_('View Receivable'), fieldname='view_receivable', fieldtype='button',
 			width=100)
 		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
 			width=100)
