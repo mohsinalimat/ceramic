@@ -179,7 +179,7 @@ def get_opening(filters):
 
 	having_cond = ''
 	if filters.get('primary_customer'):
-		having_cond = f" HAVING primary_customer = '{filters.primary_customer}'"
+		having_cond = f" GROUP BY primary_customer HAVING primary_customer = '{filters.primary_customer}'"
 	
 	total_data = frappe.db.sql(f"""
 		SELECT 
@@ -195,6 +195,8 @@ def get_opening(filters):
 			gle.`company` = '{filters.company}' AND
 			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
 	""", as_dict = True)
+
+	frappe.msgprint(str(total_data))
 
 	authorized_data =  frappe.db.sql(f"""
 		SELECT 
