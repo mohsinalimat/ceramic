@@ -34,6 +34,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 		self.get_party_total(args)
 
+		filter_company = self.filters.company[0] if self.filters.company else None
+
 		for party, party_dict in iteritems(self.party_total):
 			if party_dict.outstanding == 0 and party_dict.bank_outstanding == 0 and party_dict.cash_outstanding ==0:
 				continue
@@ -63,7 +65,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range4': self.filters.get('range4'),
 			})
 			row.view_receivable = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
-			type='button' primary-customer='{row.primary_customer}' company='{self.filters.company}'
+			type='button' primary-customer='{row.primary_customer}' company='{filter_company}'
 			onClick=view_receivable_report(this.getAttribute('primary-customer'),this.getAttribute('company'))>View Receivable</button>"""
 
 			row.add_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
@@ -192,7 +194,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button',
 			width=100)
 		self.add_column(label=_('View Receivable'), fieldname='view_receivable', fieldtype='button',
-			width=100)
+			width=110)
 		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
 			width=100)
 		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button',

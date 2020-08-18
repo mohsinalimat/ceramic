@@ -8,6 +8,7 @@ frappe.query_reports["Accounts Payable Ceramic Summary"] = {
 			"label": __("Company"),
 			"fieldtype": "MultiSelectList",
 			"default": [frappe.defaults.get_user_default("Company")],
+			"reqd": 1,
 			"get_data": function (text) {
 				return frappe.db.get_link_options('Company', text, {
 					authority : 'Unauthorized'
