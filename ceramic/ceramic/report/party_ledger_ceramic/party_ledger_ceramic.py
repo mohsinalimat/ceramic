@@ -111,52 +111,40 @@ def generate_data(filters, res):
 			d.billed_balance = d.balance
 			
 			if d.reference_doc:
-				if not frappe.db.exists(
+				d.total_credit, d.total_debit = frappe.db.get_value(
 					"GL Entry", 
 					{
 						"party": d.party,
 						"voucher_type": d.voucher_type,
 						"voucher_no": d.reference_doc,
-					}
-				):
-					d.total_credit = 0
-					d.total_debit = 0
-				else:
-					d.total_credit, d.total_debit = frappe.db.get_value(
-						"GL Entry", 
-						{
-							"party": d.party,
-							"voucher_type": d.voucher_type,
-							"voucher_no": d.reference_doc,
-						},
-						['sum(credit)', 'sum(debit)']
-					)
+					},
+					['sum(credit)', 'sum(debit)']
+				)
 				d.total_balance = d.total_debit - d.total_credit
 			else:
-				d.total_credit = d.credit
-				d.total_debit = d.debit
-				d.total_balance = d.balance
+				d.total_credit = d.total_debit = d.total_balance = 0
 
-			d.cash_debit = d.total_debit - d.billed_debit
-			d.cash_credit = d.total_credit - d.billed_credit
-			d.cash_balance = d.total_balance - d.billed_balance
 		elif d.company == filters.company and not d.reference_doc:
 			flag = True
-			d.cash_debit = d.total_debit = d.debit
-			d.cash_credit = d.total_credit = d.credit
-			d.cash_balance = d.total_balance = d.balance
+			d.total_debit = d.debit
+			d.total_credit = d.credit
+			d.total_balance = d.balance
 
 			d.billed_debit = d.billed_credit = d.billed_balance = 0
 
 		if flag:
+			d.cash_debit = d.total_debit - d.billed_debit
+			d.cash_credit = d.total_credit - d.billed_credit
+			d.cash_balance = d.total_balance - d.billed_balance
+	
 			cash_debit_total += d.cash_debit
 			cash_credit_total += d.cash_credit
 
 			total_debit_total += d.total_debit
 			total_credit_total += d.total_credit
 			
-			billed_debit_total = d.billed_balance
-			billed_credit_total = d.billed_credit
+			billed_debit_total += d.billed_debit
+			billed_credit_total += d.billed_credit
 			
 			total_balance_total = d.total_balance = flt(d.total_balance) + flt(total_balance_total)
 			cash_balance_total = d.cash_balance = flt(d.cash_balance) + flt(cash_balance_total)
@@ -181,6 +169,8 @@ def get_opening(filters):
 	conditions = ""
 	if filters.get('party_type'):
 		conditions = f" AND gle.`party_type` = '{filters.party_type}'"
+	else:
+		conditions = f" AND gle.`party_type` in ('Customer', 'Supplier')"
 	
 	if filters.get('party'):
 		conditions += f" AND gle.`party` = '{filters.party}'"
@@ -193,7 +183,7 @@ def get_opening(filters):
 	
 	total_data = frappe.db.sql(f"""
 		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance,
+			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
 		FROM
 			`tabGL Entry` as gle
@@ -208,7 +198,7 @@ def get_opening(filters):
 
 	authorized_data =  frappe.db.sql(f"""
 		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, (SUM(gle.debit) - SUM(gle.credit)) as balance,
+			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
 		FROM
 			`tabGL Entry` as gle
@@ -285,10 +275,10 @@ def get_result(filters, account_details):
 	
 	if filters.get('company'):
 		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
-		conditions += f" AND gle.`company` in ('{filters.company}', '{alternate_company}')"
+		conditions += f" gle.`company` in ('{filters.company}', '{alternate_company}')"
 
 	if filters.get('from_date'):
-		conditions = f" gle.`posting_date` >= '{filters.from_date}'"
+		conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"
 	
 	if filters.get('to_date'):
 		conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
@@ -307,8 +297,8 @@ def get_result(filters, account_details):
 	
 	return frappe.db.sql(f"""
 		SELECT 
-			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, (sum(gle.debit) - sum(gle.credit)) AS balance, gle.cost_center, gle.company,
-			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
+			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
+			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer, IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty
 		FROM
 			`tabGL Entry` as gle
 			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
@@ -390,6 +380,12 @@ def get_columns(filters):
 			"width": 120
 		},
 		{
+			"label": _("Party Type"),
+			"fieldname": "party_type",
+			"Link": "Party Type",
+			"width": 100
+		},
+		{
 			"label": _("Account"),
 			"fieldname": "account",
 			"fieldtype": "Link",
@@ -451,19 +447,13 @@ def get_columns(filters):
 			"fieldtype": "Float",
 			"width": 130
 		},
-	]
-
-	columns.extend([
-		{
-			"label": _("Party Type"),
-			"fieldname": "party_type",
-			"width": 100
-		},
 		{
 			"label": _("Party"),
 			"fieldname": "party",
+			"field_type": "Dynamic Link",
+			"options": "party_type",
 			"width": 150
 		},
-	])
+	]
 
 	return columns

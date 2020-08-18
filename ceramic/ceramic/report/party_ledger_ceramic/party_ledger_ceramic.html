@@ -43,20 +43,21 @@
         <tr>
             <td width="8%" valign="top">
                 <p>
+                    <strong>Date</strong>
+                </p>
+            </td>
+            <td width="8%" valign="top">
+                <p>
                     <strong>Voucher Type</strong>
                 </p>
             </td>
-            <td width="8%" valign="top">
+            
+            <td width="8%" valign="top" colspan="3">
                 <p>
-                    <strong>Voucher No</strong>
+                    <strong></strong>
                 </p>
             </td>
-            <td width="8%" valign="top">
-                <p>
-                    <strong>Billed</strong>
-                </p>
-            </td>
-            <td width="10%" valign="top">
+            <!-- <td width="10%" valign="top">
                 <p>
                     <strong>Cash</strong>
                 </p>
@@ -65,13 +66,13 @@
                 <p>
                     <strong>Total</strong>
                 </p>
-            </td>
-            <td width="8%" valign="top">
+            </td> -->
+            <td width="8%" valign="top" colspan="3">
                 <p>
-                    <strong>Billed</strong>
+                    <strong></strong>
                 </p>
             </td>
-            <td width="10%" valign="top">
+            <!-- <td width="10%" valign="top">
                 <p>
                     <strong>Cash</strong>
                 </p>
@@ -80,15 +81,15 @@
                 <p>
                     <strong>Total</strong>
                 </p>
-            </td>
+            </td> -->
             <td width="8%" valign="top">
                 <p>
-                    <strong>Billed</strong>
+                    <strong>Cheque</strong>
                 </p>
             </td>
             <td width="10%" valign="top">
                 <p>
-                    <strong>Cash</strong>
+                    <strong>Other</strong>
                 </p>
             </td>
             <td width="8%" valign="top">
@@ -101,7 +102,7 @@
         <tr>
             {% if(i == 0){ %}
             <td width="16%" valign="top" colspan="2">
-                <p align="center">
+                <p align="center" >
                     <strong>Opening Balance</strong>
                 </p>
             </td>
@@ -118,47 +119,87 @@
                 </p>
             </td>
             {% } else { %}
-            <td width="8%" valign="top">
-                <p>
-                    {{ data[i].voucher_type }}
-                </p>
+            <td>
+                {{ frappe.format(data[i].posting_date , {'fieldtype': ' Date'})}}
             </td>
             <td width="8%" valign="top">
                 <p>
+                    <strong> {{ data[i].voucher_type }} </strong> <br>
                     {{ data[i].voucher_no }}
                 </p>
             </td>
+          
             {% } %}
-            <td width="8%" valign="top">
+            <td width="8%" valign="top" colspan="3">
+            {% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
+            {% if data[i].cash_debit %}
+            <p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
+            </p>
+      
+            {% endif %}
+
+            {% if data[i].billed_debit %}
+            <p><span style="float:left !important">Cheque:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'})  }}</span>
+            </p>
+            {% endif %}
+
+            {% if !data[i].billed_debit && !data[i].cash_debit %}
+              <p><strong>{{ frappe.format(0, {'fieldtype': 'Currency'}) }}</strong></p>
+              {% endif %}
+
+        {% else %}
+                
                 <p>
-                    {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}
+                  <strong><span style="float:left !important">{{ frappe.format(data[i].total_debit, {'fieldtype': 'Currency'}) }}</span> </strong>
                 </p>
-            </td>
-            <td width="10%" valign="top">
+                {% if(data[i].qty != 0 && data[i].qty && data[i].voucher_type == 'Sales Invoice'){ %}
+                <p><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></p>
+                {% } %}
                 <p>
-                    {{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}
+                <span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
+
                 </p>
-            </td>
-            <td width="8%" valign="top">
                 <p>
-                    {{ frappe.format(data[i].total_debit, {'fieldtype': 'Currency'}) }}
+                    <span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}</span>
                 </p>
+            {% endif %}
+               
             </td>
-            <td width="8%" valign="top">
+            <td width="8%" valign="top" colspan="3">
+        {% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
+            {% if data[i].cash_credit %}
+            <p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
+            </p>
+      
+            {% endif %}
+
+            {% if data[i].billed_credit %}
+            <p><span style="float:left !important">Cheque:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'})  }}</span>
+            </p>
+            {% endif %}
+
+            {% if !data[i].billed_credit && !data[i].cash_credit %}
+              <p><strong>{{ frappe.format(0, {'fieldtype': 'Currency'}) }}</strong></p>
+              {% endif %}
+
+        {% else %}
                 <p>
-                    {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'}) }}
-                </p>
+                    <strong><span style="float:left !important">{{ frappe.format(data[i].total_credit, {'fieldtype': 'Currency'}) }}</span> </strong>
+                  </p>
+                  {% if(data[i].qty != 0 && data[i].qty && data[i].voucher_type == 'Purchase Invoice'){ %}
+                  
+                    <p><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></p>
+                    {% } %}
+                  <p>
+                  <span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
+  
+                  </p>
+                  <p>
+                      <span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'}) }}</span>
+                  </p>
+                  {% endif %}   
             </td>
-            <td width="10%" valign="top">
-                <p>
-                    {{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}
-                </p>
-            </td>
-            <td width="8%" valign="top">
-                <p>
-                    {{ frappe.format(data[i].total_credit, {'fieldtype': 'Currency'}) }}
-                </p>
-            </td>
+           
             <td width="8%" valign="top">
                 <p>
                     {{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
