@@ -49,6 +49,7 @@ erpnext.utils.update_child_items = function (opts) {
 					options: 'Item',
 					in_list_view: 1,
 					read_only: 0,
+					reqd: 1,
 					disabled: 0,
 					columns: 3,
 					label: __('Item Code'),

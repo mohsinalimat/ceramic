@@ -81,13 +81,17 @@ pickListItem = Class.extend({
 				fieldname: 'qty',
 				reqd: 0,
 				default: me.qty,
+				change: function(){
+					let qty = this.layout.get_value('qty') || 0;
+					cur_dialog.set_value('real_qty', qty);
+				}
 			},
-			{fieldtype:'Column Break'},
 			{
 				label: __('Sales Order Real Qty'),
 				fieldtype:'Float',
 				fieldname: 'real_qty',
 				reqd: 0,
+				hidden: 1,
 				default: me.real_qty,
 			},
 			{fieldtype:'Column Break'},
