@@ -796,6 +796,16 @@ frappe.ui.form.on('Sales Order', {
 				}
 			})
 		}
+	},
+	before_workflow_action: function (frm) {
+		if (frm.doc.workflow_state == 'Applied') {
+
+			frm.doc.items.forEach(function (d) {
+				if (!d.rate) {
+					frappe.throw(__("Row:{0} Rate can not be zero", [d.idx]))
+				}
+			})
+		}
 	}
 });
 frappe.ui.form.on("Sales Order Item", {

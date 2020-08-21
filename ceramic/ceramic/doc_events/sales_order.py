@@ -24,7 +24,7 @@ def validate(self, method):
 def on_submit(self, method):
 	checking_real_qty(self)
 	update_sales_order_total_values(self)
-	check_qty_rate(self)
+	#check_qty_rate(self)
 	update_order_rank(self)
 
 def update_order_rank(self):
@@ -88,12 +88,13 @@ def update_discounted_net_total(self):
 
 def check_qty_rate(self):
 	""" Checking rate and qty is not 0 """
+	pass
 
-	for item in self.items:
-		if not item.discounted_rate:
-			frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
-		if not item.real_qty:
-			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+	# for item in self.items:
+	# 	if not item.discounted_rate:
+	# 		frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+	# 	if not item.real_qty:
+	# 		frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 def checking_real_qty(self):
 	""" This function will show alert on submit if real qty is 0 """
