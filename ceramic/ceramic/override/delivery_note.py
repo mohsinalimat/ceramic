@@ -13,7 +13,7 @@ def set_batch_nos(doc, warehouse_field, throw=False):
 			if d.remove_batch:
 				# frappe.throw("test")
 				d.batch_no = None
-				frppa.throw(f"Row: {i.idx} Please add batch no for item {d.item_code}")
+				frappe.throw(f"Row {d.idx}: Please add Batch No for Item {frappe.bold(d.item_code)}.")
 			else:
 				batch_qty = get_batch_qty(batch_no=d.batch_no, warehouse=warehouse)
 				if flt(batch_qty, d.precision("qty")) < flt(qty, d.precision("qty")):

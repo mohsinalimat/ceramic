@@ -35,6 +35,9 @@ from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
 from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices, get_opening_invoice_summary
 from ceramic.override_default_class_method import get_transactions
+from erpnext.controllers.accounts_controller import AccountsController
+from ceramic.ceramic.override.controller.accounts_controller import set_missing_item_details as accounts_controllers_set_missing_item_details
+AccountsController.set_missing_item_details = accounts_controllers_set_missing_item_details
 NamingSeries.get_transactions = get_transactions
 OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
 OpeningInvoiceCreationTool.get_opening_invoice_summary = get_opening_invoice_summary
@@ -184,6 +187,8 @@ override_whitelisted_methods = {
 	"frappe.desk.notifications.get_open_count": "ceramic.api.get_open_count",
 	"erpnext.regional.india.utils.generate_ewb_json": "ceramic.ceramic.eway_update.generate_ewb_json",
 	"erpnext.regional.india.utils.download_ewb_json": "ceramic.ceramic.eway_update.download_ewb_json",
+	"erpnext.stock.doctype.batch.batch.get_batch_no": "ceramic.ceramic.override.stock.batch.get_batch_no",
+	"erpnext.stock.get_item_details.get_item_details": "ceramic.ceramic.override.stock.get_item_details.get_item_details",
 }
 #
 # each overriding function accepts a `data` argument;
