@@ -3,16 +3,20 @@
 
 
 from __future__ import unicode_literals
-import frappe, erpnext
-from erpnext import get_company_currency, get_default_company
-from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
+
+from six import iteritems
+from collections import OrderedDict
+
+import frappe
 from frappe.utils import getdate, cstr, flt, fmt_money
 from frappe import _, _dict
+
+from erpnext import get_company_currency, get_default_company
+from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
 from erpnext.accounts.utils import get_account_currency
 from erpnext.accounts.report.financial_statements import get_cost_centers_with_children
-from six import iteritems
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
-from collections import OrderedDict
+
 
 def execute(filters=None):
 	if not filters:
@@ -48,47 +52,6 @@ def process_data(filters, res):
 
 	return result
 
-def reference_doc_details(filters):
-	conditions = ''
-
-	if filters.get('company'):
-		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
-		conditions += f"`company` in ('{alternate_company}', '{filters.company}')"
-
-	if filters.get('from_date'):
-		conditions += f" AND posting_date >= '{filters.from_date}'"
-	
-	if filters.get('to_date'):
-		conditions += f" AND posting_date <= '{filters.to_date}'"
-	
-	pe_cond = ''
-	si_cond = ''
-	pi_cond = ''
-	
-	if filters.get('party'):
-		pe_cond = f" AND `party` = '{filters.party}'"
-		si_cond = f" AND `customer` = '{filters.party}'"
-		pi_cond = f" AND `supplier` = '{filters.party}'"
-	
-	ref_si = frappe.db.sql(f"""
-		SELECT name, si_ref as ref_doc from `tabSales Invoice` 
-		WHERE {conditions} {si_cond}
-	""", as_dict = True)
-
-	ref_pi = frappe.db.sql(f"""
-		SELECT name, pi_ref as ref_doc from `tabPurchase Invoice` 
-		WHERE {conditions} {pi_cond}
-	""", as_dict = True)
-
-	ref_pe = frappe.db.sql(f"""
-		SELECT name, pe_ref as ref_doc from `tabPayment Entry` 
-		WHERE {conditions} {pe_cond}
-	""", as_dict = True)
-
-	reference_doc_dict = ref_si + ref_pi + ref_pe
-	reference_doc_dict = {x['name']:x['ref_doc'] for x in reference_doc_dict}
-	return reference_doc_dict
-
 def generate_data(filters, res):
 	opening = get_opening(filters)[0]
 	data = []
@@ -98,12 +61,11 @@ def generate_data(filters, res):
 	billed_balance_total = opening['billed_balance']
 	cash_balance_total = opening['cash_balance']
 
-	ref_doc_map = reference_doc_details(filters)
+	reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance) for i in res if i.company == filters.company and i.reference_doc}
+
 	for d in res:
 		flag = False
-		
-		d.reference_doc = ref_doc_map.get(d.voucher_no)
-			
+					
 		if d.company != filters.company:
 			flag = True
 			d.billed_credit = d.credit
@@ -111,16 +73,7 @@ def generate_data(filters, res):
 			d.billed_balance = d.balance
 			
 			if d.reference_doc:
-				d.total_credit, d.total_debit = frappe.db.get_value(
-					"GL Entry", 
-					{
-						"party": d.party,
-						"voucher_type": d.voucher_type,
-						"voucher_no": d.reference_doc,
-					},
-					['sum(credit)', 'sum(debit)']
-				)
-				d.total_balance = d.total_debit - d.total_credit
+				d.total_credit, d.total_debit, d.total_balance = reference_doc_map[(d.party, d.reference_doc)]
 			else:
 				d.total_credit = d.total_debit = d.total_balance = 0
 
@@ -149,6 +102,7 @@ def generate_data(filters, res):
 			total_balance_total = d.total_balance = flt(d.total_balance) + flt(total_balance_total)
 			cash_balance_total = d.cash_balance = flt(d.cash_balance) + flt(cash_balance_total)
 			billed_balance_total = d.billed_balance = flt(d.billed_balance) + flt(billed_balance_total)
+			
 			data.append(d)
 			
 	data += [{
@@ -165,65 +119,43 @@ def generate_data(filters, res):
 	}]
 	return data
 
-def get_opening(filters):
-	conditions = ""
-	if filters.get('party_type'):
-		conditions = f" AND gle.`party_type` = '{filters.party_type}'"
+def get_opening_query(primary_customer_select, company, from_date, conditions, group_by_having_conditions):
+	data = frappe.db.sql(f"""
+		SELECT 
+			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance{primary_customer_select}
+		FROM
+			`tabGL Entry` as gle
+			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
+		WHERE 
+			gle.`company` = '{company}' AND
+			gle.`posting_date` < '{from_date}' {conditions} {group_by_having_conditions}
+	""", as_dict = True)
+
+	if not data:
+		data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None}
 	else:
-		conditions = f" AND gle.`party_type` in ('Customer', 'Supplier')"
+		data = data[0]
 	
-	if filters.get('party'):
-		conditions += f" AND gle.`party` = '{filters.party}'"
+	return data
+
+def get_opening(filters):
+	conditions = f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
+	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
 	
 	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
 
-	having_cond = ''
+	group_by_having_conditions = primary_customer_select = ''
 	if filters.get('primary_customer'):
-		having_cond = f" GROUP BY primary_customer HAVING primary_customer = '{filters.primary_customer}'"
+		primary_customer_select = ", IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer"
+		group_by_having_conditions = f" GROUP BY primary_customer HAVING primary_customer = '{filters.primary_customer}'"
 	
-	total_data = frappe.db.sql(f"""
-		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance,
-			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
-		FROM
-			`tabGL Entry` as gle
-			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
-			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
-			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
-			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
-		WHERE 
-			gle.`company` = '{filters.company}' AND
-			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
-	""", as_dict = True)
+	total_data = get_opening_query(primary_customer_select, filters.company, filters.from_date, conditions, group_by_having_conditions)
+	authorized_data = get_opening_query(primary_customer_select, alternate_company, filters.from_date, conditions, group_by_having_conditions)
 
-	authorized_data =  frappe.db.sql(f"""
-		SELECT 
-			SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance,
-			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer
-		FROM
-			`tabGL Entry` as gle
-			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
-			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
-			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
-			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
-		WHERE 
-			gle.`company` = '{alternate_company}' AND
-			gle.`posting_date` < '{filters.from_date}' {conditions} {having_cond}
-	""", as_dict = True)
-
-	if not total_data:
-		total_data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None}
-	else:
-		total_data = total_data[0]
-
-	if not authorized_data:
-		authorized_data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None}
-	else:
-		authorized_data = authorized_data[0]
-
-	data = []
-
-	data.append({
+	data = [{
 		"voucher_no": 'Opening',
 		"billed_debit": flt(authorized_data['debit'], 2),
 		"cash_debit": flt(total_data['debit'], 2) - flt(authorized_data['debit'], 2),
@@ -234,16 +166,12 @@ def get_opening(filters):
 		"billed_balance": flt(authorized_data['balance'], 2),
 		"cash_balance": flt(total_data['balance'], 2) - flt(authorized_data['balance'], 2),
 		"total_balance": flt(total_data['balance'], 2),
-	})
+	}]
 
 	return data
 
 def get_closing(data):
-	closing = []
-
-	debit = 0
-	credit = 0
-	balance = 0
+	debit = credit = balance = 0
 
 	for item in data:
 		debit += item.debit	 	
@@ -255,9 +183,6 @@ def get_closing(data):
 def validate_filters(filters, account_details):
 	if not filters.get('company'):
 		frappe.throw(_('{0} is mandatory').format(_('Company')))
-	
-	# frappe.throw(str(filters.party))
-
 
 def validate_party(filters):
 	party_type, party = filters.get("party_type"), filters.get("party")
@@ -271,34 +196,23 @@ def validate_party(filters):
 					frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
 
 def get_result(filters, account_details):
-	conditions = ''
-	
-	if filters.get('company'):
-		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
-		conditions += f" gle.`company` in ('{filters.company}', '{alternate_company}')"
+	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
 
-	if filters.get('from_date'):
-		conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"
+	conditions = f"gle.`company` in ('{filters.company}', '{alternate_company}')"
+	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
+	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
+	conditions += f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
+	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
 	
-	if filters.get('to_date'):
-		conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
-	
-	if filters.get('party_type'):
-		conditions += f" AND gle.`party_type` = '{filters.party_type}'"
-	else:
-		conditions += f" AND gle.`party_type` in ('Customer', 'Supplier')"
-	
-	if filters.get('party'):
-		conditions += f" AND gle.`party` = '{filters.party}'"
-	
-	having_cond = ''
-	if filters.get('primary_customer'):
-		having_cond = f" HAVING primary_customer = '{filters.primary_customer}'"
+	having_cond = f" HAVING primary_customer = '{filters.primary_customer}'" if filters.get('primary_customer') else ''
 	
 	return frappe.db.sql(f"""
 		SELECT 
-			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit, gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
-			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer, IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty
+			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
+			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
+			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
+			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
+			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc
 		FROM
 			`tabGL Entry` as gle
 			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
@@ -313,52 +227,8 @@ def get_result(filters, account_details):
 			gle.party 
 	""", as_dict = True)
 
-def date_conditions(filters):
-	conditions = ''
-
-	if filters.get('from_date'):
-		conditions += f" AND gle.posting_date >= '{filters.from_date}'"
-	
-	if filters.get('to_date'):
-		conditions += f" AND gle.posting_date <= '{filters.to_date}'"
-
-	return conditions
-
-def open_date_conditions(filters):
-	conditions = ''
-
-	if filters.get('from_date'):
-		conditions += f" AND gle.posting_date < '{filters.from_date}'"
-
-	return conditions
-
-def get_conditions(filters):
-	conditions = ''
-	
-	if filters.company:
-		alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
-		conditions += f" gle.company IN ('{filters.company}', '{alternate_company}')"
-	
-	if filters.get("party_type"):
-		conditions += f" AND gle.party_type='{filters.party_type}'"
-	else:
-		conditions += " AND gle.party_type in ('Customer', 'Supplier')"
-	
-	if filters.get('party'):
-		# frappe.throw(filters.party)
-		conditions += f" AND gle.party='{filters.party}'"
-
-	return conditions
-
 def get_columns(filters):
-	if filters.get("presentation_currency"):
-		currency = filters["presentation_currency"]
-	else:
-		if filters.get("company"):
-			currency = get_company_currency(filters["company"])
-		else:
-			company = get_default_company()
-			currency = get_company_currency(company)
+	currency = get_company_currency(filters.company)
 
 	columns = [
 		{
