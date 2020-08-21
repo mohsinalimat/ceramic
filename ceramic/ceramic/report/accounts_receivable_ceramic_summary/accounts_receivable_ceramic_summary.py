@@ -76,6 +76,9 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 			"outstanding": 0.0,
 			"bank_outstanding": 0.0,
 			"cash_outstanding": 0.0,
+			"credit_note": 0.0,
+			"billed_credit_note": 0.0,
+			"cash_credit_note": 0.0,
 			"range1": 0.0,
 			"range2": 0.0,
 			"range3": 0.0,
@@ -105,11 +108,15 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
 		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
-		# if self.party_type == "Customer":
-		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
-		# else:
-		# 	# note: fieldname is still `credit_note`
-		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
+		if self.party_type == "Customer":
+			self.add_column(_('Billed Credit Note'), fieldname='billed_credit_note')
+			self.add_column(_('Cash Credit Note'), fieldname='cash_credit_note')
+			self.add_column(_('Total Credit Note'), fieldname='credit_note')
+		else:
+			# note: fieldname is still `credit_note`
+			self.add_column(_('Billed Debit Note'), fieldname='billed_credit_note')
+			self.add_column(_('Cash Debit Note'), fieldname='cash_credit_note')
+			self.add_column(_('Debit Note'), fieldname='credit_note')
 		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
 		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		self.add_column(_('Total Paid Amount'), fieldname='paid')

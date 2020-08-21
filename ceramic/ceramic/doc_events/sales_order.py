@@ -387,7 +387,8 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 					'against_sales_order': source.name,
 					'so_detail': i.name,
 					'warehouse': i.warehouse,
-					'item_series': i.item_series
+					'item_series': i.item_series,
+					'batch_no': ''
 				})
 			
 		target_items = []
@@ -415,7 +416,8 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 					'against_sales_order': source.name,
 					'so_detail': i.name,
 					'warehouse': i.warehouse,
-					'item_series': i.item_series
+					'item_series': i.item_series,
+					'batch_no': ''
 				})
 			else:
 				target.append('items',{
@@ -427,7 +429,8 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 					'against_sales_order': source.name,
 					'so_detail': i.name,
 					'warehouse': i.warehouse,
-					'item_series': i.item_series
+					'item_series': i.item_series,
+					'batch_no': ''
 				})
 	mapper = {
 		"Sales Order": {

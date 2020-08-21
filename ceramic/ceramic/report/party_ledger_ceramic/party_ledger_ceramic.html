@@ -4,6 +4,13 @@
             size : landscape
         }
     }
+    td {
+       
+        border-right: 1px solid black;
+       
+      }
+      
+    
 </style>
 <h2 class="text-center">{%= __("Statement of Account") %}</h2>
 <h4 class="text-center">
@@ -18,41 +25,41 @@
 	{%= frappe.datetime.str_to_user(filters.to_date) %}
 </h5>
 <hr>
-<table border="1" cellspacing="0" cellpadding="0" width="100%">
+<table border="2px" cellspacing="0" cellpadding="0" width="100%">
     <tbody>
         <tr>
-            <td width="17%" colspan="2" valign="top">
-
-            </td>
-            <td width="27%" colspan="3" valign="top">
+            <th style="border-right:solid; border-left:solid" width="17%" colspan="2" valign="top">
+ 
+            </th>
+            <th style="border-right:solid" width="27%" colspan="3" valign="top">
                 <p align="center">
                     <strong>DR</strong>
                 </p>
-            </td>
-            <td width="27%" colspan="3" valign="top">
+            </th>
+            <th style="border-right:solid" width="27%" colspan="3" valign="top">
                 <p align="center">
                     <strong>CR</strong>
                 </p>
-            </td>
-            <td width="27%" colspan="3" valign="top">
+            </th>
+            <th style="border-right:solid" width="27%" colspan="3" valign="top">
                 <p align="center">
                     <strong>Balance</strong>
                 </p>
-            </td>
+            </th>
         </tr>
         <tr>
-            <td width="8%" valign="top">
+            <td style="border-left:solid"  width="8%" valign="top">
                 <p>
                     <strong>Date</strong>
                 </p>
             </td>
-            <td width="8%" valign="top">
+            <td style="border-right:solid" width="8%" valign="top">
                 <p>
                     <strong>Voucher Type</strong>
                 </p>
             </td>
             
-            <td width="8%" valign="top" colspan="3">
+            <td style="border-right:solid" width="8%" valign="top" colspan="3">
                 <p>
                     <strong></strong>
                 </p>
@@ -67,7 +74,7 @@
                     <strong>Total</strong>
                 </p>
             </td> -->
-            <td width="8%" valign="top" colspan="3">
+            <td style="border-right:solid" width="8%" valign="top" colspan="3">
                 <p>
                     <strong></strong>
                 </p>
@@ -82,17 +89,17 @@
                     <strong>Total</strong>
                 </p>
             </td> -->
-            <td width="8%" valign="top">
+            <td style="background-color:rgb(247, 246, 248)" width="8%" valign="top">
                 <p>
                     <strong>Cheque</strong>
                 </p>
             </td>
-            <td width="10%" valign="top">
+            <td style="background-color:rgb(247, 246, 248)" width="10%" valign="top">
                 <p>
                     <strong>Other</strong>
                 </p>
             </td>
-            <td width="8%" valign="top">
+            <td style="border-right:solid; background-color:rgb(247, 246, 248)"  width="8%" valign="top">
                 <p>
                     <strong>Total</strong>
                 </p>
@@ -101,28 +108,28 @@
         {% for(var i=0, l=data.length; i<l; i++) { %}
         <tr>
             {% if(i == 0){ %}
-            <td width="16%" valign="top" colspan="2">
+            <td style="border-right: solid ; border-left:solid" width="16%" valign="top" colspan="2">
                 <p align="center" >
                     <strong>Opening Balance</strong>
                 </p>
             </td>
             {% } else if(i == l - 2) { %}
-            <td width="16%" valign="top" colspan="2">
+            <td style="border-right:solid; border-left:solid" width="16%" valign="top" colspan="2">
                 <p align="center">
                     <strong>Total</strong>
                 </p>
             </td>
             {% } else if(i == l - 1)  { %}
-            <td width="16%" valign="top" colspan="2">
+            <td style="border-right:solid; border-left:solid" width="16%" valign="top" colspan="2">
                 <p align="center">
                     <strong>Closing (Opening + Total)</strong>
                 </p>
             </td>
             {% } else { %}
-            <td>
+            <td style="border-left:solid">
                 {{ frappe.format(data[i].posting_date , {'fieldtype': ' Date'})}}
             </td>
-            <td width="8%" valign="top">
+            <td style="border-right:solid"  width="8%" valign="top">
                 <p>
                     <strong> {{ data[i].voucher_type }} </strong> <br>
                     {{ data[i].voucher_no }}
@@ -130,7 +137,7 @@
             </td>
           
             {% } %}
-            <td width="8%" valign="top" colspan="3">
+            <td style="border-right:solid" width="8%" valign="top" colspan="3">
             {% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
             {% if data[i].cash_debit %}
             <p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
@@ -165,7 +172,7 @@
             {% endif %}
                
             </td>
-            <td width="8%" valign="top" colspan="3">
+            <td style="border-right:solid" width="8%" valign="top" colspan="3">
         {% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
             {% if data[i].cash_credit %}
             <p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
@@ -210,7 +217,7 @@
                     {{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
                 </p>
             </td>
-            <td width="8%" valign="top">
+            <td style="border-right: solid" width="8%" valign="top">
                 <p>
                     {{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}
                 </p>

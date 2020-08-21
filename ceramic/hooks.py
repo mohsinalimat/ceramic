@@ -4,6 +4,7 @@ from . import __version__ as app_version
 
 # import erpnext
 from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry
+from ceramic.ceramic.override.delivery_note import validate as delivery_validate
 
 from erpnext.stock.stock_ledger import update_entries_after
 from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
@@ -11,12 +12,14 @@ from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
+from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
 BankStatementTransactionEntry.create_payment_entry = create_payment_entry
 
 
 from erpnext.selling.doctype.customer.customer import Customer
 from ceramic.ceramic.doc_events.customer import override_load_dashboard_info
 Customer.load_dashboard_info = override_load_dashboard_info
+DeliveryNote.validate = delivery_validate
 # import erpnext
 # from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
 # from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl

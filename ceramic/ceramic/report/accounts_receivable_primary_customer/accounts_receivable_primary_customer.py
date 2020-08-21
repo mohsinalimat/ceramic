@@ -1,14 +1,16 @@
-# Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and contributors
+# Copyright (c) 2020, Finbyz Tech Pvt. Ltd. and Contributors and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+from six import iteritems
+import json
+
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt, cint
-#from erpnext.accounts.party import get_partywise_advanced_payment_amount
+
 from ceramic.ceramic.report.accounts_receivable_ceramic.accounts_receivable_ceramic import ReceivablePayableReport
-from six import iteritems
-import json
+
 
 def execute(filters=None):
 	args = {
@@ -25,16 +27,15 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
 		self.get_columns()
 		self.get_data(args)
+		
 		return self.columns, self.data
 
 	def get_data(self, args):
-		self.data = []
-
-		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
-
-		self.get_party_total(args)
-
 		filter_company = self.filters.company[0] if self.filters.company else None
+
+		self.data = []
+		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
+		self.get_party_total(args)
 
 		for party, party_dict in iteritems(self.party_total):
 			if party_dict.outstanding == 0 and party_dict.bank_outstanding == 0 and party_dict.cash_outstanding ==0:
@@ -64,6 +65,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range3': self.filters.get('range3'),
 				'range4': self.filters.get('range4'),
 			})
+
 			row.view_receivable = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
 			type='button' primary-customer='{row.primary_customer}' company='{filter_company}'
 			onClick=view_receivable_report(this.getAttribute('primary-customer'),this.getAttribute('company'))>View Receivable</button>"""
@@ -76,9 +78,10 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			type='button' primary-customer='{row.primary_customer}'
 			onClick=view_remark(this.getAttribute('primary-customer'))>View Remark</button>"""
 
-			row.view_details = """<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
-				type='button' filters='{}'
-				onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Details</button>""".format(filters)
+			row.view_details = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+			type='button' filters='{filters}'
+			onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Details</button>"""
+			
 			if remark_map_data.get(row.primary_customer):
 				row.remark_date = remark_map_data[row.primary_customer].date
 				row.remark = remark_map_data[row.primary_customer].remark
@@ -86,9 +89,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				row.next_follow_up_date = remark_map_data[row.primary_customer].next_follow_up_date
 	
 	def remark_map(self):
-		data = frappe.db.sql("""
-			SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date asc
-		""", as_dict = True)
+		data = frappe.db.sql("""SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date ASC""", as_dict = True)
 
 		remark_map = {}
 
@@ -150,17 +151,6 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
-		# self.add_column(_('Billed Amount'), fieldname='billed_amount')
-		# self.add_column(_('Cash Amount'), fieldname='cash_amount')
-		# self.add_column(_('Invoiced Amount'), fieldname='invoiced')
-		# if self.party_type == "Customer":
-		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
-		# else:
-		# 	# note: fieldname is still `credit_note`
-		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
-		# self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
-		# self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
-		# self.add_column(_('Total Paid Amount'), fieldname='paid')
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),
@@ -168,39 +158,17 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 		credit_debit_label = "Credit Note" if self.party_type == 'Customer' else "Debit Note"
 
-		# self.add_column(_(credit_debit_label), fieldname='credit_note')
-
 		self.setup_ageing_columns()
 
-		# if self.party_type == "Customer":
-		# 	self.add_column(label=_('Territory'), fieldname='territory', fieldtype='Link',
-		# 		options='Territory')
-		# 	self.add_column(label=_('Customer Group'), fieldname='customer_group', fieldtype='Link',
-		# 		options='Customer Group')
-		# 	if self.filters.show_sales_person:
-		# 		self.add_column(label=_('Sales Person'), fieldname='sales_person', fieldtype='Data')
-		# else:
-		# 	self.add_column(label=_('Supplier Group'), fieldname='supplier_group', fieldtype='Link',
-		# 		options='Supplier Group')
-
-		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link',
-			options='Currency', width=80)
-		self.add_column(label=_('Remark'), fieldname='remark', fieldtype='Small Text',
-			width=100)
-		self.add_column(label=_('Remark Date'), fieldname='remark_date', fieldtype='Date',
-			width=100)
-		self.add_column(label=_('Next Followup Date'), fieldname='next_follow_up_date', fieldtype='Date',
-			width=100)
-		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button',
-			width=100)
-		self.add_column(label=_('View Receivable'), fieldname='view_receivable', fieldtype='button',
-			width=110)
-		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button',
-			width=100)
-		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button',
-			width=100)
-		self.add_column(label=_('View Details'), fieldname='view_details', fieldtype='button',
-			width=100)
+		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link', options='Currency', width=80)
+		self.add_column(label=_('Remark'), fieldname='remark', fieldtype='Small Text', width=100)
+		self.add_column(label=_('Remark Date'), fieldname='remark_date', fieldtype='Date', width=100)
+		self.add_column(label=_('Next Followup Date'), fieldname='next_follow_up_date', fieldtype='Date', width=100)
+		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button', width=100)
+		self.add_column(label=_('View Receivable'), fieldname='view_receivable', fieldtype='button', width=110)
+		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button', width=100)
+		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button', width=100)
+		self.add_column(label=_('View Details'), fieldname='view_details', fieldtype='button', width=100)
 
 	def setup_ageing_columns(self):
 		for i, label in enumerate(["0-{range1}".format(range1=self.filters["range1"]),

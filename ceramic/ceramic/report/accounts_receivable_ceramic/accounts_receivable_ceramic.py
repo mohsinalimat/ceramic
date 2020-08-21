@@ -75,6 +75,7 @@ class ReceivablePayableReport(object):
 				row.billed_amount = row.invoiced
 				row.bank_paid = row.paid
 				row.bank_outstanding = row.outstanding
+				row.billed_credit_note = row.credit_note
 
 				if row.reference_doc:
 					
@@ -83,6 +84,7 @@ class ReceivablePayableReport(object):
 					row.invoiced = row_data.invoiced
 					row.paid = row_data.paid
 					row.outstanding = row_data.outstanding
+					row.credit_note = row_data.credit_note
 					covered_vouchers.append(row.reference_doc)
 				else:
 					row.invoiced = 0
@@ -92,6 +94,7 @@ class ReceivablePayableReport(object):
 				row.cash_amount = flt(row.invoiced) - flt(row.billed_amount)
 				row.cash_paid = flt(row.paid) - flt(row.bank_paid)
 				row.cash_outstanding = flt(row.outstanding) - flt(row.bank_outstanding)
+				row.cash_credit_note = flt(row.credit_note) - flt(row.billed_credit_note)
 
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
 					self.data.append(row)
@@ -99,10 +102,12 @@ class ReceivablePayableReport(object):
 				row.cash_amount = row.invoiced
 				row.cash_paid = row.paid
 				row.cash_outstanding = row.outstanding
+				row.cash_credit_note = row.credit_note
 
 				row.billed_amount = 0
 				row.bank_paid = 0
 				row.bank_outstanding = 0
+				row.billed_credit_note = 0
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
 					self.data.append(row)
 			else:
@@ -114,10 +119,12 @@ class ReceivablePayableReport(object):
 				row.cash_amount = row.invoiced
 				row.cash_paid = row.paid
 				row.cash_outstanding = row.outstanding
+				row.cash_credit_note = row.credit_note
 
 				row.billed_amount = 0
 				row.bank_paid = 0
 				row.bank_outstanding = 0
+				row.billed_credit_note = 0
 				self.data.append(row)
 		
 	def difference(self, lst1, lst2): 
@@ -874,11 +881,15 @@ class ReceivablePayableReport(object):
 		self.add_column(_('Billed Amount'), fieldname='billed_amount')
 		self.add_column(_('Cash Amount'), fieldname='cash_amount')
 		self.add_column(_('Invoiced Amount'), fieldname='invoiced')
-		# if self.party_type == "Customer":
-		# 	self.add_column(_('Credit Note'), fieldname='credit_note')
-		# else:
-		# 	# note: fieldname is still `credit_note`
-		# 	self.add_column(_('Debit Note'), fieldname='credit_note')
+		if self.party_type == "Customer":
+			self.add_column(_('Billed Credit Note'), fieldname='billed_credit_note')
+			self.add_column(_('Cash Credit Note'), fieldname='cash_credit_note')
+			self.add_column(_('Total Credit Note'), fieldname='credit_note')
+		else:
+			# note: fieldname is still `credit_note`
+			self.add_column(_('Billed Debit Note'), fieldname='billed_credit_note')
+			self.add_column(_('Cash Debit Note'), fieldname='cash_credit_note')
+			self.add_column(_('Debit Note'), fieldname='credit_note')
 		self.add_column(_('Bank Paid Amount'), fieldname='bank_paid')
 		self.add_column(_('Cash Paid Amount'), fieldname='cash_paid')
 		self.add_column(_('Total Paid Amount'), fieldname='paid')
