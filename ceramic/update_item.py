@@ -100,18 +100,6 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) and d.get("item_code") == child_item.item_code):
 			diff_qty = flt(child_item.picked_qty) - flt(d.get("qty"))
 			unpick_item(child_item.parent, child_item.name, sales_order_differnce_qty = diff_qty)
-			# for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}, order_by = 'qty'):
-			# 	if not diff_qty:
-			# 		break
-			# 	pl = frappe.get_doc("Pick List Item", picked_item.name)
-			# 	if diff_qty >= pl.qty:
-			# 		diff_qty = diff_qty - pl.qty
-			# 		pl.db_set('qty', 0)
-			# 	else:
-			# 		pl.db_set('qty', pl.qty - diff_qty)
-			# 		diff_qty = 0
-				
-				# update_delivered_percent(frappe.get_doc("Pick List", pl.parent))
 			
 			child_item.picked_qty = child_item.picked_qty - diff_qty
 		
