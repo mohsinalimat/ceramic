@@ -3,6 +3,9 @@ from frappe import _
 from frappe.utils import flt, cint
 import json
 from erpnext.controllers.accounts_controller import set_sales_order_defaults, set_purchase_order_defaults, check_and_delete_children
+from ceramic.ceramic.doc_events.pick_list import unpick_item
+from frappe.utils import get_url_to_form
+
 
 def update_delivered_percent(self):
 	qty = 0
@@ -43,7 +46,16 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		if not d.get('item_code'):
 			frappe.throw("Please Enter Item Code Properly.")
-
+		
+		comment = ''
+		
+		if d.get('item_code') != child_item.item_code:
+			comment += f""" Item Change From <a href='{get_url_to_form("Item", child_item.item_code)}'>{frappe.bold(child_item.item_code)}</a> to <a href='{frappe.bold(get_url_to_form("Item", d.get("item_code")))}'>{d.get('item_code')}.</a>"""
+		if d.get('qty') != child_item.qty:
+			comment += f" Qty Change From {child_item.qty} to {d.get('qty')}."
+		if d.get('rate') != child_item.rate or d.get('discounted_rate') != child_item.discounted_rate:
+			comment += " Rate Changed."
+		
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.delivered_qty):
 			frappe.throw(_("Cannot set quantity less than delivered quantity"))
 
@@ -86,22 +98,10 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			frappe.msgprint(_(f"All Pick List For Item {child_item.item_code} has been deleted."))
 		
 		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) and d.get("item_code") == child_item.item_code):
-			diff_qty = pq = flt(child_item.picked_qty) - flt(d.get("qty"))
-			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}, order_by = 'qty'):
-				if not diff_qty:
-					break
-				pl = frappe.get_doc("Pick List Item", picked_item.name)
-				if diff_qty >= pl.qty:
-					diff_qty = diff_qty - pl.qty
-					pl.db_set('qty', 0)
-				else:
-					pl.db_set('qty', pl.qty - diff_qty)
-					diff_qty = 0
-				
-				update_delivered_percent(frappe.get_doc("Pick List", pl.parent))
+			diff_qty = flt(child_item.picked_qty) - flt(d.get("qty"))
+			unpick_item(child_item.parent, child_item.name, sales_order_differnce_qty = diff_qty)
 			
-			frappe.msgprint("HERE2")
-			child_item.picked_qty = child_item.picked_qty - pq
+			child_item.picked_qty = child_item.picked_qty - diff_qty
 		
 		if not flt(d.get('rate')):
 			d['rate'] = child_item.rate
@@ -145,6 +145,19 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			child_item.insert()
 		else:
 			child_item.save()
+
+		if comment and not new_child_flag:
+			comment_doc = frappe.new_doc("Comment")
+			comment_doc.comment_type = "Updated"
+			comment_doc.comment_email = frappe.session.user
+			comment_doc.reference_doctype = "Sales Order"
+			comment_doc.reference_name = child_item.parent
+
+			comment_doc.content = f" changed Row: {child_item.idx}" + comment
+
+			comment_doc.save()
+
+
 
 	parent.reload()
 	parent.flags.ignore_validate_update_after_submit = True

@@ -37,9 +37,9 @@ def before_update_after_submit(self,method):
 	validate_item_qty(self)
 
 
-from ceramic.update_item import update_child_qty_rate
 import json
 def update_item_so_qty(self):
+	from ceramic.update_item import update_child_qty_rate
 	for item in self.locations:
 		doc = frappe.get_doc("Sales Order Item", item.sales_order_item)
 		parent_doc = frappe.get_doc("Sales Order", item.sales_order)
@@ -544,7 +544,7 @@ def unpick_qty_comment(reference_name, sales_order, data):
 	comment_so_doc.save()
 
 @frappe.whitelist()
-def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None):
+def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None, sales_order_differnce_qty = 0.0):
 	if pick_list_item and pick_list:
 		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
@@ -614,28 +614,58 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 	elif sales_order and sales_order_item:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1}, ['name'])
 		
-		for pl in data:
-			
-			doc = frappe.get_doc("Pick List Item", pl.name)
-			soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
-			diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
-			doc.db_set('qty', doc.qty - diff_qty)
+		if sales_order_differnce_qty:
+			for pl in data:
+				if not sales_order_differnce_qty:
+					break
+				doc = frappe.get_doc("Pick List Item", pl.name)
+				soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
+				diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
+				
+				if sales_order_differnce_qty >= diff_qty:
+					sales_order_differnce_qty -= diff_qty
+				else:
+					diff_qty = sales_order_differnce_qty
+					sales_order_differnce_qty = 0
+				
+				doc.db_set('qty', doc.qty - diff_qty)
 
-			picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
-			
-			soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
-			
-			if not unpick_qty:
-				if not doc.delivered_qty and not doc.wastage_qty:
-					if doc.docstatus == 1:
-						doc.cancel()
-					doc.delete()
-			
-			if diff_qty > 0:
-				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
-			
-			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
-			update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
+				picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+								
+				if not unpick_qty:
+					if not doc.delivered_qty and not doc.wastage_qty and not doc.qty:
+						if doc.docstatus == 1:
+							doc.cancel()
+						doc.delete()
+				
+				if diff_qty > 0:
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+				
+				update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+				# update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
+		else:
+			for pl in data:
+				
+				doc = frappe.get_doc("Pick List Item", pl.name)
+				soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
+				diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
+				doc.db_set('qty', doc.qty - diff_qty)
+
+				picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+				
+				soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
+				
+				if not unpick_qty:
+					if not doc.delivered_qty and not doc.wastage_qty:
+						if doc.docstatus == 1:
+							doc.cancel()
+						doc.delete()
+				
+				if diff_qty > 0:
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+				
+				update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
+				update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 		
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'docstatus': 1}, ['name'])
