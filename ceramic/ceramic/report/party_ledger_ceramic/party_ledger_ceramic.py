@@ -224,7 +224,7 @@ def get_result(filters, account_details):
 		GROUP BY
 			gle.voucher_no, gle.party {having_cond}
 		ORDER BY
-			gle.party 
+			gle.posting_date, gle.party
 	""", as_dict = True)
 
 def get_columns(filters):

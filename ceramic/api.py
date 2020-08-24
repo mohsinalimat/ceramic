@@ -148,7 +148,8 @@ def restrict_access():
 				'doctype': 'User Permission',
 				'user': user['email'],
 				'allow': 'Authority',
-				'for_value': 'Authorized'
+				'for_value': 'Authorized',
+				'apply_to_all_doctypes': 1
 			}):
 				doc = frappe.new_doc("User Permission")
 
@@ -178,7 +179,7 @@ def reverse_restrict_access():
 			}
 		})
 
-		doc.save()
+		doc.save(ignore_permissions = True)
 		
 		frappe.delete_doc("Backup User Permission", item['name'], ignore_permissions = True)
 	

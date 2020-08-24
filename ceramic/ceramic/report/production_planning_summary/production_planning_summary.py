@@ -151,6 +151,6 @@ def get_conditions(filters):
 	if filters.get('order_priority'):
 		conditions += f" AND soi.`order_item_priority` >= '{cint(filters.get('order_priority'))}'"
 	
-	conditions += " AND so.status not in ('Completed', 'Stopped', 'Closed')"
+	conditions += " AND so.status not in ('On Hold', 'Completed' , 'Closed')"
 	
 	return conditions
