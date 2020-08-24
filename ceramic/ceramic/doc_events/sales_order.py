@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import frappe
 from frappe import _
+from datetime import date,timedelta,datetime
 from frappe.utils import flt, cint
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
@@ -12,6 +13,7 @@ import datetime
 def before_validate(self, method):
 	ignore_permission(self)
 	setting_real_qty(self)
+	# update_transaction_status(self)
 	
 	if not self.primary_customer:
 		self.primary_customer = self.customer
@@ -60,6 +62,13 @@ def calculate_order_priority(self):
 		item.order_item_priority = cint((days * (base_factor ** (cint(self.order_priority) - 1))) + cint(self.order_priority))
 	if self.items[0]:
 		self.order_item_priority = self.items[0].order_item_priority
+
+# def update_transaction_status(self):
+# 	# old_list=['Cancelled', 'Closed', 'Completed']
+# 	days = (datetime.date.today() - datetime.datetime.strptime(self.transaction_date, '%Y-%m-%d').date())
+# 	frappe.msgprint(days)
+
+
 
 def update_discounted_amount(self):
 	""" This function is use to update discounted amonunt and net amount in sales order item """
