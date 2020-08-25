@@ -52,7 +52,6 @@ frappe.ui.form.on('Pick List', {
 		if (frm.doc.__islocal){
 			if ((frm.doc.customer || frm.doc.item) && frm.doc.available_qty.length == 0) {
 				frm.trigger('get_item_qty');
-				frm.trigger('get_picked_items');
 			}
 		}
 		frm.set_df_property("locations", "read_only", frm.doc.docstatus == 0 ? 0 : 1);
@@ -93,8 +92,7 @@ frappe.ui.form.on('Pick List', {
 					},
 					callback: function(r){
 						frm.trigger('update_items');
-						frm.trigger('get_item_qty')
-						frm.trigger('get_picked_items')
+						frm.trigger('get_item_qty');
 					}
 				});
 			},
@@ -127,56 +125,9 @@ frappe.ui.form.on('Pick List', {
 				frm.set_df_property("update_items", "hidden", 0);
 			},
 			() => {
-				frm.trigger('get_picked_items');
 				frm.trigger('get_item_qty');
 			}
 		])
-	},
-	get_picked_items: (frm) => {
-		frm.doc.picked_sales_orders = []
-		frappe.call({
-			method: 'ceramic.ceramic.doc_events.pick_list.get_picked_items',
-			args: {
-				company: frm.doc.company,
-				item_code: frm.doc.item,
-				customer: frm.doc.customer,
-				sales_order: frm.doc.sales_order,
-			},
-			callback: function(r){
-				if (r.message){
-					r.message.forEach(function(item, index){
-						if (item.qty > 0){
-							var d = frm.add_child('picked_sales_orders')
-							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
-							frappe.model.set_value(d.doctype, d.name, 'batch_no', item.batch_no);
-							frappe.model.set_value(d.doctype, d.name, 'lot_no', item.lot_no);
-							frappe.model.set_value(d.doctype, d.name, 'item_code', item.item_code);
-							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty);
-							frappe.model.set_value(d.doctype, d.name, 'uom', item.uom);
-							frappe.model.set_value(d.doctype, d.name, 'stock_qty', item.stock_qty);
-							frappe.model.set_value(d.doctype, d.name, 'stock_uom', item.stock_uom);
-							frappe.model.set_value(d.doctype, d.name, 'conversion_factor', item.conversion_factor);
-							frappe.model.set_value(d.doctype, d.name, 'picked_qty', item.qty);
-							frappe.model.set_value(d.doctype, d.name, 'item_name', item.item_name);
-							frappe.model.set_value(d.doctype, d.name, 'pick_list', item.parent);
-							frappe.model.set_value(d.doctype, d.name, 'pick_list_item', item.name);
-							frappe.model.set_value(d.doctype, d.name, 'sales_order', item.sales_order);
-							frappe.model.set_value(d.doctype, d.name, 'sales_order_item', item.sales_order_item);
-							frappe.model.set_value(d.doctype, d.name, 'date', item.date);
-							frappe.model.set_value(d.doctype, d.name, 'so_picked_percent', item.per_picked);
-							frappe.model.set_value(d.doctype, d.name, 'order_rank', item.order_rank);
-						}
-					});
-					frm.refresh_field('picked_sales_orders');
-				} else {
-					frappe.msgprint({
-						"title": "Error",
-						"message": "Please Select Item Code or Customer",
-						"indicator": "red" //or blue, orange, green
-					});
-				}
-			}
-		});
 	},
 	get_locations: (frm) => {
 		frm.doc.locations = [];
@@ -226,15 +177,12 @@ frappe.ui.form.on('Pick List', {
 	},
 	item: function(frm) {
 		frm.trigger('get_item_qty')
-		frm.trigger('get_picked_items')
 	},
 	customer: function(frm) {
 		frm.trigger('get_item_qty')
-		frm.trigger('get_picked_items')
 	},
 	sales_order: function(frm) {
 		frm.trigger('get_item_qty')
-		frm.trigger('get_picked_items')
 	},
 	get_item_qty: function(frm){
 		frm.doc.available_qty = []
@@ -409,7 +357,6 @@ frappe.ui.form.on('Picked Sales Orders', {
 			},
 			callback: function(r){
 				frm.events.get_item_qty(frm);
-				frm.events.get_picked_items(frm);
 
 				if (d.sales_order == frm.sales_order){
 					frm.events.get_item_qty('update_items');
