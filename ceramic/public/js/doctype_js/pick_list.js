@@ -129,7 +129,30 @@ frappe.ui.form.on('Pick List', {
 			}
 		])
 	},
-	get_locations: (frm) => {
+	update_available_qty: function(frm) {
+		frappe.run_serially([
+			() => {
+				frm.doc.sales_order_item = [];
+				frm.trigger('get_item_qty');
+				frm.refresh_field('available_qty');
+				frm.trigger('update_so_items');
+			}
+		])
+	},
+	update_so_items: function(frm){
+		(frm.doc.available_qty || []).forEach(function(item, index){
+			let qty = 0;
+			(frm.doc.locations || []).forEach(function(value, key){
+				if (value.item_code == item.item_code && value.batch_no == item.batch_no){
+					qty += value.qty;
+				}
+			});
+			let remaining_qty = item.available_qty - (qty || 0)
+			frappe.model.set_value(item.doctype, item.name, 'picked_in_current', qty || 0);
+			frappe.model.set_value(item.doctype, item.name, 'remaining', remaining_qty || 0);
+		})
+	},
+	get_locations: function(frm) {
 		frm.doc.locations = [];
 
 		frappe.call({
