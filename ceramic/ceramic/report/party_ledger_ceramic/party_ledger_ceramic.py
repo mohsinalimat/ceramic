@@ -205,14 +205,15 @@ def get_result(filters, account_details):
 	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
 	
 	having_cond = f" HAVING primary_customer = '{filters.primary_customer}'" if filters.get('primary_customer') else ''
+	primary_customer_pe_fields = f", pe.reference_doctype as pe_ref_doctype, pe.reference_docname as pe_ref_doc" if filters.get('primary_customer') else ''
 	
-	return frappe.db.sql(f"""
+	data = frappe.db.sql(f"""
 		SELECT 
 			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
 			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
-			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc
+			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc{primary_customer_pe_fields}
 		FROM
 			`tabGL Entry` as gle
 			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
@@ -226,6 +227,42 @@ def get_result(filters, account_details):
 		ORDER BY
 			gle.posting_date, gle.party
 	""", as_dict = True)
+
+	if filters.get('primary_customer'):
+		data_map = {}
+		new_data = []
+		for i in data:
+			if i.voucher_type == "Payment Entry" and i.pe_ref_doctype == "Primary Customer Payment":
+				if not data_map.get(i.pe_ref_doc):
+					data_map[i.pe_ref_doc] = i
+				else:
+					data_map[i.pe_ref_doc]['billed_debit'] += i.billed_debit
+					data_map[i.pe_ref_doc]['cash_debit'] += i.cash_debit
+					data_map[i.pe_ref_doc]['total_debit'] += i.total_debit
+
+					data_map[i.pe_ref_doc]['billed_credit'] += i.billed_credit
+					data_map[i.pe_ref_doc]['cash_credit'] += i.cash_credit
+					data_map[i.pe_ref_doc]['total_credit'] += i.total_credit
+
+					data_map[i.pe_ref_doc]['billed_balance'] += i.billed_balance
+					data_map[i.pe_ref_doc]['cash_balance'] += i.cash_balance
+					data_map[i.pe_ref_doc]['total_balance'] += i.total_balance
+			else:
+				new_data.append(i)
+			
+		if data_map:
+			for key, value in data_map.items():
+				value.voucher_type = "Primary Customer Payment"
+				value.voucher_no = key
+				value.party = filters.get('primary_customer')
+				new_data.append(value)
+		
+		data = new_data
+
+			
+			
+
+	return data
 
 def get_columns(filters):
 	currency = get_company_currency(filters.company)
@@ -252,9 +289,9 @@ def get_columns(filters):
 		{
 			"label": _("Party"),
 			"fieldname": "party",
-			"field_type": "Dynamic Link",
+			"fieldtype": "Dynamic Link",
 			"options": "party_type",
-			"width": 150
+			"width": 120
 		},
 		{
 			"label": _("Account"),
@@ -321,7 +358,8 @@ def get_columns(filters):
 		{
 			"label": _("Party Type"),
 			"fieldname": "party_type",
-			"Link": "Party Type",
+			"fieldtype": "Link",
+			"options": "Party Type",
 			"width": 100
 		},
 	]
