@@ -102,6 +102,8 @@ def generate_data(filters, res):
 			total_balance_total = d.total_balance = flt(d.total_balance) + flt(total_balance_total)
 			cash_balance_total = d.cash_balance = flt(d.cash_balance) + flt(cash_balance_total)
 			billed_balance_total = d.billed_balance = flt(d.billed_balance) + flt(billed_balance_total)
+
+			d.voucher_no_trim = d.voucher_no[-4:]
 			
 			data.append(d)
 			
