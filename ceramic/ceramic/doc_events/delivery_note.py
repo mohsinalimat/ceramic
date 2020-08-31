@@ -107,10 +107,13 @@ def update_status_pick_list_and_sales_order(self):
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
 			if item.batch_no != pick_list_item.batch_no:
 				frappe.throw(f"Row: {item.idx} You can not change batch as pick list is already made.")
+			
 			delivered_qty = item.qty + pick_list_item.delivered_qty
 			wastage_qty = item.wastage_qty + pick_list_item.wastage_qty
+			
 			if delivered_qty + wastage_qty > pick_list_item.qty:
 				frappe.throw(f"Row {item.idx}: You can not deliver more than picked qty")
+			
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'delivered_qty', flt(delivered_qty))
 			frappe.db.set_value("Pick List Item", pick_list_item.name, 'wastage_qty', flt(wastage_qty))
 
@@ -121,6 +124,10 @@ def update_status_pick_list_and_sales_order(self):
 
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
+
+			if item.against_pick_list:
+				frappe.db.set_value("Sales Order Item", sales_order_item.name, 'picked_qty', flt(sales_order_item.picked_qty - wastage_qty))
+
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 		
 		if not item.against_pick_list and item.against_sales_order:
@@ -214,6 +221,10 @@ def on_cancel(self, method):
 			wastage_qty = sales_order_item.wastage_qty - item.wastage_qty
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
+			if item.against_pick_list:
+				if sales_order_item.picked_qty + wastage_qty > sales_order_item.qty:
+					frappe.throw(f"Please Unpick {sales_order_item.picked_qty + wastage_qty - sales_order_item.qty} for Sales Order {sales_order_item.parent} Row: {sales_order_item.idx}")
+				frappe.db.set_value("Sales Order Item", sales_order_item.name, 'picked_qty', flt(sales_order_item.picked_qty + wastage_qty))
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 		
 		if not item.against_pick_list and item.against_sales_order:
@@ -497,11 +508,9 @@ def wastage_stock_entry(self):
 					'batch_no': row.batch_no,
 					's_warehouse': row.warehouse
 				})
-		try:
-			se.save(ignore_permissions=True)
-			se.submit()
-		except Exception as e:
-			frappe.throw(str(e))
+
+		se.save(ignore_permissions=True)
+		se.submit()
 
 def cancel_wastage_entry(self):
 	if frappe.db.exists("Stock Entry",{'reference_doctype': self.doctype,'reference_docname':self.name}):

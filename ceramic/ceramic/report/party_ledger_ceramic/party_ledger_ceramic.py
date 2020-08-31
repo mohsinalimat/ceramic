@@ -215,6 +215,7 @@ def get_result(filters, account_details):
 			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
+			IFNULL(si.is_return, 0) as is_return,
 			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc{primary_customer_pe_fields}
 		FROM
 			`tabGL Entry` as gle
@@ -238,17 +239,9 @@ def get_result(filters, account_details):
 				if not data_map.get(i.pe_ref_doc):
 					data_map[i.pe_ref_doc] = i
 				else:
-					data_map[i.pe_ref_doc]['billed_debit'] += i.billed_debit
-					data_map[i.pe_ref_doc]['cash_debit'] += i.cash_debit
-					data_map[i.pe_ref_doc]['total_debit'] += i.total_debit
-
-					data_map[i.pe_ref_doc]['billed_credit'] += i.billed_credit
-					data_map[i.pe_ref_doc]['cash_credit'] += i.cash_credit
-					data_map[i.pe_ref_doc]['total_credit'] += i.total_credit
-
-					data_map[i.pe_ref_doc]['billed_balance'] += i.billed_balance
-					data_map[i.pe_ref_doc]['cash_balance'] += i.cash_balance
-					data_map[i.pe_ref_doc]['total_balance'] += i.total_balance
+					data_map[i.pe_ref_doc]['debit'] = flt(data_map[i.pe_ref_doc].get('debit')) + flt(i.debit)
+					data_map[i.pe_ref_doc]['credit'] = flt(data_map[i.pe_ref_doc].get('credit')) + flt(i.credit)
+					data_map[i.pe_ref_doc]['balance'] = flt(data_map[i.pe_ref_doc].get('balance')) + flt(i.balance)
 			else:
 				new_data.append(i)
 			
@@ -259,11 +252,8 @@ def get_result(filters, account_details):
 				value.party = filters.get('primary_customer')
 				new_data.append(value)
 		
-		data = new_data
-
-			
-			
-
+		data = sorted(new_data, key = lambda i: i['posting_date'])
+		
 	return data
 
 def get_columns(filters):

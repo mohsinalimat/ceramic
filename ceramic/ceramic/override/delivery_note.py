@@ -2,6 +2,7 @@ import frappe
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
 from erpnext.stock.doctype.batch.batch import get_batch_qty
 from frappe.utils import flt
+from frappe import _
 
 def set_batch_nos(doc, warehouse_field, throw=False):
 	"""Automatically select `batch_no` for outgoing items in item table"""

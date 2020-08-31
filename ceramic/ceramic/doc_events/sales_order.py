@@ -467,6 +467,16 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 def schedule_daily():
 	calculate_order_item_priority()
 	calculate_order_rank()
+	set_transaction_status()
+
+def set_transaction_status():
+	frappe.db.sql(f"update `tabSales Order` set transaction_status = 'Old' WHERE status in ('Cancelled', 'Closed', 'Completed') AND transaction_status != 'Old' AND modified < '{datetime.datetime.today()-datetime.timedelta(7)}'")
+	frappe.db.sql(f"update `tabSales Order` set transaction_status = 'New' WHERE status in ('Cancelled', 'Closed', 'Completed') AND transaction_status != 'New' AND modified >= '{datetime.datetime.today()-datetime.timedelta(7)}'")
+
+	frappe.db.sql(f"update `tabDelivery Note` set transaction_status = 'Old' WHERE transaction_status != 'Old' AND modified < '{datetime.datetime.today()-datetime.timedelta(7)}'")
+	frappe.db.sql(f"update `tabDelivery Note` set transaction_status = 'New' WHERE transaction_status != 'New' AND modified >= '{datetime.datetime.today()-datetime.timedelta(7)}'")
+
+	frappe.db.commit()
 
 def calculate_order_item_priority():
 	data = frappe.db.sql(f"""
