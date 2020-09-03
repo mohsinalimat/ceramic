@@ -227,7 +227,7 @@ def update_sales_order_total_values(self):
 		total_deliverd_weight += flt(row.weight_per_unit * row.delivered_qty)
 		total_qty += row.qty
 		total_real_qty += row.real_qty
-		row.total_weight = flt(row.weight_per_unit * row.qty)
+		row.db_set('total_weight',flt(row.weight_per_unit * row.qty))
 		total_net_weight += row.total_weight
 
 	if qty:

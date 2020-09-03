@@ -120,6 +120,8 @@
 						<strong> Payment </strong>
 					{% } else if(data[i].voucher_type == "Journal Entry") { %}
 						<strong>  Cr/Db-Note </strong>
+					{% } else if(data[i].is_return == 1) { %}
+						<strong> RateChange </strong>
 					{% } else if(data[i].voucher_type == "Sales Invoice") { %}
 						<strong> Sales </strong>
 					{% } else if(data[i].voucher_type == "Purchase Invoice") { %}
