@@ -137,9 +137,16 @@ def create_payment_entry(self):
 			
 			if source.deductions:
 				for index, i in enumerate(source.deductions):
-					target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
-					target.deductions[index].cost_center.replace(source_company_abbr, target_company_abbr)
-			
+					# target.deductions[index].account.replace(source_company_abbr, target_company_abbr)
+					# target.deductions[index].cost_center.replace(source_company_abbr, target_company_abbr)
+					source_cost_center = target.deductions[index].cost_center
+					target_cost_center = source_cost_center.replace(source_company_abbr, target_company_abbr)
+					target.deductions[index].cost_center = target_cost_center
+
+					source_account = target.deductions[index].account
+					target_account = source_account.replace(source_company_abbr, target_company_abbr)
+					target.deductions[index].account = target_account
+
 			if self.amended_from:
 				target.amended_from = frappe.db.get_value("Payment Entry", self.amended_from, "pe_ref")			
 
