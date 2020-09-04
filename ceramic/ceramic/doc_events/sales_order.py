@@ -548,7 +548,7 @@ def update_order_rank_(date, order_priority, company):
 	base_factor = 4
 	order_item_priority = cint((days * (base_factor ** (cint(order_priority) - 1))) + cint(order_priority))
 
-	order_rank = frappe.db.sql(f"""
+	order_rank_tuple = frappe.db.sql(f"""
 	select 
 		order_rank, ABS(order_item_priority - {order_item_priority}) as difference
 	from
@@ -561,7 +561,11 @@ def update_order_rank_(date, order_priority, company):
 		difference > 0 
 	ORDER BY
 		difference LIMIT 1
-	""")[0][0] or 0
+	""")
+	if order_rank_tuple:
+		order_rank = order_rank_tuple[0][0] or 0
+	else:
+		order_rank = 0
 
 	return {'order_item_priority': order_item_priority, 'order_rank': order_rank}
 
