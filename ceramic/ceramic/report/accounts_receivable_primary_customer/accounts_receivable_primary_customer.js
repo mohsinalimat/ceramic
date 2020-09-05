@@ -184,11 +184,13 @@ function get_payment_remark_details(filters) {
 }
 
 function view_receivable_report(primary_customer, company) {
-	console.log(company)
+	
 	frappe.set_route("query-report", "Party Ledger Ceramic", {
 		"company": company,
-		"primary_customer": primary_customer
-	})
+		"primary_customer": primary_customer,
+	});
+	//console.log(url)
+	//var ur = window.open("#query-report/Party Ledger Ceramic","_blank")
 }
 
 function new_remark(primary_customer){

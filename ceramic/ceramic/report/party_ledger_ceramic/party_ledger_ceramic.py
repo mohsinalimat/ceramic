@@ -212,7 +212,7 @@ def get_result(filters, account_details):
 	data = frappe.db.sql(f"""
 		SELECT 
 			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
-			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
+			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher, gle.against_voucher_type,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return,
@@ -352,6 +352,25 @@ def get_columns(filters):
 			"fieldname": "party_type",
 			"fieldtype": "Link",
 			"options": "Party Type",
+			"width": 100
+		},
+		{
+			"label": _("GL Entry"),
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "GL Entry",
+			"width": 100
+		},
+		{
+			"label": _("Against Voucher Type"),
+			"fieldname": "against_voucher_type",
+			"width": 100
+		},
+		{
+			"label": _("Against Voucher"),
+			"fieldname": "against_voucher",
+			"fieldtype": "Dynamic Link",
+			"options": "against_voucher_type",
 			"width": 100
 		},
 	]
