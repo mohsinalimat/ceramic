@@ -471,6 +471,7 @@ def unpick_qty_comment(reference_name, sales_order, data):
 
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None, sales_order_differnce_qty = 0.0):
+
 	if pick_list_item and pick_list:
 		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
@@ -619,10 +620,20 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		
 		update_sales_order_total_values(frappe.get_doc("Sales Order", sales_order))
-	
+		
 	return "Pick List to this Sales Order Have Been Deleted."
 
+@frappe.whitelist()
+def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
+	unpick_item(sales_order, sales_order_item = sales_order_item)
 
+	picked_qty = flt(frappe.db.get_value("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1, 'item_code':item_code},'sum(qty - wastage_qty)'))
+	soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
+	soi_doc.db_set('picked_qty', picked_qty)
+	update_sales_order_total_values(frappe.get_doc("Sales Order", sales_order))
+
+	return "Pick List to this Sales Order Have Been Deleted."
+	
 @frappe.whitelist()
 def get_items(filters):
 	from six import string_types
