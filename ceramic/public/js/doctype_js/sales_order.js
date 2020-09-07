@@ -806,6 +806,21 @@ frappe.ui.form.on('Sales Order', {
 				}
 			})
 		}
+	},
+	correct_picked_qty: function (frm) {
+		frm.doc.items.forEach(function (d) {
+			frappe.call({
+				method: "ceramic.ceramic.doc_events.pick_list.correct_picked_qty",
+				args: {
+					'sales_order': frm.doc.name,
+					'sales_order_item': d.name,
+					'item_code':d.item_code
+				},
+				callback: function (r) {
+					//frappe.msgprint(r.message);
+				}
+			})
+		});
 	}
 });
 frappe.ui.form.on("Sales Order Item", {

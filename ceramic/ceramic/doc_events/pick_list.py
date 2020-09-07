@@ -626,7 +626,10 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 @frappe.whitelist()
 def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
 	unpick_item(sales_order, sales_order_item = sales_order_item)
+	correct_picked_qty(sales_order, sales_order_item, item_code)
 
+@frappe.whitelist()
+def correct_picked_qty(sales_order, sales_order_item, item_code):
 	picked_qty = flt(frappe.db.get_value("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1, 'item_code':item_code},'sum(qty - wastage_qty)'))
 	soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
 	soi_doc.db_set('picked_qty', picked_qty)
