@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from . import __version__ as app_version
 
 # import erpnext
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry
+from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry, populate_matching_invoices
 from ceramic.ceramic.override.delivery_note import validate as delivery_validate
 
 from erpnext.stock.stock_ledger import update_entries_after
@@ -14,6 +14,7 @@ from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLed
 from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
 BankStatementTransactionEntry.create_payment_entry = create_payment_entry
+BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
 
 
 from erpnext.selling.doctype.customer.customer import Customer

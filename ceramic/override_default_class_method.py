@@ -5,6 +5,42 @@ from erpnext.stock.stock_ledger import get_previous_sle, NegativeStockError
 from erpnext.stock.doctype.pick_list.pick_list import get_available_item_locations_for_batched_item
 from frappe.model.naming import parse_naming_series
 from frappe.permissions import get_doctypes_with_read
+from ceramic.ceramic.doc_events.payment_entry import get_outstanding_invoices
+from datetime import datetime
+
+
+def populate_matching_invoices(self):
+		self.payment_invoice_items = []
+		self.map_unknown_transactions()
+		added_invoices = []
+		for entry in self.new_transaction_items:
+			if (not entry.party or entry.party_type == "Account"): continue
+			account = self.receivable_account if entry.party_type == "Customer" else self.payable_account
+			invoices = get_outstanding_invoices(entry.party_type, entry.party, account, entry.primary_customer)
+			transaction_date = datetime.strptime(entry.transaction_date, "%Y-%m-%d").date()
+			outstanding_invoices = [invoice for invoice in invoices if invoice.posting_date <= transaction_date]
+			amount = abs(entry.amount)
+			matching_invoices = [invoice for invoice in outstanding_invoices if invoice.outstanding_amount == amount]
+			sorted(outstanding_invoices, key=lambda k: k['posting_date'])
+			for e in (matching_invoices + outstanding_invoices):
+				added = next((inv for inv in added_invoices if inv == e.get('voucher_no')), None)
+				if (added is not None): continue
+				ent = self.append('payment_invoice_items', {})
+				ent.transaction_date = entry.transaction_date
+				ent.payment_description = frappe.safe_decode(entry.description)
+				ent.party_type = entry.party_type
+				ent.party = entry.party
+				ent.invoice = e.get('voucher_no')
+				added_invoices += [ent.invoice]
+				ent.invoice_type = "Sales Invoice" if entry.party_type == "Customer" else "Purchase Invoice"
+				ent.invoice_date = e.get('posting_date')
+				ent.outstanding_amount = e.get('outstanding_amount')
+				ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
+				amount -= float(e.get('outstanding_amount'))
+				if (amount <= 5): break
+		self.match_invoice_to_payment()
+		self.populate_matching_vouchers()
+		self.map_transactions_on_journal_entry()
 
 def create_payment_entry(self, pe):
 	payment = frappe.new_doc("Payment Entry")

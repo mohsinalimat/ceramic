@@ -558,7 +558,7 @@ def get_outstanding_invoices(party_type, party, account, primary_customer=None, 
 							'currency': d.currency
 						})
 					)
-				elif primary_customer== primary_customer_value:
+				elif primary_customer == primary_customer_value:
 					outstanding_invoices.append(
 						frappe._dict({
 							'voucher_no': d.voucher_no,
