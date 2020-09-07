@@ -373,6 +373,13 @@ def get_columns(filters):
 			"options": "against_voucher_type",
 			"width": 100
 		},
+		{
+			"label": _("Primary Customer"),
+			"fieldname": "primary_customer",
+			"fieldtype": "Link",
+			"options": "Customer",
+			"width": 120
+		},
 	]
 
 	return columns
