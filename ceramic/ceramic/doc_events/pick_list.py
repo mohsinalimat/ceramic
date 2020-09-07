@@ -539,8 +539,8 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 	elif sales_order and sales_order_item:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'sales_order_item': sales_order_item, 'docstatus': 1}, ['name'])
-		
 		if sales_order_differnce_qty:
+			
 			for pl in data:
 				if not sales_order_differnce_qty:
 					break
@@ -557,6 +557,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				doc.db_set('qty', doc.qty - diff_qty)
 
 				picked_qty = frappe.db.get_value("Sales Order Item", doc.sales_order_item, 'picked_qty')
+				#soi_doc.db_set('picked_qty', flt(picked_qty) - flt(diff_qty))
 								
 				if not unpick_qty:
 					if not doc.delivered_qty and not doc.wastage_qty and not doc.qty:
@@ -571,7 +572,6 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				# update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 		else:
 			for pl in data:
-				
 				doc = frappe.get_doc("Pick List Item", pl.name)
 				soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
 				diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
@@ -595,7 +595,6 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 	else:
 		data = frappe.get_all("Pick List Item", {'sales_order': sales_order, 'docstatus': 1}, ['name'])
-		
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
 			soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)

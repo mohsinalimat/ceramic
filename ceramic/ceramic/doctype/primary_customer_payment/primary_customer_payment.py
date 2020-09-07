@@ -11,6 +11,7 @@ from erpnext.accounts.utils import get_balance_on,get_account_currency
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_outstanding_reference_documents
 from six import string_types
 from collections import defaultdict
+from ceramic.ceramic.doc_events.payment_entry import get_outstanding_reference_document
 #from erpnext.controllers.accounts_controller import get_supplier_block_status
 #from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
 #from erpnext.accounts.doctype.bank_account.bank_account import get_party_bank_account, get_bank_account_details
@@ -203,7 +204,8 @@ def get_primary_customer_reference_documents(args):
 	# iterate loop over every customer from the unique_customer_list and check that diff amount > 0
 	for customer in unique_customer_list:
 		args.update({'party': customer})
-		data = get_outstanding_reference_documents(args)
+		#args.update({'primary_customer':customer})
+		data = get_outstanding_reference_document(args)
 		for invoice in data:
 			diff_amt= frappe.db.get_value("Sales Invoice",invoice.voucher_no,"pay_amount_left")
 			if diff_amt > 0:
