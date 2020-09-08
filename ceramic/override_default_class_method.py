@@ -36,6 +36,7 @@ def populate_matching_invoices(self):
 				ent.invoice_date = e.get('posting_date')
 				ent.outstanding_amount = e.get('outstanding_amount')
 				ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
+				ent.primary_customer = e.primary_customer
 				amount -= float(e.get('outstanding_amount'))
 				if (amount <= 5): break
 		self.match_invoice_to_payment()
@@ -64,6 +65,7 @@ def create_payment_entry(self, pe):
 		reference.reference_doctype = inv_entry.invoice_type
 		reference.reference_name = inv_entry.invoice
 		reference.allocated_amount = inv_entry.allocated_amount
+		reference.primary_customer = inv_entry.primary_customer
 		print ("Adding invoice {0} {1}".format(reference.reference_name, reference.allocated_amount))
 	payment.setup_party_account_field()
 	payment.set_missing_values()
