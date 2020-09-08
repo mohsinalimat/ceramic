@@ -207,7 +207,7 @@ def get_primary_customer_reference_documents(args):
 		#args.update({'primary_customer':customer})
 		data = get_outstanding_reference_document(args)
 		for invoice in data:
-			diff_amt= frappe.db.get_value("Sales Invoice",invoice.voucher_no,"pay_amount_left")
+			diff_amt= flt(frappe.db.get_value("Sales Invoice",invoice.voucher_no,"pay_amount_left"))
 			if diff_amt > 0:
 				invoice.update({'party': customer})
 				invoice.update({'diff_amt':diff_amt})
