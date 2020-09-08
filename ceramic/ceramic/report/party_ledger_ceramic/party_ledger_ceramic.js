@@ -61,7 +61,10 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"label": __("Primary Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
-			"width": "80px"
+			"width": "80px",
+			get_query: () => {
+				return { query: "erpnext.controllers.queries.customer_query" }
+			}
 		}
 	]
 }
