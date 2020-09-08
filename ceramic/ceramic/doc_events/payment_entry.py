@@ -31,9 +31,11 @@ def on_update_after_submit(self, method):
 	if self.pe_ref:
 		frappe.db.set_value("Payment Entry", self.pe_ref, 'primary_customer', self.primary_customer)
 	update_payment_entries(self)
-	# self.make_gl_entries(cancel=1)
-	# self.make_gl_entries(cancel = 0)
 
+	if self.authority == "Unauthorized":
+		self.make_gl_entries(cancel=1)
+		self.make_gl_entries(cancel=0)	
+	
 def update_payment_entries(self):
 	authority = frappe.db.get_value("Company", self.company, 'authority')
 	
@@ -62,6 +64,7 @@ def update_payment_entries(self):
 	if self.pe_ref and not self.get('dont_replicate'):
 		payment_doc = frappe.get_doc("Payment Entry", self.pe_ref)
 		payment_doc.dont_replicate = 1
+		payment_doc.db_set('primary_customer',self.primary_customer)
 		payment_doc_reference_list = [x.reference_name for x in payment_doc.references]
 
 		for idx, row in enumerate(self.references):
@@ -75,6 +78,8 @@ def update_payment_entries(self):
 					row.against_voucher_type = row.reference_doctype
 					row.grand_total = row.total_amount
 					update_reference_in_payment_entry(row, payment_doc)
+	
+
 
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
@@ -424,7 +429,6 @@ def get_orders_to_be_billed(posting_date, party_type, party,
 				"party_type": scrub(party_type),
 				"condition": condition
 			}), (party, company), as_dict=True)
-
 		else:
 			orders = frappe.db.sql("""
 				select

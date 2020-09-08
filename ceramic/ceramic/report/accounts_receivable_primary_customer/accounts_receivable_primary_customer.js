@@ -190,7 +190,7 @@ function view_receivable_report(primary_customer, company) {
 		"primary_customer": primary_customer,
 	});
 	//console.log(url)
-	//var ur = window.open("#query-report/Party Ledger Ceramic","_blank")
+	//window.open("#query-report/Party Ledger Ceramic","_blank");
 }
 
 function new_remark(primary_customer){

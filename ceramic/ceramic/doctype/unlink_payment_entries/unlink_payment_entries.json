@@ -1,0 +1,135 @@
+{
+ "allow_copy": 1,
+ "creation": "2020-09-08 11:26:41.901640",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "party_type",
+  "party",
+  "primary_customer",
+  "col_break1",
+  "from_date",
+  "to_date",
+  "get_entries",
+  "unlink_entries",
+  "sec_break1",
+  "payments",
+  "reconcile",
+  "sec_break2",
+  "invoices"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "label": "Party Type",
+   "options": "Customer\nSupplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "From Invoice Date"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "To Invoice Date"
+  },
+  {
+   "fieldname": "sec_break1",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Unreconciled Payment Details"
+  },
+  {
+   "fieldname": "payments",
+   "fieldtype": "Table",
+   "label": "Payments",
+   "options": "Unlink Payment Entries Payment"
+  },
+  {
+   "fieldname": "reconcile",
+   "fieldtype": "Button",
+   "label": "Reconcile"
+  },
+  {
+   "fieldname": "sec_break2",
+   "fieldtype": "Section Break",
+   "label": "Invoice/Journal Entry Details"
+  },
+  {
+   "fieldname": "invoices",
+   "fieldtype": "Table",
+   "label": "Invoices",
+   "options": "Unlink Payment Entries Invoice"
+  },
+  {
+   "depends_on": "eval: doc.party_type == \"Customer\"",
+   "fetch_from": "customer.primary_customer",
+   "fieldname": "primary_customer",
+   "fieldtype": "Link",
+   "label": "Primary Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "get_entries",
+   "fieldtype": "Button",
+   "label": "Get Entries"
+  },
+  {
+   "fieldname": "unlink_entries",
+   "fieldtype": "Button",
+   "label": "Unlink Entries"
+  }
+ ],
+ "hide_toolbar": 1,
+ "icon": "icon-resize-horizontal",
+ "issingle": 1,
+ "modified": "2020-09-08 16:48:57.474722",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Unlink Payment Entries",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
