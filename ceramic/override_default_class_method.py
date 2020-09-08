@@ -36,7 +36,7 @@ def populate_matching_invoices(self):
 				ent.invoice_date = e.get('posting_date')
 				ent.outstanding_amount = e.get('outstanding_amount')
 				ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
-				ent.primary_customer = e.primary_customer
+				ent.primary_customer = e.get('primary_customer')
 				amount -= float(e.get('outstanding_amount'))
 				if (amount <= 5): break
 		self.match_invoice_to_payment()
