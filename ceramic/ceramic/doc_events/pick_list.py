@@ -623,10 +623,10 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 	return "Pick List to this Sales Order Have Been Deleted."
 
-# @frappe.whitelist()
-# def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
-# 	unpick_item(sales_order, sales_order_item = sales_order_item)
-# 	correct_picked_qty(sales_order, sales_order_item, item_code)
+@frappe.whitelist()
+def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
+	unpick_item(sales_order, sales_order_item = sales_order_item)
+	correct_picked_qty(sales_order)
 
 @frappe.whitelist()
 def correct_picked_qty(sales_order):
