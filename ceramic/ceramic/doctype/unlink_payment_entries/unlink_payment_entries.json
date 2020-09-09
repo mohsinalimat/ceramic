@@ -65,6 +65,7 @@
    "options": "Unlink Payment Entries Invoice"
   },
   {
+   "depends_on": "eval: doc.party_type == \"Customer\"",
    "fieldname": "primary_customer",
    "fieldtype": "Link",
    "label": "primary_customer",
@@ -84,7 +85,7 @@
  "hide_toolbar": 1,
  "icon": "icon-resize-horizontal",
  "issingle": 1,
- "modified": "2020-09-08 17:41:40.844622",
+ "modified": "2020-09-08 17:37:24.875742",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Unlink Payment Entries",
