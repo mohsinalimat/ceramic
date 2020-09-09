@@ -812,9 +812,7 @@ frappe.ui.form.on('Sales Order', {
 			frappe.call({
 				method: "ceramic.ceramic.doc_events.pick_list.correct_picked_qty",
 				args: {
-					'sales_order': frm.doc.name,
-					'sales_order_item': d.name,
-					'item_code':d.item_code
+					'sales_order': frm.doc.name
 				},
 				callback: function (r) {
 					//frappe.msgprint(r.message);
@@ -850,27 +848,27 @@ frappe.ui.form.on("Sales Order Item", {
 	unpick_item: function (frm, cdt, cdn) {
 		let d = locals[cdt][cdn]
 			
-		frappe.call({
-			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
-			args: {
-				'sales_order': frm.doc.name,
-				'sales_order_item': d.name,
-			},
-			callback: function (r) {
-				frappe.msgprint(r.message);
-			}
-		})
-		
 		// frappe.call({
-		// 	method: "ceramic.ceramic.doc_events.pick_list.unpick_picked_qty_sales_order",
+		// 	method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 		// 	args: {
 		// 		'sales_order': frm.doc.name,
 		// 		'sales_order_item': d.name,
-		// 		'item_code':d.item_code
 		// 	},
 		// 	callback: function (r) {
 		// 		frappe.msgprint(r.message);
 		// 	}
 		// })
+		
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_picked_qty_sales_order",
+			args: {
+				'sales_order': frm.doc.name,
+				'sales_order_item': d.name,
+				'item_code':d.item_code
+			},
+			callback: function (r) {
+				frappe.msgprint(r.message);
+			}
+		})
 	}
 });
