@@ -212,7 +212,7 @@ def get_result(filters, account_details):
 	data = frappe.db.sql(f"""
 		SELECT 
 			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
-			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher, gle.against_voucher_type,
+			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher as against_voucher, gle.against_voucher_type as against_voucher_type,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return,
@@ -253,8 +253,13 @@ def get_result(filters, account_details):
 				new_data.append(value)
 		
 		data = sorted(new_data, key = lambda i: i['posting_date'])
-		
-	return data
+	
+	final_data = []
+	for gle in data:
+		if gle.against_voucher	and gle.against_voucher_type in ["Sales Invoice","Payment Entry","Journal Entry"]:
+			gle['against_primary_customer'] = frappe.db.get_value(gle.against_voucher_type,gle.against_voucher,"primary_customer")
+		final_data.append(gle)
+	return final_data
 
 def get_columns(filters):
 	currency = get_company_currency(filters.company)
@@ -372,6 +377,13 @@ def get_columns(filters):
 			"fieldtype": "Dynamic Link",
 			"options": "against_voucher_type",
 			"width": 100
+		},
+		{
+			"label": _("Against Primary Customer"),
+			"fieldname": "against_primary_customer",
+			"fieldtype": "Link",
+			"options": "Customer",
+			"width": 120
 		},
 		{
 			"label": _("Primary Customer"),

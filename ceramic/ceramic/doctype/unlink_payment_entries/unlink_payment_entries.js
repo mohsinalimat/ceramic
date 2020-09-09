@@ -14,6 +14,8 @@ frappe.ui.form.on('Unlink Payment Entries', {
 		frm.refresh_fields()
 	},
 	get_entries: function(frm){
+		frm.doc.invoices.length = 0
+		frm.refresh_fields()
 		if (frm.doc.invoices.length == 0 || frm.doc.invoices == undefined)
 		{
 			frappe.call({
