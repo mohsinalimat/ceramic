@@ -623,10 +623,10 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		
 	return "Pick List to this Sales Order Have Been Deleted."
 
-@frappe.whitelist()
-def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
-	unpick_item(sales_order, sales_order_item = sales_order_item)
-	correct_picked_qty(sales_order, sales_order_item, item_code)
+# @frappe.whitelist()
+# def unpick_picked_qty_sales_order(sales_order, sales_order_item, item_code):
+# 	unpick_item(sales_order, sales_order_item = sales_order_item)
+# 	correct_picked_qty(sales_order, sales_order_item, item_code)
 
 @frappe.whitelist()
 def correct_picked_qty(sales_order, sales_order_item, item_code):
@@ -635,7 +635,7 @@ def correct_picked_qty(sales_order, sales_order_item, item_code):
 	soi_doc.db_set('picked_qty', picked_qty)
 	update_sales_order_total_values(frappe.get_doc("Sales Order", sales_order))
 
-	return "Pick List to this Sales Order Have Been Deleted."
+	return "Pick List to this Sales Order Has been Corrected."
 	
 @frappe.whitelist()
 def get_items(filters):
