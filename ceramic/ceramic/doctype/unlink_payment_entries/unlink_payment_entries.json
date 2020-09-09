@@ -86,7 +86,6 @@
   },
   {
    "depends_on": "eval: doc.party_type == \"Customer\"",
-   "fetch_from": "customer.primary_customer",
    "fieldname": "primary_customer",
    "fieldtype": "Link",
    "label": "Primary Customer",
@@ -106,7 +105,7 @@
  "hide_toolbar": 1,
  "icon": "icon-resize-horizontal",
  "issingle": 1,
- "modified": "2020-09-08 16:48:57.474722",
+ "modified": "2020-09-08 17:37:24.875742",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Unlink Payment Entries",
