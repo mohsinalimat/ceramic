@@ -1,6 +1,6 @@
 {
  "allow_copy": 1,
- "creation": "2020-09-08 11:26:41.901640",
+ "creation": "2020-09-08 17:39:17.349572",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -13,9 +13,6 @@
   "to_date",
   "get_entries",
   "unlink_entries",
-  "sec_break1",
-  "payments",
-  "reconcile",
   "sec_break2",
   "invoices"
  ],
@@ -57,23 +54,6 @@
    "label": "To Invoice Date"
   },
   {
-   "fieldname": "sec_break1",
-   "fieldtype": "Section Break",
-   "hidden": 1,
-   "label": "Unreconciled Payment Details"
-  },
-  {
-   "fieldname": "payments",
-   "fieldtype": "Table",
-   "label": "Payments",
-   "options": "Unlink Payment Entries Payment"
-  },
-  {
-   "fieldname": "reconcile",
-   "fieldtype": "Button",
-   "label": "Reconcile"
-  },
-  {
    "fieldname": "sec_break2",
    "fieldtype": "Section Break",
    "label": "Invoice/Journal Entry Details"
@@ -88,7 +68,7 @@
    "depends_on": "eval: doc.party_type == \"Customer\"",
    "fieldname": "primary_customer",
    "fieldtype": "Link",
-   "label": "Primary Customer",
+   "label": "primary_customer",
    "options": "Customer"
   },
   {
