@@ -204,13 +204,12 @@ def get_result(filters, account_details):
 	conditions += f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
 	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
 	
-	having_cond = f" HAVING primary_customer = '{filters.primary_customer}'" if filters.get('primary_customer') else ''
 	primary_customer_pe_fields = f", pe.reference_doctype as pe_ref_doctype, pe.reference_docname as pe_ref_doc" if filters.get('primary_customer') else ''
 	
 	data = frappe.db.sql(f"""
 		SELECT 
-			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
-			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher as against_voucher, gle.against_voucher_type as against_voucher_type,
+			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, (gle.debit) as debit, (gle.credit) as credit,
+			gle.voucher_type, gle.voucher_no, (gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher as against_voucher, gle.against_voucher_type as against_voucher_type,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return,
@@ -223,8 +222,6 @@ def get_result(filters, account_details):
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
 			{conditions}
-		GROUP BY
-			gle.voucher_no, gle.party {having_cond}
 		ORDER BY
 			gle.posting_date, gle.party
 	""", as_dict = True)
