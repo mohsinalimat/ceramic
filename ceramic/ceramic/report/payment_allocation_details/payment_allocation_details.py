@@ -1,6 +1,5 @@
-# Copyright (c) 2013, FinByz Tech Pvt Ltd and contributors
+# Copyright (c) 2013, Finbyz and contributors
 # For license information, please see license.txt
-
 
 from __future__ import unicode_literals
 
@@ -16,7 +15,6 @@ from erpnext.accounts.report.utils import get_currency, convert_to_presentation_
 from erpnext.accounts.utils import get_account_currency
 from erpnext.accounts.report.financial_statements import get_cost_centers_with_children
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
-
 
 def execute(filters=None):
 	if not filters:
@@ -212,7 +210,7 @@ def get_result(filters, account_details):
 	data = frappe.db.sql(f"""
 		SELECT 
 			gle.name, gle.posting_date, gle.account, gle.party_type, gle.party, sum(gle.debit) as debit, sum(gle.credit) as credit,
-			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
+			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,gle.against_voucher as against_voucher, gle.against_voucher_type as against_voucher_type,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return,
@@ -231,29 +229,35 @@ def get_result(filters, account_details):
 			gle.posting_date, gle.party
 	""", as_dict = True)
 
-	if filters.get('primary_customer'):
-		data_map = {}
-		new_data = []
-		for i in data:
-			if i.voucher_type == "Payment Entry" and i.pe_ref_doctype == "Primary Customer Payment":
-				if not data_map.get(i.pe_ref_doc):
-					data_map[i.pe_ref_doc] = i
-				else:
-					data_map[i.pe_ref_doc]['debit'] = flt(data_map[i.pe_ref_doc].get('debit')) + flt(i.debit)
-					data_map[i.pe_ref_doc]['credit'] = flt(data_map[i.pe_ref_doc].get('credit')) + flt(i.credit)
-					data_map[i.pe_ref_doc]['balance'] = flt(data_map[i.pe_ref_doc].get('balance')) + flt(i.balance)
-			else:
-				new_data.append(i)
+	# if filters.get('primary_customer'):
+	# 	data_map = {}
+	# 	new_data = []
+	# 	for i in data:
+	# 		if i.voucher_type == "Payment Entry" and i.pe_ref_doctype == "Primary Customer Payment":
+	# 			if not data_map.get(i.pe_ref_doc):
+	# 				data_map[i.pe_ref_doc] = i
+	# 			else:
+	# 				data_map[i.pe_ref_doc]['debit'] = flt(data_map[i.pe_ref_doc].get('debit')) + flt(i.debit)
+	# 				data_map[i.pe_ref_doc]['credit'] = flt(data_map[i.pe_ref_doc].get('credit')) + flt(i.credit)
+	# 				data_map[i.pe_ref_doc]['balance'] = flt(data_map[i.pe_ref_doc].get('balance')) + flt(i.balance)
+	# 		else:
+	# 			new_data.append(i)
 			
-		if data_map:
-			for key, value in data_map.items():
-				value.voucher_type = "Primary Customer Payment"
-				value.voucher_no = key
-				value.party = filters.get('primary_customer')
-				new_data.append(value)
+	# 	if data_map:
+	# 		for key, value in data_map.items():
+	# 			value.voucher_type = "Primary Customer Payment"
+	# 			value.voucher_no = key
+	# 			value.party = filters.get('primary_customer')
+	# 			new_data.append(value)
 		
-		data = sorted(new_data, key = lambda i: i['posting_date'])
-	return data
+	# 	data = sorted(new_data, key = lambda i: i['posting_date'])
+	
+	final_data = []
+	for gle in data:
+		if gle.against_voucher	and gle.against_voucher_type in ["Sales Invoice","Payment Entry","Journal Entry"]:
+			gle['against_primary_customer'] = frappe.db.get_value(gle.against_voucher_type,gle.against_voucher,"primary_customer")
+		final_data.append(gle)
+	return final_data
 
 def get_columns(filters):
 	currency = get_company_currency(filters.company)
@@ -359,6 +363,25 @@ def get_columns(filters):
 			"fieldtype": "Link",
 			"options": "GL Entry",
 			"width": 100
+		},
+		{
+			"label": _("Against Voucher Type"),
+			"fieldname": "against_voucher_type",
+			"width": 100
+		},
+		{
+			"label": _("Against Voucher"),
+			"fieldname": "against_voucher",
+			"fieldtype": "Dynamic Link",
+			"options": "against_voucher_type",
+			"width": 100
+		},
+		{
+			"label": _("Against Primary Customer"),
+			"fieldname": "against_primary_customer",
+			"fieldtype": "Link",
+			"options": "Customer",
+			"width": 120
 		},
 		{
 			"label": _("Primary Customer"),
