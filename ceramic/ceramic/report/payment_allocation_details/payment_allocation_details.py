@@ -252,7 +252,9 @@ def get_result(filters, account_details):
 	final_data = []
 	for gle in data:
 		if gle.against_voucher	and gle.against_voucher_type in ["Sales Invoice","Payment Entry","Journal Entry"]:
-			gle['against_primary_customer'] = frappe.db.get_value(gle.against_voucher_type,gle.against_voucher,"primary_customer")
+			gle['against_primary_customer']  = frappe.db.get_value(gle.against_voucher_type,gle.against_voucher,"primary_customer")
+			if gle['against_primary_customer'] != gle.primary_customer:
+				gle['error'] = "Error"
 		final_data.append(gle)
 	return final_data
 
@@ -386,6 +388,12 @@ def get_columns(filters):
 			"fieldtype": "Link",
 			"options": "Customer",
 			"width": 120
+		},
+		{
+			"label": _("Error"),
+			"fieldname": "error",
+			"fieldtype": "Data",
+			"width": 100
 		},
 	]
 
