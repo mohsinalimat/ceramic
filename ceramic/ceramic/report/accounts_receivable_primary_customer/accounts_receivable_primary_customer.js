@@ -183,12 +183,51 @@ function get_payment_remark_details(filters) {
 	})
 }
 
+// frappe.set_finbyz_route = function() {
+// 	return new Promise(resolve => {
+// 		var params = arguments;
+// 		if(params.length===1 && $.isArray(params[0])) {
+// 			params = params[0];
+// 		}
+		
+// 		var route = $.map(params, function(a) {
+// 			if($.isPlainObject(a)) {
+// 				frappe.route_options = a;
+// 				return null;
+// 			} else {
+// 				a = String(a);
+// 				if (a && a.match(/[%'"]/)) {
+// 					// if special chars, then encode
+// 					a = encodeURIComponent(a);
+// 				}
+// 				return a;
+// 			}
+// 		}).join('/');
+// 		//window.location.hash = route
+// 		//console.log(window.location.hash)
+// 		//window.open(window.location.href.split("#")[0] + "#"+ route)
+// 		window.open(window.location.href.split("#")[0] + "#"+ route + "/?" + "company="+frappe.route_options["company"] + "&" + "primary_customer=" + frappe.route_options["primary_customer"],"_blank")
+// 		// Set favicon (app.js)
+// 		frappe.provide('frappe.app');
+// 		frappe.app.set_favicon && frappe.app.set_favicon();
+// 		setTimeout(() => {
+// 			frappe.after_ajax && frappe.after_ajax(() => {
+// 				resolve();
+// 			});
+// 		}, 100);
+// 	});
+// }
+
 function view_receivable_report(primary_customer, company) {
 	
-	frappe.set_route("query-report", "Party Ledger Ceramic", {
-		"company": company,
-		"primary_customer": primary_customer,
-	});
+	// frappe.set_finbyz_route("query-report", "Party Ledger Ceramic", {
+	// 	"company": company,
+	// 	"primary_customer": primary_customer,
+	// });
+	// frappe.set_finbyz_route("query-report", "Party Ledger Ceramic",{
+	// 	"company": company, "primary_customer": primary_customer
+	// });
+	window.open(window.location.href.split("#")[0] + "#query-report/Party Ledger Ceramic" + "/?" + "company="+company + "&" + "primary_customer=" + primary_customer,"_blank")
 	//console.log(url)
 	//window.open("#query-report/Party Ledger Ceramic","_blank");
 }

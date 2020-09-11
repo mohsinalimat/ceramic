@@ -66,9 +66,9 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				'range4': self.filters.get('range4'),
 			})
 
-			row.view_receivable = f"""<a style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
+			row.view_receivable = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
 			target="_blank" primary-customer='{row.primary_customer}' company='{filter_company}' 
-			onClick=view_receivable_report(this.getAttribute('primary-customer'),this.getAttribute('company'))>View Receivable</a>"""
+			onClick=view_receivable_report(this.getAttribute('primary-customer'),this.getAttribute('company'))>View Receivable</button>"""
 
 			row.add_remark = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;'
 			type='button' primary-customer='{row.primary_customer}'
