@@ -26,6 +26,7 @@ def validate(self,method):
 	
 	if not self.primary_customer and self.party_type == "Customer":
 		self.primary_customer = self.party
+	set_status(self)
 
 def on_update_after_submit(self, method):
 	if self.pe_ref:
@@ -84,13 +85,14 @@ def update_payment_entries(self):
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
 	create_payment_entry(self)
+	set_status(self)
 
 
 def on_cancel(self, method):
 	"""On Cancel Custom Function for Payment Entry"""
 	cancel_payment_entry(self)
 	validate_primary_customer_payment_entry(self)
-
+	set_status(self)
 
 def on_trash(self, method):
 	"""On Delete Custom Function for Payment Entry"""
@@ -597,3 +599,14 @@ def get_outstanding_invoices(party_type, party, account, primary_customer=None, 
 					)
 	outstanding_invoices = sorted(outstanding_invoices, key=lambda k: k['due_date'] or getdate(nowdate()))
 	return outstanding_invoices
+
+def set_status(self):
+		if self.docstatus == 2:
+			self.status = 'Cancelled'
+			self.db_set("status","Cancelled")
+		elif self.docstatus == 1:
+			self.status = 'Submitted'
+			self.db_set("status","Submitted")
+		else:
+			self.status = 'Draft'
+			self.db_set("status","Draft")
