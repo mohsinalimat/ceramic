@@ -131,6 +131,9 @@
 					{% if((data[i].billed_credit || data[i].billed_debit) && (data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Journal Entry" || data[i].voucher_type == "Primary Customer Payment") || (data[i].voucher_type == "Sales Invoice" || data[i].voucher_type == "Purchase Invoice")){ %}
 						<br> [{{ data[i].party }}]
 					{% } %} 
+					{% if((data[i].voucher_type == "Journal Entry") && (data[i].remark)) { %}
+						<br> [{{ data[i].remark }}]
+					{% } %} 					
 				</p>
 			</td>
 		  

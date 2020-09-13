@@ -215,7 +215,7 @@ def get_result(filters, account_details):
 			gle.voucher_type, gle.voucher_no, SUM(gle.debit - gle.credit) AS balance, gle.cost_center, gle.company,
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
-			IFNULL(si.is_return, 0) as is_return,
+			IFNULL(si.is_return, 0) as is_return, jv.user_remark as remark,
 			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc{primary_customer_pe_fields}
 		FROM
 			`tabGL Entry` as gle
@@ -367,6 +367,12 @@ def get_columns(filters):
 			"options": "Customer",
 			"width": 120
 		},
+		{
+			"label": _("Remark"),
+			"fieldname": "remark",
+			"fieldtype": "data",
+			"width": 120
+		},		
 	]
 
 	return columns
