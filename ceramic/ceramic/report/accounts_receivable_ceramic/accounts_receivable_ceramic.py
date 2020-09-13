@@ -214,14 +214,16 @@ class ReceivablePayableReport(object):
 		if gle.voucher_type in ('Sales Invoice', 'Purchase Invoice'):
 			flag = False
 			if self.filters.get("sales_person"):
-				if gle.voucher_no in self.sales_person_records.get("Sales Invoice", []) \
-					or gle.party in self.sales_person_records.get("Customer", []):
+				# if gle.voucher_no in self.sales_person_records.get("Sales Invoice", []) \
+				# 	or gle.party in self.sales_person_records.get("Customer", []):
+				if gle.primary_customer in self.sales_person_records.get("Customer", []):
 						self.invoices.add(gle.voucher_no)
 						flag = True
 			
 			if self.filters.get("regional_sales_manager"):
-				if gle.voucher_no in self.regional_sales_manager_records.get("Sales Invoice", []) \
-					or gle.party in self.regional_sales_manager_records.get("Customer", []):
+				# if gle.voucher_no in self.regional_sales_manager_records.get("Sales Invoice", []) \
+				# 	or gle.party in self.regional_sales_manager_records.get("Customer", []):
+				if gle.primary_customer in self.regional_sales_manager_records.get("Customer", []):
 						self.invoices.add(gle.voucher_no)
 						flag = True
 
@@ -281,15 +283,17 @@ class ReceivablePayableReport(object):
 	def get_voucher_balance(self, gle):
 		if self.filters.get("sales_person"):
 			against_voucher = gle.against_voucher or gle.voucher_no
-			if not (gle.party in self.sales_person_records.get("Customer", []) or \
-				against_voucher in self.sales_person_records.get("Sales Invoice", [])):
-					return
+			# if not (gle.party in self.sales_person_records.get("Customer", []) or \
+			# 	against_voucher in self.sales_person_records.get("Sales Invoice", [])):
+			if not (gle.primary_customer in self.sales_person_records.get("Customer", [])):
+				return
 		
 		if self.filters.get("regional_sales_manager"):
 			against_voucher = gle.against_voucher or gle.voucher_no
-			if not (gle.party in self.regional_sales_manager_records.get("Customer", []) or \
-				against_voucher in self.regional_sales_manager_records.get("Sales Invoice", [])):
-					return
+			# if not (gle.party in self.regional_sales_manager_records.get("Customer", []) or \
+			# 	against_voucher in self.regional_sales_manager_records.get("Sales Invoice", [])):
+			if not (gle.primary_customer in self.regional_sales_manager_records.get("Customer", [])):
+				return
 
 		voucher_balance = None
 		if gle.against_voucher:
@@ -706,7 +710,7 @@ class ReceivablePayableReport(object):
 			records = frappe.db.sql("""
 				select distinct parent, parenttype
 				from `tabSales Team` steam
-				where parenttype in ('Customer', 'Sales Invoice')
+				where parenttype = 'Customer'
 					and exists(select name from `tabSales Person` where lft >= %s and rgt <= %s and name = steam.sales_person)
 			""", (lft, rgt), as_dict=1)
 
