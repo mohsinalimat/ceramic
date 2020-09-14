@@ -64,7 +64,7 @@ frappe.query_reports["Payment Allocation Details"] = {
 			"options": "Customer",
 			"width": "80px",
 			get_query: () => {
-				return { query: "erpnext.controllers.queries.customer_query" }
+				return { query: "ceramic.controllers.queries.new_customer_query" }
 			}
 		}
 	]
