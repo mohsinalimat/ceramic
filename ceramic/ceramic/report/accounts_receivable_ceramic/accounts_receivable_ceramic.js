@@ -115,11 +115,9 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 			"fieldtype": "Link",
 			"options": "Customer",
 			get_query: () => {
-				var company = frappe.query_report.get_filter_value('company');
+				
 				return {
-					filters: {
-						'is_primary_customer': 1
-					}
+					query: "ceramic.controllers.queries.new_customer_query",
 				}
 			}
 

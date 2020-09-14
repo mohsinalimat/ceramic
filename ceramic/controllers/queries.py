@@ -1,5 +1,6 @@
 import frappe
-from frappe.desk.reportview import get_match_cond
+from erpnext.controllers.queries import get_fields
+from frappe.desk.reportview import get_match_cond, get_filters_cond
 
 def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
@@ -51,3 +52,39 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 			{match_conditions}
 			order by expiry_date, name desc
 			limit %(start)s, %(page_len)s""".format(cond, match_conditions=get_match_cond(doctype)), args)
+
+@frappe.whitelist()
+def new_customer_query(doctype, txt, searchfield, start, page_len, filters):
+	conditions = []
+	cust_master_name = frappe.defaults.get_user_default("cust_master_name")
+
+	if cust_master_name == "Customer Name":
+		fields = ["name", "customer_group", "territory"]
+	else:
+		fields = ["name", "customer_name", "customer_group", "territory"]
+
+	fields = get_fields("Customer", fields)
+
+	searchfields = frappe.get_meta("Customer").get_search_fields()
+	searchfields = " or ".join([field + " like %(txt)s" for field in searchfields])
+
+	return frappe.db.sql("""select {fields} from `tabCustomer`
+		where docstatus < 2
+			and ({scond}) and disabled=0 and (is_primary_customer=1 or primary_customer IS NULL)
+			{fcond} {mcond}
+		order by
+			if(locate(%(_txt)s, name), locate(%(_txt)s, name), 99999),
+			if(locate(%(_txt)s, customer_name), locate(%(_txt)s, customer_name), 99999),
+			idx desc,
+			name, customer_name
+		limit %(start)s, %(page_len)s""".format(**{
+			"fields": ", ".join(fields),
+			"scond": searchfields,
+			"mcond": get_match_cond(doctype),
+			"fcond": get_filters_cond(doctype, filters, conditions).replace('%', '%%'),
+		}), {
+			'txt': "%%%s%%" % txt,
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len
+		})
