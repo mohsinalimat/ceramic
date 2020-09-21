@@ -32,8 +32,10 @@ def validate(self, method):
 
 
 def override_load_dashboard_info(self):
-	info = get_dashboard_info(self.doctype, self.name, self.loyalty_program)
-	self.set_onload('dashboard_info', info)
+	user = frappe.session.user
+	if ("Sales Manager" in frappe.get_roles(user)) or ("Accounts Manager" in frappe.get_roles(user)) or ("Local Admin" in frappe.get_roles(user)):
+		info = get_dashboard_info(self.doctype, self.name, self.loyalty_program)
+		self.set_onload('dashboard_info', info)
 
 def get_dashboard_info(party_type, party, loyalty_program=None):
 	current_fiscal_year = get_fiscal_year(nowdate(), as_dict=True)
@@ -65,7 +67,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 					fields=["company", "sum(grand_total) as grand_total", "sum(base_grand_total) as base_grand_total"]
 				
 			)
-				    
+					
 			# company_wise_grand_total = frappe.get_all(doctype,
 			# 	filters=[
 			# 	    ['docstatus','=', 1],

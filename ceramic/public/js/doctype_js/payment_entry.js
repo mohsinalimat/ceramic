@@ -27,6 +27,13 @@ frappe.ui.form.on('Payment Entry', {
 			frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 			frm.trigger('company');
 		}
+		// user roles
+		if(frappe.user_roles.includes('Local Admin')){
+			cur_frm.set_df_property("primary_customer", "allow_on_submit", 1);
+		}
+		else{
+			cur_frm.set_df_property("primary_customer", "allow_on_submit", 0);
+		}
 	},
 	party: function (frm) {
 		if (frm.doc.party_type == "Customer" && frm.doc.customer){

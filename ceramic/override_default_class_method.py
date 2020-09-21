@@ -16,9 +16,11 @@ def populate_matching_invoices(self):
 		for entry in self.new_transaction_items:
 			if (not entry.party or entry.party_type == "Account"): continue
 			account = self.receivable_account if entry.party_type == "Customer" else self.payable_account
+			#finbyz Changes Start
 			invoices = get_outstanding_invoices(entry.party_type, entry.party, account, entry.primary_customer)
+			#finbyz Changes End
 			transaction_date = datetime.strptime(entry.transaction_date, "%Y-%m-%d").date()
-			outstanding_invoices = [invoice for invoice in invoices if invoice.posting_date <= transaction_date]
+			outstanding_invoices = [invoice for invoice in invoices if invoice.posting_date <= transaction_date and invoice.voucher_type != "Journal Entry"]
 			amount = abs(entry.amount)
 			matching_invoices = [invoice for invoice in outstanding_invoices if invoice.outstanding_amount == amount]
 			sorted(outstanding_invoices, key=lambda k: k['posting_date'])
@@ -30,13 +32,15 @@ def populate_matching_invoices(self):
 				ent.payment_description = frappe.safe_decode(entry.description)
 				ent.party_type = entry.party_type
 				ent.party = entry.party
+				#finbyz Changes Start
+				ent.primary_customer = e.get('primary_customer')
+				#finbyz Changes End
 				ent.invoice = e.get('voucher_no')
 				added_invoices += [ent.invoice]
 				ent.invoice_type = "Sales Invoice" if entry.party_type == "Customer" else "Purchase Invoice"
 				ent.invoice_date = e.get('posting_date')
 				ent.outstanding_amount = e.get('outstanding_amount')
 				ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
-				ent.primary_customer = e.get('primary_customer')
 				amount -= float(e.get('outstanding_amount'))
 				if (amount <= 5): break
 		self.match_invoice_to_payment()

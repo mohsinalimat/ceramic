@@ -175,6 +175,14 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.trigger('naming_series');
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+
+		// user roles
+		if(frappe.user_roles.includes('Local Admin')){
+			cur_frm.set_df_property("primary_customer", "allow_on_submit", 1);
+		}
+		else{
+			cur_frm.set_df_property("primary_customer", "allow_on_submit", 0);
+		}
 	},
 	customer: function (frm) {
 		if (frm.doc.customer){

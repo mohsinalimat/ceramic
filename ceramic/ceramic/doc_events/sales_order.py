@@ -273,6 +273,8 @@ def change_customer(customer, doc):
 
 @frappe.whitelist()
 def get_tax_template(tax_category, company, tax_paid=0):
+	if not tax_category:
+		frappe.throw("Please Select Tax Category")
 	if frappe.db.exists("Sales Taxes and Charges Template",{'tax_paid':tax_paid,'tax_category':tax_category,'company':company}):
 		return frappe.db.get_value("Sales Taxes and Charges Template",{'tax_paid':tax_paid,'tax_category':tax_category,'company':company},'name')
 
