@@ -54,6 +54,18 @@ frappe.ui.form.on('Customer', {
                 return indicator;
             });
         }
+        frm.add_custom_button(__('Party Ledger Ceramic'), function() {
+            frappe.set_route('query-report', 'Party Ledger Ceramic',
+                {party_type:'Customer', primary_customer:frm.doc.name});
+        });
+        frm.add_custom_button(__('Accounts Receivable Ceramic'), function() {
+            frappe.set_route('query-report', 'Accounts Receivable Ceramic',
+                {party_type:'Customer', primary_customer:frm.doc.name});
+        });
+        frm.remove_custom_button("Accounting Ledger");
+        frm.remove_custom_button("Accounts Receivable");
+        $(".form-inner-toolbar").find("button[data-label=Create]").css({"float":"right !important"})
+
     },
     add_indicator_for_multicompany: function (frm, info) {
         frm.dashboard.stats_area.removeClass('hidden');
