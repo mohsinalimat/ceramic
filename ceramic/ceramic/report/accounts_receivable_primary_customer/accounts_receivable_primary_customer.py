@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 from six import iteritems
 import json
-
+import datetime as dt
 import frappe
 from frappe import _, scrub
 from frappe.utils import flt, cint
@@ -87,7 +87,17 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				row.remark = remark_map_data[row.primary_customer].remark
 				row.follow_up_by = remark_map_data[row.primary_customer].follow_up_by
 				row.next_follow_up_date = remark_map_data[row.primary_customer].next_follow_up_date
+			else:
+				row.next_follow_up_date = dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date()
 	
+		self.data = sorted(self.data, key = lambda i: (i['next_follow_up_date'], i['primary_customer'], i['party']))
+		# d = [item for item in self.data if 'next_follow_up_date' != dt.datetime.strptime("2023-05-05", '%Y-%m-%d').date()]
+		# self.data = sorted(d, key=lambda i: (i['next_follow_up_date'], i['primary_customer'], i['party']))
+		for row in self.data:
+			if row.next_follow_up_date == dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date():
+				row.next_follow_up_date = None
+				
+
 	def remark_map(self):
 		data = frappe.db.sql("""SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date ASC""", as_dict = True)
 
