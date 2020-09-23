@@ -119,21 +119,20 @@ def create_payment_entry(self):
 			target.set_posting_time = 1
 			target.pe_ref = source.name
 			if target.payment_type == "Pay":
-				if target.mode_of_payment:
-					target.paid_from = get_bank_cash_account(target.mode_of_payment, target.company)['account']
-				else:
-					target.paid_from = source.paid_to.replace(source_company_abbr, target_company_abbr)
+				# if target.mode_of_payment:
+				# 	target.paid_from = get_bank_cash_account(target.mode_of_payment, target.company)['account']
+				# else:
+				target.paid_from = source.paid_from.replace(source_company_abbr, target_company_abbr)
 				party_details = get_party_details(target.company, target.party_type, target.party, target.posting_date)
-				
 				target.paid_to = party_details['party_account']
 				target.paid_to_account_currency = party_details['party_account_currency']
 				target.paid_to_account_balance = party_details['account_balance']
 			
 			elif target.payment_type == "Receive":
-				if target.mode_of_payment:
-					target.paid_to = get_bank_cash_account(target.mode_of_payment, target.company)['account']
-				else:
-					target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
+				# if target.mode_of_payment:
+				# 	target.paid_to = get_bank_cash_account(target.mode_of_payment, target.company)['account']
+				# else:
+				target.paid_to = source.paid_to.replace(source_company_abbr, target_company_abbr)
 				party_details = get_party_details(target.company, target.party_type, target.party, target.posting_date)
 				target.paid_from = party_details['party_account']
 				target.paid_from_account_currency = party_details['party_account_currency']
