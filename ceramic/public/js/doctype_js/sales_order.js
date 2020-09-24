@@ -135,10 +135,7 @@ erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.exte
 		// FinByz Changes Over
 		let allow_delivery = false;
 
-
-
 		if (doc.docstatus == 1) {
-
 			if (this.frm.doc.per_delivered == 0) {
 				this.frm.add_custom_button(__('Unpick All'), () => this.unpick_all(this.frm.doc))
 			}
@@ -559,12 +556,10 @@ cur_frm.set_query('company', function () {
 frappe.ui.form.on('Sales Order', {
 	refresh: (frm) => {
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
-
-		frm.add_custom_button(__('Lot-Wise Balance'), function() {
-			window.open(window.location.href.split("#")[0] + "#query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
-        });
 	},
-
+	lotwise_balance: function(frm){
+		window.open(window.location.href.split("#")[0] + "#query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
+	},
 	onload: function (frm) {
 		frm.trigger('naming_series');
 		if(frm.doc.__islocal){
