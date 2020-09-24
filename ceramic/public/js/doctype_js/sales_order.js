@@ -559,7 +559,12 @@ cur_frm.set_query('company', function () {
 frappe.ui.form.on('Sales Order', {
 	refresh: (frm) => {
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+
+		frm.add_custom_button(__('Lot-Wise Balance'), function() {
+			window.open(window.location.href.split("#")[0] + "#query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
+        });
 	},
+
 	onload: function (frm) {
 		frm.trigger('naming_series');
 		if(frm.doc.__islocal){
