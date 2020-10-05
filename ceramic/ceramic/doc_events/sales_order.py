@@ -641,3 +641,5 @@ def get_rate_discounted_rate(item_code, customer, company, so_number = None):
 
 	# return data[0] if data else {'rate': 0, 'discounted_rate': 0}
 	pass
+
+			

@@ -10,42 +10,42 @@ from datetime import datetime
 
 
 def populate_matching_invoices(self):
-		self.payment_invoice_items = []
-		self.map_unknown_transactions()
-		added_invoices = []
-		for entry in self.new_transaction_items:
-			if (not entry.party or entry.party_type == "Account"): continue
-			account = self.receivable_account if entry.party_type == "Customer" else self.payable_account
+	self.payment_invoice_items = []
+	self.map_unknown_transactions()
+	added_invoices = []
+	for entry in self.new_transaction_items:
+		if (not entry.party or entry.party_type == "Account"): continue
+		account = self.receivable_account if entry.party_type == "Customer" else self.payable_account
+		#finbyz Changes Start
+		invoices = get_outstanding_invoices(entry.party_type, entry.party, account, entry.primary_customer)
+		#finbyz Changes End
+		transaction_date = datetime.strptime(entry.transaction_date, "%Y-%m-%d").date()
+		outstanding_invoices = [invoice for invoice in invoices if invoice.posting_date <= transaction_date and invoice.voucher_type != "Journal Entry"]
+		amount = abs(entry.amount)
+		matching_invoices = [invoice for invoice in outstanding_invoices if invoice.outstanding_amount == amount]
+		sorted(outstanding_invoices, key=lambda k: k['posting_date'])
+		for e in (matching_invoices + outstanding_invoices):
+			added = next((inv for inv in added_invoices if inv == e.get('voucher_no')), None)
+			if (added is not None): continue
+			ent = self.append('payment_invoice_items', {})
+			ent.transaction_date = entry.transaction_date
+			ent.payment_description = frappe.safe_decode(entry.description)
+			ent.party_type = entry.party_type
+			ent.party = entry.party
 			#finbyz Changes Start
-			invoices = get_outstanding_invoices(entry.party_type, entry.party, account, entry.primary_customer)
+			ent.primary_customer = e.get('primary_customer')
 			#finbyz Changes End
-			transaction_date = datetime.strptime(entry.transaction_date, "%Y-%m-%d").date()
-			outstanding_invoices = [invoice for invoice in invoices if invoice.posting_date <= transaction_date and invoice.voucher_type != "Journal Entry"]
-			amount = abs(entry.amount)
-			matching_invoices = [invoice for invoice in outstanding_invoices if invoice.outstanding_amount == amount]
-			sorted(outstanding_invoices, key=lambda k: k['posting_date'])
-			for e in (matching_invoices + outstanding_invoices):
-				added = next((inv for inv in added_invoices if inv == e.get('voucher_no')), None)
-				if (added is not None): continue
-				ent = self.append('payment_invoice_items', {})
-				ent.transaction_date = entry.transaction_date
-				ent.payment_description = frappe.safe_decode(entry.description)
-				ent.party_type = entry.party_type
-				ent.party = entry.party
-				#finbyz Changes Start
-				ent.primary_customer = e.get('primary_customer')
-				#finbyz Changes End
-				ent.invoice = e.get('voucher_no')
-				added_invoices += [ent.invoice]
-				ent.invoice_type = "Sales Invoice" if entry.party_type == "Customer" else "Purchase Invoice"
-				ent.invoice_date = e.get('posting_date')
-				ent.outstanding_amount = e.get('outstanding_amount')
-				ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
-				amount -= float(e.get('outstanding_amount'))
-				if (amount <= 5): break
-		self.match_invoice_to_payment()
-		self.populate_matching_vouchers()
-		self.map_transactions_on_journal_entry()
+			ent.invoice = e.get('voucher_no')
+			added_invoices += [ent.invoice]
+			ent.invoice_type = "Sales Invoice" if entry.party_type == "Customer" else "Purchase Invoice"
+			ent.invoice_date = e.get('posting_date')
+			ent.outstanding_amount = e.get('outstanding_amount')
+			ent.allocated_amount = min(float(e.get('outstanding_amount')), amount)
+			amount -= float(e.get('outstanding_amount'))
+			if (amount <= 5): break
+	self.match_invoice_to_payment()
+	self.populate_matching_vouchers()
+	self.map_transactions_on_journal_entry()
 
 def create_payment_entry(self, pe):
 	payment = frappe.new_doc("Payment Entry")
@@ -224,31 +224,31 @@ def set_item_locations(self):
 	pass
 
 def get_current_tax_amount(self, item, tax, item_tax_map):
-		tax_rate = self._get_tax_rate(tax, item_tax_map)
-		current_tax_amount = 0.0
+	tax_rate = self._get_tax_rate(tax, item_tax_map)
+	current_tax_amount = 0.0
 
-		if tax.charge_type == "Actual":
-			# distribute the tax amount proportionally to each item row
-			actual = flt(tax.tax_amount, tax.precision("tax_amount"))
-			current_tax_amount = item.net_amount*actual / self.doc.net_total if self.doc.net_total else 0.0
+	if tax.charge_type == "Actual":
+		# distribute the tax amount proportionally to each item row
+		actual = flt(tax.tax_amount, tax.precision("tax_amount"))
+		current_tax_amount = item.net_amount*actual / self.doc.net_total if self.doc.net_total else 0.0
 
-		elif tax.charge_type == "On Net Total":
-			if self.doc.authority == "Unauthorized":
-				current_tax_amount = (tax_rate / 100.0) * item.discounted_net_amount
-			else:
-				current_tax_amount = (tax_rate / 100.0) * item.net_amount
-		elif tax.charge_type == "On Previous Row Amount":
-			current_tax_amount = (tax_rate / 100.0) * \
-				self.doc.get("taxes")[cint(tax.row_id) - 1].tax_amount_for_current_item
-		elif tax.charge_type == "On Previous Row Total":
-			current_tax_amount = (tax_rate / 100.0) * \
-				self.doc.get("taxes")[cint(tax.row_id) - 1].grand_total_for_current_item
-		elif tax.charge_type == "On Item Quantity":
-			current_tax_amount = tax_rate * item.stock_qty
+	elif tax.charge_type == "On Net Total":
+		if self.doc.authority == "Unauthorized":
+			current_tax_amount = (tax_rate / 100.0) * item.discounted_net_amount
+		else:
+			current_tax_amount = (tax_rate / 100.0) * item.net_amount
+	elif tax.charge_type == "On Previous Row Amount":
+		current_tax_amount = (tax_rate / 100.0) * \
+			self.doc.get("taxes")[cint(tax.row_id) - 1].tax_amount_for_current_item
+	elif tax.charge_type == "On Previous Row Total":
+		current_tax_amount = (tax_rate / 100.0) * \
+			self.doc.get("taxes")[cint(tax.row_id) - 1].grand_total_for_current_item
+	elif tax.charge_type == "On Item Quantity":
+		current_tax_amount = tax_rate * item.stock_qty
 
-		self.set_item_wise_tax(item, tax, tax_rate, current_tax_amount)
+	self.set_item_wise_tax(item, tax, tax_rate, current_tax_amount)
 
-		return current_tax_amount
+	return current_tax_amount
 
 def determine_exclusive_rate(self):
 	if not any((cint(tax.included_in_print_rate) for tax in self.doc.get("taxes"))):
