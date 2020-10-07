@@ -72,8 +72,20 @@ def get_columns():
 			"width": 120
 		},
 		{
+			"fieldname": "total_pending_qty",
+			"label": _("Total Pending Qty"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
 			"fieldname": "to_pick",
 			"label": _("To Pick Qty"),
+			"fieldtype": "Float",
+			"width": 120
+		},
+		{
+			"fieldname": "total_to_pick",
+			"label": _("Total To Pick Qty"),
 			"fieldtype": "Float",
 			"width": 120
 		},
@@ -101,7 +113,7 @@ def get_columns():
 
 def get_data(filters):
 	conditions = get_conditions(filters)
-
+	total_qty_data_conditions = get_conditions_total_qty(filters)
 	data = frappe.db.sql(f"""
 		SELECT
 			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, i.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
@@ -119,6 +131,26 @@ def get_data(filters):
 			soi.`item_code`, soi.packing_type
 	""", as_dict = True)
 
+	total_qty_data = frappe.db.sql(f"""
+		SELECT
+			soi.`item_code`, SUM(soi.`qty` - soi.delivered_qty) as `total_pending_qty`, SUM(soi.qty - soi.picked_qty) as total_to_pick,
+			soi.packing_type as packing_type
+		FROM
+			`tabSales Order Item` as soi JOIN
+			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1
+		WHERE
+			{total_qty_data_conditions}
+			AND so.docstatus = 1
+			AND soi.`qty` != soi.delivered_qty
+		GROUP BY
+			soi.`item_code`, soi.packing_type
+	""", as_dict = True)
+
+	
+	total_qty_data_map = {}
+	for row in total_qty_data:
+		total_qty_data_map[row.item_code,row.packing_type] = row
+
 	for item in data:
 		actual_qty = frappe.db.sql(f"""
 		SELECT
@@ -134,7 +166,10 @@ def get_data(filters):
 
 		item['actual_qty'] = actual_qty[0][0] or 0.0
 		item['to_manufacture'] = item['pending_qty'] - item['actual_qty'] if item['pending_qty'] > item['actual_qty'] else 0
-		
+
+		item['total_pending_qty'] = total_qty_data_map[item.item_code,item.packing_type].total_pending_qty
+		item['total_to_pick'] = total_qty_data_map[item.item_code,item.packing_type].total_to_pick
+
 	return data
 
 def get_conditions(filters):
@@ -150,6 +185,21 @@ def get_conditions(filters):
 	
 	if filters.get('order_priority'):
 		conditions += f" AND soi.`order_item_priority` >= '{cint(filters.get('order_priority'))}'"
+	
+	conditions += " AND so.status not in ('On Hold', 'Completed' , 'Closed')"
+	
+	return conditions
+
+def get_conditions_total_qty(filters):
+	conditions = ''
+	if filters.get('company'):
+		conditions += f"so.`company` = '{filters.get('company')}'"
+
+	if filters.get('item_group'):
+		conditions += f" AND i.`item_group` = '{filters.get('item_group')}'"
+	
+	if filters.get('item_code'):
+		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
 	
 	conditions += " AND so.status not in ('On Hold', 'Completed' , 'Closed')"
 	
