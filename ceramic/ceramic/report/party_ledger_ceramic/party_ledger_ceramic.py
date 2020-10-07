@@ -198,9 +198,16 @@ def validate_party(filters):
 					frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
 
 def get_result(filters, account_details):
-	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
+	conditions =""
+	company_placeholder_list = []
+	if filters.company:
+		company_placeholder_list.append(filters.company)
+		alternate_company = [x.name for x in frappe.get_list("Company", {'alternate_company': filters.company}, 'name')]
+		company_placeholder_list += alternate_company
 
-	conditions = f"gle.`company` in ('{filters.company}', '{alternate_company}')"
+		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
+		conditions += (f"gle.company in ({company_placeholder})")
+
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
 	conditions += f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"

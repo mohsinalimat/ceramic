@@ -11,8 +11,8 @@ from frappe.model.rename_doc import rename_doc
 
 def validate(self, method):
 	""" Custom Validate Function """
-
-	update_cost_center(self)
+	pass
+	#update_cost_center(self)
 
 def on_trash(self, method):
 	""" Custom Trash Function """

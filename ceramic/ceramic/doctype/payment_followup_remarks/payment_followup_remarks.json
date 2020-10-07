@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
+  "company",
   "date",
   "customer",
   "remark",
@@ -55,9 +56,17 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "PFR-"
+  },
+  {
+   "bold": 1,
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
   }
  ],
- "modified": "2020-08-06 18:51:54.795145",
+ "modified": "2020-10-06 11:47:57.714230",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Payment Followup Remarks",
