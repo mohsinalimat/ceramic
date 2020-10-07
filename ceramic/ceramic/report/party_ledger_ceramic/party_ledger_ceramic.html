@@ -104,9 +104,9 @@
 			</td>
 			{% } else if(i == l - 1)  { %}
 			<td width="16%" valign="top" colspan="2">
-				<p align="center">
+				<!-- <p align="center">
 					<strong>Closing (Opening + Total)</strong>
-				</p>
+				</p> -->
 			</td>
 			{% } else { %}
 			<td>
@@ -139,6 +139,7 @@
 		  
 			{% } %}
 			<td width="11%" valign="top" colspan="3">
+			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_debit %}
 			<p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
@@ -167,10 +168,12 @@
 					<span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}</span>
 				</p>
 				{% } %}
-			{% endif %}
+				{% endif %}
+				{% } %}
 			   
 			</td>
 			<td width="11%" valign="top" colspan="3">
+				{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 		{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_credit %}
 			<p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
@@ -206,22 +209,29 @@
 				  </p>
 				  {% endif %}   
 				  {% } %}
+				  {% } %}
 			</td>
 		   
 			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
 				<p>
 					{{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
 				</p>
+				{% } %}
 			</td>
 			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
 				<p>
 					{{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
 				</p>
+				{% } %}
 			</td>
 			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
 				 <div style="font-size: 14px; ">
 					{{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}
 				</div>
+				{% } %}
 			</td>
 		</tr>
 		{% } %}

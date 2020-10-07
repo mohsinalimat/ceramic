@@ -158,6 +158,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 	def get_columns(self):
 		self.columns = []
 		self.add_column(_('Primary Customer'), fieldname='primary_customer', fieldtype='Data')
+		self.add_column(_('Sales Head'), fieldname='sales_person', fieldtype='Data')
+		self.add_column(_('RSM'), fieldname='regional_sales_manager', fieldtype='Data')
 		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
