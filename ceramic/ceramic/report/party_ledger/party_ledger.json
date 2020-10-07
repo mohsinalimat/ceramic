@@ -1,5 +1,5 @@
 {
- "add_total_row": 0,
+ "add_total_row": 1,
  "creation": "2020-05-27 17:05:02.384985",
  "disable_prepared_report": 0,
  "disabled": 0,
@@ -8,7 +8,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Millennium",
- "modified": "2020-05-27 17:05:02.384985",
+ "modified": "2020-09-30 18:17:54.940277",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Party Ledger",
