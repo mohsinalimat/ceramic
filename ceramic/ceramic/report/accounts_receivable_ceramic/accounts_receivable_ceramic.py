@@ -462,8 +462,11 @@ class ReceivablePayableReport(object):
 	def set_party_details(self, row):
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
-		for i in party_details:
-			row.update(i)
+		if self.party_type =="Customer":
+			for i in party_details:
+				row.update(i)
+		else:
+			row.update(party_details)
 		if self.filters.get(scrub(self.filters.party_type)):
 			row.currency = row.account_currency
 		else:
