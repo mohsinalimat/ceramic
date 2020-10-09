@@ -200,7 +200,10 @@ class ReceivablePayableReport(object):
 					company = gle.company,
 					primary_customer = gle.primary_customer,
 					vehicle_no = gle.vehicle_no,
-					reference_doc = gle.reference_doc
+					reference_doc = gle.reference_doc,
+					sales_person = "",
+					sales_manager = "",
+					regional_sales_manager =""
 				)
 			self.get_invoices(gle)
 
@@ -372,9 +375,8 @@ class ReceivablePayableReport(object):
 			if self.filters.show_delivery_notes:
 				self.set_delivery_notes(row)
 
-			if self.filters.show_sales_person and row.sales_team:
-				row.sales_person = ", ".join(row.sales_team)
-				del row['sales_team']
+			# if self.filters.show_sales_person and row.sales_person:
+			# 	row.sales_person = row.sales_person
 
 	def set_delivery_notes(self, row):
 		delivery_notes = self.delivery_notes.get(row.voucher_no, [])
@@ -409,23 +411,34 @@ class ReceivablePayableReport(object):
 		self.invoice_details = frappe._dict()
 		if self.party_type == "Customer":
 			si_list = frappe.db.sql("""
-				select name, due_date, po_no
+				select name, due_date, po_no,customer
 				from `tabSales Invoice`
 				where posting_date <= %s
 			""",self.filters.report_date, as_dict=1)
 			for d in si_list:
 				self.invoice_details.setdefault(d.name, d)
-
+			#frappe.msgprint(str(self.invoice_details))
 			# Get Sales Team
-			if self.filters.show_sales_person:
-				sales_team = frappe.db.sql("""
-					select parent, sales_person
-					from `tabSales Team`
-					where parenttype = 'Sales Invoice'
-				""", as_dict=1)
-				for d in sales_team:
-					self.invoice_details.setdefault(d.parent, {})\
-						.setdefault('sales_team', []).append(d.sales_person)
+
+		# elif self.party_type == "Customer" and self.filters.show_sales_person:
+		# 	si_list = frappe.db.sql("""
+		# 		select si.name, si.company, si.due_date, si.po_no, si.customer, st.sales_person, st.regional_sales_manager, st.sales_manager
+		# 		from `tabSales Invoice` as si
+		# 		LEFT JOIN `tabSales Team` as st ON (st.parent = si.customer and st.company = %s)
+		# 		where si.posting_date <= %s and st.parenttype = "Customer"
+		# 	""",(self.filters.company[0],self.filters.report_date), as_dict=1)
+		# 	for d in si_list:
+		# 		self.invoice_details.setdefault(d.name, d)
+
+				# sales_team = frappe.db.sql("""
+				# 	select parent, sales_person,regional_sales_manager,sales_manager
+				# 	from `tabSales Team`
+				# 	where parenttype = 'Sales Invoice'
+				# """, as_dict=1)
+				# for d in sales_team:
+				# 	self.invoice_details.setdefault(d.parent, {})\
+				# 		.setdefault('sales_team', []).append(d.sales_person)
+				# frappe.msgprint(str(self.invoice_details))
 
 		if self.party_type == "Supplier":
 			for pi in frappe.db.sql("""
@@ -449,7 +462,8 @@ class ReceivablePayableReport(object):
 	def set_party_details(self, row):
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
-		row.update(party_details)
+		for i in party_details:
+			row.update(i)
 		if self.filters.get(scrub(self.filters.party_type)):
 			row.currency = row.account_currency
 		else:
@@ -845,8 +859,13 @@ class ReceivablePayableReport(object):
 	def get_party_details(self, party):
 		if not party in self.party_details:
 			if self.party_type == 'Customer':
-				self.party_details[party] = frappe.db.get_value('Customer', party, ['customer_name',
-					'territory', 'customer_group', 'customer_primary_contact'], as_dict=True)
+				self.party_details[party] = frappe.db.sql("""
+					select cu.customer_name, cu.territory, cu.customer_group, cu.customer_primary_contact, st.sales_person, st.regional_sales_manager, st.sales_manager
+					from `tabCustomer` as cu
+					LEFT JOIN `tabSales Team` as st ON (st.parent = cu.name and st.company = %s)
+					where cu.name = %s and st.parenttype = "Customer"
+			""",(self.filters.company[0],party), as_dict=1)
+
 			else:
 				self.party_details[party] = frappe.db.get_value('Supplier', party, ['supplier_name',
 					'supplier_group'], as_dict=True)
@@ -925,6 +944,8 @@ class ReceivablePayableReport(object):
 				options='Customer Group')
 			if self.filters.show_sales_person:
 				self.add_column(label=_('Sales Person'), fieldname='sales_person', fieldtype='Data')
+				self.add_column(label=_('Regional Sales Manager'), fieldname='regional_sales_manager', fieldtype='Data')
+				self.add_column(label=_('Sales Manager'), fieldname='sales_manager', fieldtype='Data')
 
 		if self.filters.party_type == "Supplier":
 			self.add_column(label=_('Supplier Group'), fieldname='supplier_group', fieldtype='Link',

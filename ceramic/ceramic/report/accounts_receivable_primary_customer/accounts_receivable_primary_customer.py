@@ -116,9 +116,11 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 			# Add all amount columns
 			for k in list(self.party_total[d.primary_customer]):
-				if k not in ["currency", "sales_person", "party", "primary_customer"]:
-
+				if k not in ["currency", "sales_person", "party", "primary_customer","regional_sales_manager","sales_manager","territory","customer_group"]:
 					self.party_total[d.primary_customer][k] += d.get(k, 0.0)
+
+				# if k in ["invoiced", "billed_amount", "cash_amount", "paid","cash_paid","bank_paid","credit_note","outstanding","bank_outstanding","cash_outstanding","range1","range2","range3","range4","range5"]:
+				# 	self.party_total[d.primary_customer][k] += d.get(k, 0.0)
 
 			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
@@ -142,7 +144,9 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			"range3": 0.0,
 			"range4": 0.0,
 			"range5": 0.0,
-			"sales_person": []
+			"sales_person": row.sales_person or '',
+			"regional_sales_manager": row.regional_sales_manager or '',
+			"sales_manager": row.sales_manager or ''
 		}))
 
 	def set_party_details(self, row):
@@ -153,13 +157,18 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 				self.party_total[row.primary_customer][key] = row.get(key)
 
 		if row.sales_person:
-			self.party_total[row.primary_customer].sales_person.append(row.sales_person)
+			self.party_total[row.primary_customer].sales_person = row.sales_person
+		if row.regional_sales_manager:
+			self.party_total[row.primary_customer].regional_sales_manager = row.regional_sales_manager
+		if row.sales_manager:
+			self.party_total[row.primary_customer].sales_manager = row.sales_manager
 
 	def get_columns(self):
 		self.columns = []
 		self.add_column(_('Primary Customer'), fieldname='primary_customer', fieldtype='Data')
 		self.add_column(_('Sales Head'), fieldname='sales_person', fieldtype='Data')
 		self.add_column(_('RSM'), fieldname='regional_sales_manager', fieldtype='Data')
+		self.add_column(_('Sales Manager'), fieldname='sales_manager', fieldtype='Data')
 		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
