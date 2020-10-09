@@ -36,6 +36,8 @@ def create_main_purchase_invoice(self):
 			target.authority = "Unauthorized"
 			target.update_stock = 0
 
+			if source.cost_center:
+				target.cost_center = source.cost_center.replace(source_company_abbr, target_company_abbr)	
 			if source.credit_to:
 				target.credit_to = source.credit_to.replace(source_company_abbr, target_company_abbr)
 			if source.taxes_and_charges:
@@ -69,7 +71,6 @@ def create_main_purchase_invoice(self):
 				target_doc.deferred_expense_account = source_doc.deferred_expense_account.replace(source_company_abbr, target_company_abbr)
 			if source_doc.cost_center:
 				target_doc.cost_center = source_doc.cost_center.replace(source_company_abbr, target_company_abbr)
-			
 			if source_doc.warehouse:
 				target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
 			if source_doc.rejected_warehouse:

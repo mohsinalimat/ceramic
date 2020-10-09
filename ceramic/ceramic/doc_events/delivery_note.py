@@ -218,7 +218,7 @@ def on_cancel(self, method):
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			delivered_real_qty = sales_order_item.delivered_real_qty - item.real_qty
-			wastage_qty = sales_order_item.wastage_qty - item.wastage_qty
+			wastage_qty = sales_order_item.wastage_qty - 1
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			if item.against_pick_list:
