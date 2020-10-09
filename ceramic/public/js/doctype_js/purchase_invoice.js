@@ -8,23 +8,23 @@ cur_frm.fields_dict.taxes_and_charges.get_query = function(doc) {
 };
 
 this.frm.cscript.onload = function (frm) {
-	this.frm.set_query("item_code", "items", function (doc) {
-		return {
-			query: "erpnext.controllers.queries.item_query",
-			filters: [
-
-				['is_purchase_item', '=', 1],
-				['authority', 'in', ['', doc.authority]]
-			]
-		}
-	});
+		this.frm.set_query("item_code", "items", function (doc) {
+			return {
+				query: "erpnext.controllers.queries.item_query",
+				filters: [
+	
+					['is_purchase_item', '=', 1],
+					['authority', 'in', ['', doc.authority]]
+				]
+			}
+		});
 }
 frappe.ui.form.on('Purchase Invoice', {
 	refresh: function(frm){
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
 			frm.set_value("pi_ref", null);
 		}
-		if (cur_frm.doc.company){
+		if (cur_frm.doc.company && frm.doc.__islocal){
 			frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {
 				frm.set_value('company_series', r.company_series);
 			});

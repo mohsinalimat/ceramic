@@ -321,7 +321,6 @@ def get_outstanding_reference_document(args):
 	if args.get("party_type") not in ["Student", "Employee"] and not args.get("voucher_no"):
 		negative_outstanding_invoices = get_negative_outstanding_invoices(args.get("party_type"), args.get("party"),
 			args.get("party_account"), args.get("company"), party_account_currency, company_currency, args.get("primary_customer"))
-
 	# Get positive outstanding sales /purchase invoices/ Fees
 	condition = ""
 	if args.get("voucher_type") and args.get("voucher_no"):
@@ -347,7 +346,6 @@ def get_outstanding_reference_document(args):
 
 	outstanding_invoices = get_outstanding_invoices(args.get("party_type"), args.get("party"),
 		args.get("party_account"), args.get("primary_customer"), filters=args, condition=condition)
-	
 	for d in outstanding_invoices:
 		d["exchange_rate"] = 1
 		if party_account_currency != company_currency:
@@ -365,7 +363,6 @@ def get_outstanding_reference_document(args):
 	if (args.get("party_type") != "Student"):
 		orders_to_be_billed =  get_orders_to_be_billed(args.get("posting_date"),args.get("party_type"),
 			args.get("party"), args.get("company"), party_account_currency, company_currency, args.get("primary_customer"), filters=args)
-
 	data = negative_outstanding_invoices + outstanding_invoices + orders_to_be_billed
 
 	if not data:
