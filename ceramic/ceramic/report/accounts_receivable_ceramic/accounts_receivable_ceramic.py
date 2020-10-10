@@ -462,11 +462,21 @@ class ReceivablePayableReport(object):
 	def set_party_details(self, row):
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
+		primary_customer = frappe.db.sql("""
+				select st.sales_person, st.regional_sales_manager, st.sales_manager
+				from `tabCustomer` as cu
+				LEFT JOIN `tabSales Team` as st ON (st.parent = cu.name and st.company = %s)
+				where cu.name = %s and st.parenttype = "Customer"
+		""",(self.filters.company[0],row.primary_customer), as_dict=1)
 		if self.party_type =="Customer":
 			for i in party_details:
 				row.update(i)
+			if primary_customer:
+				for data_pc in primary_customer:
+					row.update(data_pc)
 		else:
 			row.update(party_details)
+
 		if self.filters.get(scrub(self.filters.party_type)):
 			row.currency = row.account_currency
 		else:
@@ -863,12 +873,19 @@ class ReceivablePayableReport(object):
 		if not party in self.party_details:
 			if self.party_type == 'Customer':
 				self.party_details[party] = frappe.db.sql("""
-					select cu.customer_name, cu.territory, cu.customer_group, cu.customer_primary_contact, st.sales_person, st.regional_sales_manager, st.sales_manager
+					select cu.customer_name, cu.territory, cu.customer_group, cu.customer_primary_contact
 					from `tabCustomer` as cu
-					LEFT JOIN `tabSales Team` as st ON (st.parent = cu.name and st.company = %s)
-					where cu.name = %s and st.parenttype = "Customer"
-			""",(self.filters.company[0],party), as_dict=1)
-
+					where cu.name = %s
+			""",(party), as_dict=1)
+			# 	primary_customer = frappe.db.sql("""
+			# 		select cu.name, st.sales_person, st.regional_sales_manager, st.sales_manager
+			# 		from `tabCustomer` as cu
+			# 		LEFT JOIN `tabSales Team` as st ON (st.parent = cu.name and st.company = %s)
+			# 		where cu.name = %s and st.parenttype = "Customer"
+			# """,(self.filters.company[0],primary_customer), as_dict=1)
+			# 	party_dict = {}
+			# 	for data_pc in primary_customer:
+			# 		party_dict[data_pc.name] = data_pc
 			else:
 				self.party_details[party] = frappe.db.get_value('Supplier', party, ['supplier_name',
 					'supplier_group'], as_dict=True)
