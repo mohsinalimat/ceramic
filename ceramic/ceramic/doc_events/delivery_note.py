@@ -483,7 +483,9 @@ def create_delivery_note_from_pick_list(source_name, target_doc = None):
 def wastage_stock_entry(self):
 	flag = 0
 	for row in self.items:
-		if row.wastage_qty > 0:
+		if row.wastage_qty < 0:
+			frappe.throw("Row {}: Please Don't Enter Negative Value in Wastage Qty".format(row.idx))
+		elif row.wastage_qty > 0:
 			flag = 1
 			break
 	if flag == 1:
