@@ -1,0 +1,244 @@
+<style>
+	@media print{
+		@page{
+			size : landscape
+		}
+	}
+
+	table, td, th {
+		border: 2px solid black;
+	}
+
+	tbody tr:nth-child(even) {
+		background-color: rgb(247, 246, 248);
+	}
+</style>
+<h2 class="text-center">{%= __("Statement of Account") %}</h2>
+<h4 class="text-center">
+	{% if (filters.party) { %}
+		{%= filters.party %}
+	{% } %}
+</h4>
+
+<h5 class="text-center">
+	{%= frappe.datetime.str_to_user(filters.from_date) %}
+	{%= __("to") %}
+	{%= frappe.datetime.str_to_user(filters.to_date) %}
+</h5>
+<hr>
+<table border="2px" cellspacing="0" cellpadding="0" width="100%">
+	<thead>
+		<tr>
+			<th width="17%" colspan="2" valign="top">
+ 
+			</th>
+			<th width="30%" colspan="3" valign="top">
+				<p style="font-size: 14px;" align="center">
+				<b>	<strong>DR</strong></b>
+				</p>
+			</th>
+			<th width="30%" colspan="3" valign="top">
+				<p style="font-size: 14px; " align="center">
+					<b><strong>CR</strong></b>
+				</p>
+			</th>
+			<th width="24%" colspan="3" valign="top">
+				<p align="center">
+					<strong>Balance</strong>
+				</p>
+			</th>
+		</tr>
+		<tr>
+			<th width="8%" valign="top">
+				<p style="font-size: 14px;" align="center">
+					<b><strong>Date</strong></b>
+				</p>
+			</th>
+			<th width="8%" valign="top">
+				<p style="font-size: 14px; " align="center">
+					<b><strong>Voucher Type</strong></b>
+				</p>
+			</th>
+			
+			<th width="10%" valign="top" colspan="3">
+				<p>
+					<strong></strong>
+				</p>
+			</th>
+			<th width="10%" valign="top" colspan="3">
+				<p>
+					<strong></strong>
+				</p>
+			</th>
+			<th width="6%" valign="top">
+				<p align="center">
+					<strong>Cheque</strong>
+				</p>
+			</th>
+			<th width="6%" valign="top">
+				<p align="center">
+					<strong>Other</strong>
+				</p>
+			</th>
+			<th  width="6%" valign="top">
+				<p style="font-size: 14px; " align="center" >
+				<b>	<strong>Total</strong> </b>
+				</p>
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for(var i=0, l=data.length; i<l; i++) { %}
+		<tr>
+			{% if(i == 0){ %}
+			<td width="16%" valign="top" colspan="2">
+				<p align="center" >
+					<strong>Opening Balance</strong>
+				</p>
+			</td>
+			{% } else if(i == l - 2) { %}
+			<td width="16%" valign="top" colspan="2">
+				<p style="font-size: 14px;  " align="center">
+			<b>	<strong>Total</strong></b>
+				</p>
+			</td>
+			{% } else if(i == l - 1)  { %}
+			<td width="16%" valign="top" colspan="2">
+				<!-- <p align="center">
+					<strong>Closing (Opening + Total)</strong>
+				</p> -->
+			</td>
+			{% } else { %}
+			<td>
+				<p style="font-size: 14px;">
+				<strong>{{ frappe.format(data[i].posting_date , {'fieldtype': ' Date'})}} </strong>
+				</p>
+			</td>
+			<td  width="11%" valign="top">
+				{% if data[i].voucher_no != "Closing (Opening + Total)" %}
+				<p style="font-size: 14px;" >
+					{% if(data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Primary Customer Payment"){ %}
+						<strong> Payment </strong>
+					{% } else if(data[i].voucher_type == "Journal Entry") { %}
+						<strong>  Cr/Db-Note </strong>
+					{% } else if(data[i].is_return == 1) { %}
+						<strong> RateChange </strong>
+					{% } else if(data[i].voucher_type == "Sales Invoice") { %}
+						<strong> Sales </strong>
+					{% } else if(data[i].voucher_type == "Purchase Invoice") { %}
+						<strong> Purchase </strong>
+					{% } %}
+					[{{ data[i].voucher_no_trim }}]
+					{% if((data[i].billed_credit || data[i].billed_debit) && (data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Journal Entry" || data[i].voucher_type == "Primary Customer Payment") || (data[i].voucher_type == "Sales Invoice" || data[i].voucher_type == "Purchase Invoice")){ %}
+						<br> [{{ data[i].party }}]
+					{% } %} 
+					{% if((data[i].voucher_type == "Journal Entry") && (data[i].remark)) { %}
+						<br> [{{ data[i].remark }}]
+					{% } %} 					
+				</p>
+				{% endif %} 
+			</td>
+		  
+			{% } %}
+			<td width="11%" valign="top" colspan="3">
+			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
+			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
+			{% if data[i].cash_debit %}
+			<p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
+			</p>
+	  
+			{% endif %}
+
+			{% if data[i].billed_debit %}
+			<p><span style="float:left !important">Cheque:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'})  }}</span>
+			</p>
+			{% endif %}
+
+		{% else %}
+				{% if(data[i].billed_debit || data[i].cash_debit){ %}
+				<p>
+				  <strong><span style="float:left !important">{{ frappe.format(data[i].total_debit, {'fieldtype': 'Currency'}) }}</span> </strong>
+				</p>
+				{% if(data[i].qty != 0 && data[i].qty && data[i].voucher_type == 'Sales Invoice'){ %}
+				<p><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></p>
+				<span style="float:left !important"> {{ data[i].si_details }} </span>
+				{% } %}
+				
+				<p>
+				<span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
+
+				</p>
+				<p>
+					<span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}</span>
+				</p>
+				{% } %}
+				{% endif %}
+				{% } %}
+			   
+			</td>
+			<td width="11%" valign="top" colspan="3">
+			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
+			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
+			{% if data[i].cash_credit %}
+			<p><span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
+			</p>
+	  
+			{% endif %}
+
+			{% if data[i].billed_credit %}
+			<p><span style="float:left !important">Cheque:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'})  }}</span>
+			</p>
+			{% endif %}
+		{% } else if(data[i].voucher_type == "Primary Customer Payment") { %}
+		<p>
+			
+			<strong><span style="float:left !important">Other:{{ frappe.format(data[i].total_credit, {'fieldtype': 'Currency'}) }}</span> </strong>
+		  </p>
+	
+		  {% } else { %}
+			{% if(data[i].billed_credit || data[i].cash_credit){ %}
+				<p>
+					<strong><span style="float:left !important">{{ frappe.format(data[i].total_credit, {'fieldtype': 'Currency'}) }}</span> </strong>
+				  </p>
+				  {% if(data[i].qty != 0 && data[i].qty && data[i].voucher_type == 'Purchase Invoice'){ %}
+				  
+					<p><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></p>
+					{% } %}
+				  <p>
+				  <span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_credit, {'fieldtype': 'Currency'}) }}</span>
+  
+				  </p>
+				  <p>
+					  <span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_credit, {'fieldtype': 'Currency'}) }}</span>
+				  </p>
+				  {% endif %}   
+				  {% } %}
+				  {% } %}
+			</td>
+		   
+			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
+				<p>
+					{{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
+				</p>
+				{% } %}
+			</td>
+			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
+				<p>
+					{{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
+				</p>
+				{% } %}
+			</td>
+			<td width="6%" valign="top">
+				{% if( i != l - 1){ %}
+				 <div style="font-size: 14px; ">
+					{{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}
+				</div>
+				{% } %}
+			</td>
+		</tr>
+		{% } %}
+	</tbody>
+</table>
+<p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
