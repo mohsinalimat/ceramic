@@ -137,7 +137,8 @@ def get_data(filters):
 			soi.packing_type as packing_type
 		FROM
 			`tabSales Order Item` as soi JOIN
-			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1
+			`tabSales Order` as so ON so.`name` = soi.`parent` AND so.`docstatus` = 1 JOIN
+			`tabItem` as i on i.`name` = soi.`item_code`
 		WHERE
 			{total_qty_data_conditions}
 			AND so.docstatus = 1
@@ -194,7 +195,7 @@ def get_conditions_total_qty(filters):
 	conditions = ''
 	if filters.get('company'):
 		conditions += f"so.`company` = '{filters.get('company')}'"
-
+	
 	if filters.get('item_group'):
 		conditions += f" AND i.`item_group` = '{filters.get('item_group')}'"
 	
