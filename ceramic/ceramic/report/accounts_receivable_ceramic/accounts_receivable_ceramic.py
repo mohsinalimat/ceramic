@@ -53,6 +53,7 @@ class ReceivablePayableReport(object):
 		self.get_data()
 		self.make_data_map()
 		self.update_data()
+		self.group_by_party()
 		self.get_chart_data()
 		return self.columns, self.data, None, self.chart, None, self.skip_total_row
 	
@@ -127,6 +128,7 @@ class ReceivablePayableReport(object):
 				row.billed_credit_note = 0
 				self.data.append(row)
 		
+		
 	def difference(self, lst1, lst2): 
 		return (list(set(lst1) - set(lst2))) 
 
@@ -154,6 +156,23 @@ class ReceivablePayableReport(object):
 			self.previous_party=''
 			self.total_row_map = {}
 			self.skip_total_row = 1
+
+	def group_by_party(self):
+		if self.filters.get('group_by_party'):
+			data = self.data
+			self.data = []
+			for row in data:
+				try:
+					self.update_sub_total_row(row, row.party)
+					if self.previous_party and (self.previous_party != row.party):
+						self.append_subtotal_row(self.previous_party)
+					self.previous_party = row.party
+					self.data.append(row)
+				except:
+					pass
+			self.append_subtotal_row(self.previous_party)
+			self.data.append(self.total_row_map.get('Total'))
+
 
 	def get_data(self):
 		self.get_gl_entries()
@@ -244,7 +263,7 @@ class ReceivablePayableReport(object):
 				self.total_row_map[party][field] = 0.0
 
 	def get_currency_fields(self):
-		return ['invoiced', 'paid', 'credit_note', 'outstanding', 'range1',
+		return ['bank_outstanding','cash_outstanding','billed_credit_note','cash_credit_note','billed_amount','cash_amount','invoiced', 'bank_paid','cash_paid','paid', 'credit_note', 'outstanding', 'range1',
 			'range2', 'range3', 'range4', 'range5']
 
 	def update_voucher_balance(self, gle):
@@ -347,21 +366,12 @@ class ReceivablePayableReport(object):
 			else:
 				self.append_row(row)
 
-		if self.filters.get('group_by_party'):
-			self.append_subtotal_row(self.previous_party)
-			self.data.append(self.total_row_map.get('Total'))
 
 	def append_row(self, row):
 		self.allocate_future_payments(row)
 		self.set_invoice_details(row)
 		self.set_party_details(row)
 		self.set_ageing(row)
-
-		if self.filters.get('group_by_party'):
-			self.update_sub_total_row(row, row.party)
-			if self.previous_party and (self.previous_party != row.party):
-				self.append_subtotal_row(self.previous_party)
-			self.previous_party = row.party
 
 		self.data.append(row)
 
