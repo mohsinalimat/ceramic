@@ -144,10 +144,15 @@ frappe.query_reports["Accounts Receivable Ceramic"] = {
 			"label": __("Show Future Payments"),
 			"fieldtype": "Check",
 		},
+		// {
+		// 	"fieldname":"show_delivery_notes",
+		// 	"label": __("Show Delivery Notes"),
+		// 	"fieldtype": "Check",
+		// },
 		{
-			"fieldname":"show_delivery_notes",
-			"label": __("Show Delivery Notes"),
-			"fieldtype": "Check",
+			"fieldname": "group_by_party",
+			"label": __("Group By Supplier"),
+			"fieldtype": "Check"
 		},
 		{
 			"fieldname":"show_sales_person",
