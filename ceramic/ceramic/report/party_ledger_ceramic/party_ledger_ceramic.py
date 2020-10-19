@@ -61,7 +61,10 @@ def generate_data(filters, res):
 	billed_balance_total = opening['billed_balance']
 	cash_balance_total = opening['cash_balance']
 
-	reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance) for i in res if i.company == filters.company and i.reference_doc}
+	if filters.get('print_with_item'):
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
+	else:
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
 		flag = False
@@ -73,7 +76,11 @@ def generate_data(filters, res):
 			d.billed_balance = d.balance
 			
 			if d.reference_doc:
-				d.total_credit, d.total_debit, d.total_balance = reference_doc_map[(d.party, d.reference_doc)]
+				if filters.get('print_with_item'):
+					d.total_credit, d.total_debit, d.total_balance, d.si_details = reference_doc_map[(d.party, d.reference_doc)]
+				else:
+					d.total_credit, d.total_debit, d.total_balance = reference_doc_map[(d.party, d.reference_doc)]
+
 			else:
 				d.total_credit = d.total_debit = d.total_balance = 0
 
@@ -259,7 +266,82 @@ def get_result(filters, account_details):
 				new_data.append(value)
 		
 		data = sorted(new_data, key = lambda i: i['posting_date'])
+	if filters.get('print_with_item'):	
+		sales_invoice_map,total_taxes_and_charges = get_sales_invoice_data(filters)
+		for d in data:
+			try:
+				d.si_details = html_sales_invoice_data(sales_invoice_map[d.name],total_taxes_and_charges[d.name])
+			except KeyError:
+				d.si_details = ''
 	return data
+
+def html_sales_invoice_data(sales_invoice_map,total_taxes_and_charges):
+	table = ""
+	for item_group,value in sales_invoice_map.items():
+		if item_group:
+			if item_group.find('-'):
+				i_group = item_group.split('-', 1)[0].strip()
+			else:
+				i_group = item_group
+
+			table += f"""
+				<p>
+					<strong>{i_group}</strong>
+				</p>
+			"""
+			for k,v in value.items():
+				table+= f"""<p>
+						{v["qty"]} x {k} = <span><strong>{frappe.format(v["qty"] * k,{'fieldtype': 'Currency'})}</strong></span>
+					</p>	
+				"""
+	if total_taxes_and_charges:
+		table += f"""<p>
+			<span><strong>Taxes & Charges = {frappe.format(total_taxes_and_charges,{'fieldtype': 'Currency'})}</strong></span>
+		</p>
+	"""
+	return table
+
+def get_sales_invoice_data(filters):
+	conditions =""
+	company_placeholder_list = []
+	if filters.company:
+		company_placeholder_list.append(filters.company)
+		alternate_company = [x.name for x in frappe.get_list("Company", {'alternate_company': filters.company}, 'name')]
+		company_placeholder_list += alternate_company
+
+		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
+		conditions += (f"gle.company in ({company_placeholder})")
+
+	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
+	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
+	conditions += " AND gle.voucher_type = 'Sales Invoice'"
+	conditions += f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
+	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
+	
+	si_data = frappe.db.sql(f"""
+		SELECT 
+			gle.name, sii.parent as si_name, si.total,si.rounded_total, sii.item_group, sii.rate, sii.qty
+		FROM
+			`tabGL Entry` as gle
+			JOIN `tabSales Invoice Item` as sii ON sii.parent=gle.voucher_no
+			JOIN `tabSales Invoice` as si ON si.name = gle.voucher_no
+		WHERE
+			{conditions}
+	""", as_dict = True)
+	
+	sales_invoice_map = {}
+	total_taxes_and_charges = {}
+	for row in si_data:
+		total_taxes_and_charges[row.name] = row.rounded_total - row.total
+		sales_invoice_map.setdefault(row.name, {})\
+			.setdefault(row.item_group, {})\
+			.setdefault(row.rate, frappe._dict({
+				"qty": 0.0,
+			}))
+		sales_invoice_dict = sales_invoice_map[row.name][row.item_group][row.rate]
+		sales_invoice_dict.qty += row.qty
+
+	return sales_invoice_map,total_taxes_and_charges
 
 def get_columns(filters):
 	currency = get_company_currency(filters.company)
@@ -372,13 +454,23 @@ def get_columns(filters):
 			"fieldtype": "Link",
 			"options": "Customer",
 			"width": 120
-		},
+		},	
 		{
 			"label": _("Remark"),
 			"fieldname": "remark",
 			"fieldtype": "data",
 			"width": 120
-		},		
+		},
 	]
+	if filters.get('print_with_item'):
+		columns+= [
+				{
+				"label": _("Link No"),
+				"fieldname": "reference_doc",
+				"fieldtype": "Dynamic Link",
+				"options": "voucher_type",
+				"width": 120
+			},
+			]
 
 	return columns
