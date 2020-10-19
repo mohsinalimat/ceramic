@@ -65,6 +65,11 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			get_query: () => {
 				return { query: "ceramic.controllers.queries.new_customer_query" }
 			}
-		}
+		},
+		{
+			"label": __("Print With Item"),
+			"fieldname": "print_with_item",
+			"fieldtype": "Check"
+		},	
 	]
 }

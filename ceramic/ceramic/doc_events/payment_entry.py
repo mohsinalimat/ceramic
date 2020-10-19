@@ -33,9 +33,9 @@ def on_update_after_submit(self, method):
 		frappe.db.set_value("Payment Entry", self.pe_ref, 'primary_customer', self.primary_customer)
 	update_payment_entries(self)
 
-	if self.authority == "Unauthorized":
-		self.make_gl_entries(cancel=1)
-		self.make_gl_entries(cancel=0)	
+	# if self.authority == "Unauthorized":
+	# 	self.make_gl_entries(cancel=1)
+	# 	self.make_gl_entries(cancel=0)	
 	
 def update_payment_entries(self):
 	authority = frappe.db.get_value("Company", self.company, 'authority')

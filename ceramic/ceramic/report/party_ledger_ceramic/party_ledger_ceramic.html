@@ -8,9 +8,17 @@
 	table, td, th {
 		border: 2px solid black;
 	}
-
+	.tbspace>tbody>tr>td {
+        padding: 0 2px 0 2px !important;
+        margin: 0 !important;
+        border-spacing: 0 !important;
+    }
+    
 	tbody tr:nth-child(even) {
 		background-color: rgb(247, 246, 248);
+	}
+	.print-format{
+		padding: 5px!important;
 	}
 </style>
 <h2 class="text-center">{%= __("Statement of Account") %}</h2>
@@ -29,10 +37,10 @@
 <table border="2px" cellspacing="0" cellpadding="0" width="100%">
 	<thead>
 		<tr>
-			<th width="17%" colspan="2" valign="top">
+			<th width="14%" colspan="2" valign="top">
  
 			</th>
-			<th width="30%" colspan="3" valign="top">
+			<th width="33%" colspan="3" valign="top">
 				<p style="font-size: 14px;" align="center">
 				<b>	<strong>DR</strong></b>
 				</p>
@@ -49,7 +57,7 @@
 			</th>
 		</tr>
 		<tr>
-			<th width="8%" valign="top">
+			<th width="6%" valign="top">
 				<p style="font-size: 14px;" align="center">
 					<b><strong>Date</strong></b>
 				</p>
@@ -60,7 +68,12 @@
 				</p>
 			</th>
 			
-			<th width="10%" valign="top" colspan="3">
+			<th width="20%" valign="top" colspan="3">
+				<p>
+					<strong></strong>
+				</p>
+			</th>
+			<th width="5%" valign="top" colspan="3">
 				<p>
 					<strong></strong>
 				</p>
@@ -70,7 +83,7 @@
 					<strong></strong>
 				</p>
 			</th>
-			<th width="6%" valign="top">
+			<!-- <th width="6%" valign="top">
 				<p align="center">
 					<strong>Cheque</strong>
 				</p>
@@ -84,7 +97,7 @@
 				<p style="font-size: 14px; " align="center" >
 				<b>	<strong>Total</strong> </b>
 				</p>
-			</th>
+			</th> -->
 		</tr>
 	</thead>
 	<tbody>
@@ -140,7 +153,7 @@
 			</td>
 		  
 			{% } %}
-			<td width="11%" valign="top" colspan="3">
+			<td width="12%" valign="top" colspan="3">
 			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_debit %}
@@ -160,21 +173,26 @@
 				  <strong><span style="float:left !important">{{ frappe.format(data[i].total_debit, {'fieldtype': 'Currency'}) }}</span> </strong>
 				</p>
 				{% if(data[i].qty != 0 && data[i].qty && data[i].voucher_type == 'Sales Invoice'){ %}
-				<p><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></p>
+				<p><strong><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></strong></p>
+				{% if (filters.print_with_item == 1) { %}
+					{{ data[i].si_details }}
 				{% } %}
-				<p>
+				{% } %}
+				
+				<p><strong>
 				<span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
-
+					</strong>
 				</p>
-				<p>
+				<p><strong>
 					<span style="float:left !important">Bill:</span> <span style="float:left !important"> {{ frappe.format(data[i].billed_debit, {'fieldtype': 'Currency'}) }}</span>
+					</strong>
 				</p>
 				{% } %}
 				{% endif %}
 				{% } %}
 			   
 			</td>
-			<td width="11%" valign="top" colspan="3">
+			<td width="9%" valign="top" colspan="3">
 			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_credit %}
@@ -215,24 +233,16 @@
 			</td>
 		   
 			<td width="6%" valign="top">
+				<div style="font-size: 14px; ">
+					<strong>  {{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}</strong>
+			   </div>
 				{% if( i != l - 1){ %}
 				<p>
-					{{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
+					<span style="float:left !important">Bill:</span> <span style="float:left !important"></span> {{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
 				</p>
-				{% } %}
-			</td>
-			<td width="6%" valign="top">
-				{% if( i != l - 1){ %}
 				<p>
-					{{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
+					<span style="float:left !important">Cash:</span> <span style="float:left !important"></span> {{ frappe.format(data[i].cash_balance, {'fieldtype': 'Currency'}) }}
 				</p>
-				{% } %}
-			</td>
-			<td width="6%" valign="top">
-				{% if( i != l - 1){ %}
-				 <div style="font-size: 14px; ">
-					{{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}
-				</div>
 				{% } %}
 			</td>
 		</tr>
