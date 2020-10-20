@@ -62,9 +62,9 @@ def generate_data(filters, res):
 	cash_balance_total = opening['cash_balance']
 
 	if filters.get('print_with_item'):
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
 	else:
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance) for i in res if i.company == filters.company and i.reference_doc}
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
 		flag = False
@@ -77,9 +77,9 @@ def generate_data(filters, res):
 			
 			if d.reference_doc:
 				if filters.get('print_with_item'):
-					d.total_credit, d.total_debit, d.total_balance, d.si_details = reference_doc_map[(d.party, d.reference_doc)]
+					d.total_credit, d.total_debit, d.total_balance, d.qty,d.si_details = reference_doc_map[(d.party, d.reference_doc)]
 				else:
-					d.total_credit, d.total_debit, d.total_balance = reference_doc_map[(d.party, d.reference_doc)]
+					d.total_credit, d.total_debit, d.total_balance, d.qty = reference_doc_map[(d.party, d.reference_doc)]
 
 			else:
 				d.total_credit = d.total_debit = d.total_balance = 0

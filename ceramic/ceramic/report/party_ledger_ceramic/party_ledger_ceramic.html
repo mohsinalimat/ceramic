@@ -1,7 +1,7 @@
 <style>
 	@media print{
 		@page{
-			size : landscape
+			size : portrait;
 		}
 	}
 
@@ -50,14 +50,14 @@
 					<b><strong>CR</strong></b>
 				</p>
 			</th>
-			<th width="24%" colspan="3" valign="top">
+			<th width="22%" colspan="3" valign="top">
 				<p align="center">
 					<strong>Balance</strong>
 				</p>
 			</th>
 		</tr>
 		<tr>
-			<th width="6%" valign="top">
+			<th width="7%" valign="top">
 				<p style="font-size: 14px;" align="center">
 					<b><strong>Date</strong></b>
 				</p>
@@ -73,12 +73,12 @@
 					<strong></strong>
 				</p>
 			</th>
-			<th width="5%" valign="top" colspan="3">
+			<th width="4%" valign="top" colspan="3">
 				<p>
 					<strong></strong>
 				</p>
 			</th>
-			<th width="10%" valign="top" colspan="3">
+			<th width="8%" valign="top" colspan="3">
 				<p>
 					<strong></strong>
 				</p>
@@ -127,7 +127,7 @@
 				<strong>{{ frappe.format(data[i].posting_date , {'fieldtype': ' Date'})}} </strong>
 				</p>
 			</td>
-			<td  width="11%" valign="top">
+			<td  width="12%" valign="top">
 				{% if data[i].voucher_no != "Closing (Opening + Total)" %}
 				<p style="font-size: 14px;" >
 					{% if(data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Primary Customer Payment"){ %}
@@ -192,7 +192,7 @@
 				{% } %}
 			   
 			</td>
-			<td width="9%" valign="top" colspan="3">
+			<td width="8%" valign="top" colspan="3">
 			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_credit %}
@@ -232,11 +232,11 @@
 				  {% } %}
 			</td>
 		   
-			<td width="6%" valign="top">
+			<td width="5%" valign="top">
+				{% if( i != l - 1){ %}
 				<div style="font-size: 14px; ">
 					<strong>  {{ frappe.format(data[i].total_balance, {'fieldtype': 'Currency'}) }}</strong>
 			   </div>
-				{% if( i != l - 1){ %}
 				<p>
 					<span style="float:left !important">Bill:</span> <span style="float:left !important"></span> {{ frappe.format(data[i].billed_balance, {'fieldtype': 'Currency'}) }}
 				</p>
