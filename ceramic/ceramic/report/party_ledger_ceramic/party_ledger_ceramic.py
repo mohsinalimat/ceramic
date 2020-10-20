@@ -60,11 +60,12 @@ def generate_data(filters, res):
 	total_balance_total = opening['total_balance']
 	billed_balance_total = opening['billed_balance']
 	cash_balance_total = opening['cash_balance']
+	qty_total = 0
 
 	if filters.get('print_with_item'):
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance,i.qty, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
 	else:
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance) for i in res if i.company == filters.company and i.reference_doc}
+		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
 		flag = False
@@ -77,9 +78,9 @@ def generate_data(filters, res):
 			
 			if d.reference_doc:
 				if filters.get('print_with_item'):
-					d.total_credit, d.total_debit, d.total_balance, d.si_details = reference_doc_map[(d.party, d.reference_doc)]
+					d.total_credit, d.total_debit, d.total_balance,d.qty, d.si_details = reference_doc_map[(d.party, d.reference_doc)]
 				else:
-					d.total_credit, d.total_debit, d.total_balance = reference_doc_map[(d.party, d.reference_doc)]
+					d.total_credit, d.total_debit, d.total_balance,d.qty = reference_doc_map[(d.party, d.reference_doc)]
 
 			else:
 				d.total_credit = d.total_debit = d.total_balance = 0
@@ -111,11 +112,12 @@ def generate_data(filters, res):
 			billed_balance_total = d.billed_balance = flt(d.billed_balance) + flt(billed_balance_total)
 
 			d.voucher_no_trim = d.voucher_no[-4:]
-			
+			qty_total += d.qty
 			data.append(d)
 			
 	data += [{
 		"voucher_no": "Total",
+		"qty":qty_total,
 		"billed_debit": billed_debit_total,
 		"billed_credit": billed_credit_total,
 		"billed_balance": billed_balance_total,
@@ -180,14 +182,15 @@ def get_opening(filters):
 	return data
 
 def get_closing(data):
-	debit = credit = balance = 0
+	debit = credit = balance = qty = 0
 
 	for item in data:
 		debit += item.debit	 	
 		credit += item.credit
 		balance += item.balance
+		qty += item.qty
 	
-	return [{'account': 'Closing', 'debit': debit, 'credit': credit, 'balance': balance}]
+	return [{'account': 'Closing', 'debit': debit, 'credit': credit, 'balance': balance, 'qty':qty}]
 
 def validate_filters(filters, account_details):
 	if not filters.get('company'):
@@ -380,6 +383,12 @@ def get_columns(filters):
 			"width": 180,
 			"hidden": 1
 		},
+		# {
+		# 	"label": _("Qty".format(currency)),
+		# 	"fieldname": "qty",
+		# 	"fieldtype": "Float",
+		# 	"width": 80
+		# },
 		{
 			"label": _("Billed Debit ({0})".format(currency)),
 			"fieldname": "billed_debit",
