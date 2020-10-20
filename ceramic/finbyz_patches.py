@@ -50,6 +50,16 @@ for idx,d in enumerate(data,start=0):
         print("committed " + str(idx) +  "  " + str(d.name))
     print(str(idx) +  "  " + str(d.name)) 
 
+# Patch In GL Entry for Updating Cost Center in VF
+data = frappe.get_list("GL Entry",{'company':'Victory Floor Tiles Pvt. Ltd.','cost_center':['LIKE','']})
+print(len(data))
+for idx,d in enumerate(data,start=0):
+    frappe.db.set_value("GL Entry",d.name,'cost_center','Main - VF')
+    if idx % 500 == 0:
+        frappe.db.commit()
+        print("committed " + str(idx) +  "  " + str(d.name))
+    print(str(idx) +  "  " + str(d.name)) 
+
 # Patch In GL Entry for Updating Cost Center in KC
 data = frappe.get_list("GL Entry",{'company':'Koradiya Ceramics Pvt. Ltd.','cost_center':['LIKE','']})
 print(len(data))
@@ -59,3 +69,14 @@ for idx,d in enumerate(data,start=0):
         frappe.db.commit()
         print("committed " + str(idx) +  "  " + str(d.name))
     print(str(idx) +  "  " + str(d.name)) 
+
+
+query = frappe.db.sql("""
+    select pe.name
+    from `tabPayment Entry` as pe JOIN
+    `tabGL Entry` as gl on gl.voucher_no = pe.name
+    where
+        gl.voucher_type = 'Payment Entry'
+        and (gl.account LIKE '%Debtors%' or gl.account LIKE '%Creditors%')
+        and pe.paid_amount * 1.2 < (gl.debit + gl.credit) 
+""")

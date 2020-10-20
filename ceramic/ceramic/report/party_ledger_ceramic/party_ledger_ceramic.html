@@ -109,10 +109,16 @@
 					<strong>Opening Balance</strong>
 				</p>
 			</td>
-			{% } else if(i == l - 2) { %}
+			{% } else if(i == l - 3) { %}
 			<td width="16%" valign="top" colspan="2">
 				<p style="font-size: 14px;  " align="center">
 			<b>	<strong>Total</strong></b>
+				</p>
+			</td>
+			{% } else if(i == l - 2) { %}
+			<td width="16%" valign="top" colspan="2">
+				<p style="font-size: 14px;  " align="center">
+			<b>	<strong>Closing Balance</strong></b>
 				</p>
 			</td>
 			{% } else if(i == l - 1)  { %}
@@ -178,7 +184,9 @@
 					{{ data[i].si_details }}
 				{% } %}
 				{% } %}
-				
+				{% if(data[i].voucher_no == 'Total'){ %}
+				<p><strong><span style="float:left !important">Qty:</span> <span style="text-align: right !important;">{{ frappe.format(data[i].qty, {'fieldtype': 'Float'}) }}</span></strong></p>
+				{% } %}
 				<p><strong>
 				<span style="float:left !important">Other:</span> <span style="float:left !important">{{ frappe.format(data[i].cash_debit, {'fieldtype': 'Currency'}) }}</span>
 					</strong>
