@@ -81,7 +81,7 @@ def create_main_sales_invoice(self):
 
 			target.si_ref = self.name
 			target.authority = "Unauthorized"
-
+			target.cost_center = source.cost_center.replace(source_company_abbr, target_company_abbr)
 			if source.is_return:
 				target.is_return = source.is_return
 				target.return_against = frappe.db.get_value("Sales Invoice", source.return_against, 'si_ref')
