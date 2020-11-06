@@ -80,3 +80,14 @@ query = frappe.db.sql("""
         and (gl.account LIKE '%Debtors%' or gl.account LIKE '%Creditors%')
         and pe.paid_amount * 1.2 < (gl.debit + gl.credit) 
 """)
+
+# cost_center Patch
+query = frappe.get_list("Purchase Invoice",{'cost_center':['LIKE',''],'docstatus':['!=',2]})
+for idx,d in enumerate(query,start=0):
+    doc = frappe.get_doc("Purchase Invoice",d.name)
+    company_cost_center = frappe.db.get_value("Company",doc.company,'cost_center')
+    doc.db_set('cost_center',company_cost_center,update_modified = False)
+    if idx % 500 == 0:
+        frappe.db.commit()
+        print("commited at " + str(idx) + " " + str(d.name))
+    print(str(idx) + " "+  str(d.name))

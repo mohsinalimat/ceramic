@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
+from frappe.model.utils import get_fetch_values
 from erpnext.stock.doctype.delivery_note.delivery_note import get_returned_qty_map,get_invoiced_qty_map
 from frappe.contacts.doctype.address.address import get_company_address
 
@@ -78,10 +79,10 @@ def create_main_sales_invoice(self):
 			target.company = target_company
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
-
+			target.cost_center = source.cost_center.replace(source_company_abbr, target_company_abbr)
 			target.si_ref = self.name
 			target.authority = "Unauthorized"
-			target.cost_center = source.cost_center.replace(source_company_abbr, target_company_abbr)
+			
 			if source.is_return:
 				target.is_return = source.is_return
 				target.return_against = frappe.db.get_value("Sales Invoice", source.return_against, 'si_ref')
@@ -115,7 +116,6 @@ def create_main_sales_invoice(self):
 
 			target_company_abbr = frappe.db.get_value("Company", target_company, "abbr")
 			source_company_abbr = frappe.db.get_value("Company", source_parent.company, "abbr")
-
 			doc = frappe.get_doc("Company", target_company)
 
 			target_doc.real_qty = source_doc.qty
@@ -184,10 +184,12 @@ def create_main_sales_invoice(self):
 		invoiced_qty_map = get_invoiced_qty_map(source_name)
 
 		def set_missing_values(source, target):
+			source_company_abbr = frappe.db.get_value("Company", self.company, "abbr")
+			target_company_abbr = frappe.db.get_value("Company", source.company, "abbr")
 			target.ignore_pricing_rule = 1
 			target.run_method("set_missing_values")
 			target.run_method("set_po_nos")
-
+			target.cost_center = self.cost_center.replace(source_company_abbr, target_company_abbr)
 			if len(target.get("items")) == 0:
 				frappe.throw(_("All these items have already been invoiced"))
 

@@ -33,6 +33,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 	for d in data:
 		new_child_flag = False
+		if not d.get('item_code'):
+			frappe.throw("Please Enter Item Code Properly.")
+			
 		if not d.get("docname"):
 			new_child_flag = True
 			if parent_doctype == "Sales Order":
@@ -44,8 +47,6 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			if child_item.item_code == d.get("item_code") and (not d.get("rate") or flt(child_item.get("rate")) == flt(d.get("rate"))) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
 				continue
 
-		if not d.get('item_code'):
-			frappe.throw("Please Enter Item Code Properly.")
 		
 		comment = ''
 		
@@ -54,7 +55,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if d.get('qty') != child_item.qty:
 			comment += f" Qty Change From {child_item.qty} to {d.get('qty')}."
 		if d.get('rate') != child_item.rate or d.get('discounted_rate') != child_item.discounted_rate:
-			comment += " Rate Changed."
+			comment += f" Rate Changed from {child_item.rate} to {d.get('rate')}"
 		
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.delivered_qty):
 			frappe.throw(_("Cannot set quantity less than delivered quantity"))
@@ -105,6 +106,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		
 		if not flt(d.get('rate')):
 			d['rate'] = child_item.rate
+
 		
 		if flt(child_item.billed_amt, precision) > flt(flt(d.get("rate")) * flt(d.get("qty")), precision):
 			frappe.throw(_("Row #{0}: Cannot set Rate if amount is greater than billed amount for Item {1}.")

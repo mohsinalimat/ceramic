@@ -338,9 +338,70 @@ frappe.ui.form.on('Delivery Note', {
 			}
 		})
 	},
-	items: function(frm){
-		
-	}
+	customer: function (frm) {
+		if (frm.doc.customer) {
+			frm.set_value("primary_customer", '')
+			frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function (r) {
+				frm.set_value("primary_customer", r.message.primary_customer)
+			})
+			if (!frm.doc.primary_customer) {
+				setTimeout(function () {
+					frm.doc.sales_team = []
+					frappe.model.with_doc("Customer", frm.doc.customer, function () {
+						var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
+						$.each(cus_doc.sales_team, function (index, row) {
+							if (row.company == frm.doc.company) {
+							frm.set_value('sales_head',row.sales_person)
+							frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							frm.set_value('dispatch_person',row.sales_manager)
+								let st = frm.add_child("sales_team");
+								st.sales_person = row.sales_person
+								st.contact_no = row.contact_no
+								st.allocated_percentage = row.allocated_percentage
+								st.allocated_amount = row.allocated_amount
+								st.commission_rate = row.commission_rate
+								st.incentives = row.incentives
+								st.company = row.company
+								st.regional_sales_manager = row.regional_sales_manager
+								st.sales_manager = row.sales_manager
+							}
+						})
+
+						frm.refresh_field("sales_team");
+					});
+				}, 1000);
+			}
+		}
+	},
+	primary_customer: function (frm) {
+		if (frm.doc.primary_customer) {
+			setTimeout(function () {
+				frm.doc.sales_team = []
+				frappe.model.with_doc("Customer", frm.doc.primary_customer, function () {
+					var cus_doc = frappe.model.get_doc("Customer", frm.doc.primary_customer)
+					$.each(cus_doc.sales_team, function (index, row) {
+						if (row.company == frm.doc.company) {
+							frm.set_value('sales_head',row.sales_person)
+							frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							frm.set_value('dispatch_person',row.sales_manager)
+							let st = frm.add_child("sales_team");
+							st.sales_person = row.sales_person
+							st.contact_no = row.contact_no
+							st.allocated_percentage = row.allocated_percentage
+							st.allocated_amount = row.allocated_amount
+							st.commission_rate = row.commission_rate
+							st.incentives = row.incentives
+							st.company = row.company
+							st.regional_sales_manager = row.regional_sales_manager
+							st.sales_manager = row.sales_manager
+						}
+					})
+
+					frm.refresh_field("sales_team");
+				});
+			}, 2000);
+		}
+	},
 });
 frappe.ui.form.on("Delivery Note Item", {
 	qty: (frm, cdt, cdn) => {

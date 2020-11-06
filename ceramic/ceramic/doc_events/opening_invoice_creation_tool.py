@@ -93,16 +93,12 @@ def make_invoices(self):
 		if row.outstanding_amount > 0.0:
 			if row.outstanding_amount <= row.full_amount:
 				doc = frappe.get_doc(args).insert()
-				if doc.doctype == 'Sales Invoice':
-					doc.sales_partner = row.sales_partner
 				doc.primary_customer = row.primary_customer
 			else:
 				difference = row.outstanding_amount - row.full_amount
 				# frappe.throw(str(difference))
 				args['items'][0]['full_rate'] = args['items'][0]['rate']
 				doc = frappe.get_doc(args).insert()
-				if doc.doctype == 'Sales Invoice':
-					doc.sales_partner = row.sales_partner
 				doc.primary_customer = row.primary_customer
 				
 				doc2 = frappe.new_doc("Journal Entry")
@@ -120,7 +116,8 @@ def make_invoices(self):
 						'party': row.party,
 						'debit_in_account_currency': 0,
 						'credit_in_account_currency': abs(difference),
-						'is_advance': 'Yes'
+						'is_advance': 'Yes',
+						'cost_center': row.cost_center.replace(source_abbr, target_abbr),
 					})
 
 					doc2.append('accounts', {
@@ -128,7 +125,8 @@ def make_invoices(self):
 						'party_type': None,
 						'party': None,
 						'debit_in_account_currency': abs(difference),
-						'credit_in_account_currency': 0
+						'credit_in_account_currency': 0,
+						'cost_center': row.cost_center.replace(source_abbr, target_abbr),
 					})
 				
 				elif self.invoice_type == 'Purchase':
@@ -138,7 +136,8 @@ def make_invoices(self):
 						'party': row.party,
 						'debit_in_account_currency': abs(difference),
 						'credit_in_account_currency': 0,
-						'is_advance': 'Yes'
+						'is_advance': 'Yes',
+						'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 					})
 
 					doc2.append('accounts', {
@@ -146,14 +145,13 @@ def make_invoices(self):
 						'party_type': None,
 						'party': None,
 						'debit_in_account_currency': 0,
-						'credit_in_account_currency': abs(difference)
+						'credit_in_account_currency': abs(difference),
+						'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 					})
 				
 				doc2.save()
 				doc2.submit()
-
-				
-			
+		
 			doc.submit()
 			names.append(doc.name)
 
@@ -164,6 +162,8 @@ def make_invoices(self):
 			doc = frappe.get_doc(args).insert()
 			doc.primary_customer = row.primary_customer
 			doc.authority = frappe.get_value("Company", doc.company, "authority")
+			if row.cost_center:
+				doc.cost_center = row.cost_center.replace(source_abbr, target_abbr)
 			for item in doc.items:
 				item.rate = flt(row.full_amount) / flt(item.qty)
 				item.cost_center = item.cost_center.replace(source_abbr, target_abbr)
@@ -197,7 +197,8 @@ def make_invoices(self):
 					'party': row.party,
 					'debit_in_account_currency': 0,
 					'credit_in_account_currency': abs(row.outstanding_amount),
-					'is_advance': 'Yes'
+					'is_advance': 'Yes',
+					'cost_center': row.cost_center
 				})
 
 				doc.append('accounts', {
@@ -205,7 +206,8 @@ def make_invoices(self):
 					'party_type': None,
 					'party': None,
 					'debit_in_account_currency': abs(row.outstanding_amount),
-					'credit_in_account_currency': 0
+					'credit_in_account_currency': 0,
+					'cost_center': row.cost_center
 				})
 			
 			elif self.invoice_type == 'Purchase':
@@ -215,7 +217,8 @@ def make_invoices(self):
 					'party': row.party,
 					'debit_in_account_currency': abs(row.outstanding_amount),
 					'credit_in_account_currency': 0,
-					'is_advance': 'Yes'
+					'is_advance': 'Yes',
+					'cost_center': row.cost_center
 				})
 
 				doc.append('accounts', {
@@ -223,7 +226,8 @@ def make_invoices(self):
 					'party_type': None,
 					'party': None,
 					'debit_in_account_currency': 0,
-					'credit_in_account_currency': abs(row.outstanding_amount)
+					'credit_in_account_currency': abs(row.outstanding_amount),
+					'cost_center': row.cost_center
 				})
 			
 			doc.save()
@@ -245,7 +249,8 @@ def make_invoices(self):
 					'party': row.party,
 					'debit_in_account_currency': 0,
 					'credit_in_account_currency': abs(row.full_amount),
-					'is_advance': 'Yes'
+					'is_advance': 'Yes',
+					'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 				})
 
 				doc.append('accounts', {
@@ -253,7 +258,8 @@ def make_invoices(self):
 					'party_type': None,
 					'party': None,
 					'debit_in_account_currency': abs(row.full_amount),
-					'credit_in_account_currency': 0
+					'credit_in_account_currency': 0,
+					'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 				})
 			
 			elif self.invoice_type == 'Purchase':
@@ -263,7 +269,8 @@ def make_invoices(self):
 					'party': row.party,
 					'debit_in_account_currency': abs(row.full_amount),
 					'credit_in_account_currency': 0,
-					'is_advance': 'Yes'
+					'is_advance': 'Yes',
+					'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 				})
 
 				doc.append('accounts', {
@@ -271,7 +278,8 @@ def make_invoices(self):
 					'party_type': None,
 					'party': None,
 					'debit_in_account_currency': 0,
-					'credit_in_account_currency': abs(row.full_amount)
+					'credit_in_account_currency': abs(row.full_amount),
+					'cost_center': row.cost_center.replace(source_abbr, target_abbr)
 				})
 			
 			doc.save()
@@ -335,7 +343,8 @@ def get_invoice_dict(self, row=None):
 		"posting_date": row.posting_date,
 		frappe.scrub(party_type): row.party,
 		"doctype": "Sales Invoice" if self.invoice_type == "Sales" else "Purchase Invoice",
-		"currency": frappe.get_cached_value('Company',  self.company,  "default_currency")
+		"currency": frappe.get_cached_value('Company',  self.company,  "default_currency"),
+		"cost_center":row.cost_center
 	})
 
 	if self.invoice_type == "Sales":
