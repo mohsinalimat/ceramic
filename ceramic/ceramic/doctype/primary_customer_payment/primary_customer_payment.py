@@ -30,6 +30,8 @@ class PrimaryCustomerPayment(Document):
 			where parent = %s and allocated_amount = 0""", self.name)
 
 	def on_submit(self):
+		if (self.total_allocated_amount + self.unallocated_amount) != self.paid_amount:
+			frappe.throw("Total Allocated Amount + Unallocated Amount cannot be different than Paid Amount")
 		self.create_primay_customer_payment_entry()
 
 	def before_cancel(self):

@@ -487,10 +487,10 @@ def validate_after_submit(self, method):
 def before_update_after_submit(self, method):
 	setting_real_qty(self)
 	calculate_order_priority(self)
+	self.calculate_taxes_and_totals()
 	update_discounted_amount(self)
 	update_idx(self)
 	update_discounted_net_total(self)
-	self.calculate_taxes_and_totals()
 	update_order_rank(self)
 	update_linked_order(self)
 

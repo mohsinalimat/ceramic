@@ -368,6 +368,13 @@ def get_columns(filters):
 			"options": "voucher_type",
 			"width": 120
 		},
+				{
+			"label": _("Link No"),
+			"fieldname": "reference_doc",
+			"fieldtype": "Dynamic Link",
+			"options": "voucher_type",
+			"width": 120
+		},
 		{
 			"label": _("Party"),
 			"fieldname": "party",
@@ -471,15 +478,4 @@ def get_columns(filters):
 			"width": 120
 		},
 	]
-	if filters.get('print_with_item'):
-		columns+= [
-				{
-				"label": _("Link No"),
-				"fieldname": "reference_doc",
-				"fieldtype": "Dynamic Link",
-				"options": "voucher_type",
-				"width": 120
-			},
-			]
-
 	return columns

@@ -471,7 +471,8 @@ def unpick_qty_comment(reference_name, sales_order, data):
 
 @frappe.whitelist()
 def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_list_item = None, unpick_qty = None, sales_order_differnce_qty = 0.0):
-
+	# if flt(unpick_qty) < 0:
+	# 	frappe.throw(_("Unpick qty cannot be negative"))
 	if pick_list_item and pick_list:
 		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)

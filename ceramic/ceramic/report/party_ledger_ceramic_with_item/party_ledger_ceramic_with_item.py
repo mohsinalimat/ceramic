@@ -10,6 +10,7 @@ from collections import OrderedDict
 import frappe
 from frappe.utils import getdate, cstr, flt, fmt_money
 from frappe import _, _dict
+import re
 
 from erpnext import get_company_currency, get_default_company
 from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
@@ -272,18 +273,22 @@ def get_result(filters, account_details):
 def html_sales_invoice_data(sales_invoice_map,total_taxes_and_charges):
 	table = ""
 	for item_group,value in sales_invoice_map.items():
-		i_group = item_group.split('-', 1)[0].strip()
-
-		table += f"""
-			<p>
-				<strong>{i_group}</strong>
-			</p>
-		"""
-		for k,v in value.items():
-			table+= f"""<p>
-					{v["qty"]} x {k} = <span><strong>{frappe.format(v["qty"] * k,{'fieldtype': 'Currency'})}</strong></span>
-				</p>	
+		if item_group:
+			if item_group.find('-'):
+				i_group = item_group.split('-', 1)[0].strip()
+			else:
+				i_group = item_group
+				
+			table += f"""
+				<p>
+					<strong>{i_group}</strong>
+				</p>
 			"""
+			for k,v in value.items():
+				table+= f"""<p>
+						{v["qty"]} x {k} = <span><strong>{frappe.format(v["qty"] * k,{'fieldtype': 'Currency'})}</strong></span>
+					</p>	
+				"""
 	if total_taxes_and_charges:
 		table += f"""<p>
 			<span><strong> Total Taxes & Charges = {frappe.format(total_taxes_and_charges,{'fieldtype': 'Currency'})}</strong></span>

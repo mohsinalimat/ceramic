@@ -7,6 +7,7 @@ from frappe.utils import flt
 from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
 
 def before_validate(self, method):
+	self.sales_team = []
 	self.flags.ignore_permissions = True
 
 	if self.invoice_company == self.company or not self.invoice_company:
@@ -121,7 +122,12 @@ def update_status_pick_list_and_sales_order(self):
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			wastage_qty = item.wastage_qty + sales_order_item.wastage_qty
 			delivered_real_qty = item.real_qty + sales_order_item.delivered_real_qty
+			delivered_qty = item.qty + sales_order_item.delivered_qty
 
+
+			if delivered_qty + wastage_qty > sales_order_item.qty:
+				frappe.throw(f"Row {item.idx}: You can not deliver more than sales order qty")
+			
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 
@@ -218,13 +224,14 @@ def on_cancel(self, method):
 		if item.against_sales_order:
 			sales_order_item = frappe.get_doc("Sales Order Item", item.so_detail)
 			delivered_real_qty = sales_order_item.delivered_real_qty - item.real_qty
-			wastage_qty = sales_order_item.wastage_qty - 1
+			wastage_qty = sales_order_item.wastage_qty - item.wastage_qty
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			if item.against_pick_list:
-				if sales_order_item.picked_qty + wastage_qty > sales_order_item.qty:
+				if sales_order_item.picked_qty + item.wastage_qty > sales_order_item.qty:
 					frappe.throw(f"Please Unpick {sales_order_item.picked_qty + wastage_qty - sales_order_item.qty} for Sales Order {sales_order_item.parent} Row: {sales_order_item.idx}")
-				frappe.db.set_value("Sales Order Item", sales_order_item.name, 'picked_qty', flt(sales_order_item.picked_qty + wastage_qty))
+				
+				frappe.db.set_value("Sales Order Item", sales_order_item.name, 'picked_qty', flt(sales_order_item.picked_qty + item.wastage_qty))
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 		
 		if not item.against_pick_list and item.against_sales_order:
