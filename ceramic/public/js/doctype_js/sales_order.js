@@ -555,6 +555,9 @@ cur_frm.set_query('company', function () {
 });
 frappe.ui.form.on('Sales Order', {
 	refresh: (frm) => {
+		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
+			frm.set_value("so_ref", "");
+		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	lotwise_balance: function(frm){
