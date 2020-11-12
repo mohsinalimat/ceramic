@@ -256,7 +256,10 @@ doc_events = {
 		"validate_after_submit": "ceramic.ceramic.doc_events.sales_order.validate_after_submit",
 		"before_update_after_submit": "ceramic.ceramic.doc_events.sales_order.before_update_after_submit",
 		"on_update_after_submit": "ceramic.ceramic.doc_events.sales_order.on_update_after_submit",
+		"before_cancel": "ceramic.ceramic.doc_events.sales_order.before_cancel",
 		"on_cancel": "ceramic.ceramic.doc_events.sales_order.on_cancel",
+		"on_trash": "ceramic.ceramic.doc_events.sales_order.on_trash",
+
 	},
 	"Pick List": {
 		"before_validate": "ceramic.api.naming_series_validate",
