@@ -13,7 +13,8 @@
   "column_break_6",
   "posting_date",
   "posting_time",
-  "authority"
+  "authority",
+  "amended_from"
  ],
  "fields": [
   {
@@ -57,10 +58,12 @@
    "label": "Posting Time"
   },
   {
+   "fetch_from": "company.authority",
    "fieldname": "authority",
    "fieldtype": "Link",
    "label": "Authority",
-   "options": "Authority"
+   "options": "Authority",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_6",
@@ -71,9 +74,19 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "ACR-.YY.-"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Account Reco",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "modified": "2020-02-29 12:48:08.262090",
+ "is_submittable": 1,
+ "modified": "2020-12-05 11:23:40.163530",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Account Reco",

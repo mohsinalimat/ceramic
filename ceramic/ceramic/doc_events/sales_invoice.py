@@ -362,7 +362,7 @@ def cancel_main_sales_invoice(self):
 					change_delivery_authority(i.delivery_docname)
 			except Exception as e:
 				frappe.db.rollback()
-				frappe.throw(e)
+				frappe.throw(_(str(e)))
 	else:
 		for i in self.items:
 			change_delivery_authority(i.delivery_docname)
