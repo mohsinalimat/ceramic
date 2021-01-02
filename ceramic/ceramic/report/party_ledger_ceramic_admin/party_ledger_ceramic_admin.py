@@ -142,7 +142,7 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
 			gle.`company` = '{company}' AND
-			(gle.`posting_date` < '{from_date}' or gle.transaction_status = 'Old') {conditions} {group_by_having_conditions}
+			gle.`posting_date` < '{from_date}' {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 
 	if not data:
@@ -208,7 +208,7 @@ def validate_party(filters):
 					frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
 
 def get_result(filters, account_details):
-	conditions =" AND "
+	conditions =""
 	company_placeholder_list = []
 	if filters.company:
 		company_placeholder_list.append(filters.company)
@@ -240,7 +240,6 @@ def get_result(filters, account_details):
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
-			gle.transaction_status = 'New'
 			{conditions}
 		GROUP BY
 			gle.voucher_no, gle.party {having_cond}

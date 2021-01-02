@@ -7,7 +7,7 @@ def get_data():
 		{
 			"module_name": "Ceramic",
 			"color": "grey",
-			"icon": "octicon octicon-file-directory",
+			"icon": "/files/ceramic.svg",
 			"type": "module",
 			"label": _("Ceramic")
 		}

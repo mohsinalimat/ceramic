@@ -8,7 +8,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Millennium",
- "modified": "2020-09-30 18:17:54.940277",
+ "modified": "2020-12-09 17:42:10.721721",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Party Ledger",
@@ -19,13 +19,7 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "Accounts User"
-  },
-  {
-   "role": "Accounts Manager"
-  },
-  {
-   "role": "Auditor"
+   "role": "System Manager"
   }
  ]
 }

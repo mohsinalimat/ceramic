@@ -24,7 +24,15 @@ class AccountReco(Document):
 			for row in data:
 				frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='Old' where name = '{voucher_no}'
 				""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
-
+		
+		if self.party_type == "Customer":
+			doc = frappe.get_doc("Customer",self.party)
+			if doc.sales_team:
+				for sales in doc.sales_team:
+					if sales.company == self.company:
+						sales.db_set('account_reco_date', self.posting_date)
+						sales.db_set('reconciled_amount', self.reconciled_amount)
+						sales.db_update()
 
 	def on_cancel(self):
 		frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'New' where name!='a'
@@ -43,3 +51,14 @@ class AccountReco(Document):
 			for row in data:
 				frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='New' where name = '{voucher_no}'
 				""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
+
+		if self.party_type == "Customer":
+			doc = frappe.get_doc("Customer",self.party)
+			if doc.sales_team:
+				for sales in doc.sales_team:
+					if sales.company == self.company:
+						if sales.account_reco_date == self.posting_date:
+							sales.db_set('account_reco_date', None)
+						if sales.reconciled_amount == self.reconciled_amount:
+							sales.db_set('reconciled_amount', 0)
+						sales.db_update()
