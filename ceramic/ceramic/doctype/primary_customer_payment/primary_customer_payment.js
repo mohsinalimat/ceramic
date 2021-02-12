@@ -61,7 +61,7 @@ cur_frm.set_query("account","deductions", function(doc, cdt, cdn){
 
 this.frm.cscript.onload = function (frm) {
 	this.frm.set_query("primary_customer", function (doc) {
-		return { query: "erpnext.controllers.queries.customer_query" }
+		return { query: "ceramic.controllers.queries.new_customer_query" }
 	});
 }
 frappe.ui.form.on('Primary Customer Payment', {

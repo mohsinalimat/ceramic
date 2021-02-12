@@ -130,7 +130,7 @@ def create_main_purchase_invoice(self):
 		return doclist
 
 	# If company is authorized then only cancel another invoice
-	if authority == "Authorized":
+	if authority == "Authorized" and not self.dont_replicate:
 		pi = get_purchase_invoice_entry(self.name)
 		pi.naming_series = 'A' + str(self.company_series) + self.naming_series
 		pi.company_series = self.company_series

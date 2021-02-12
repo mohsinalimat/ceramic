@@ -20,5 +20,20 @@ def get_data():
 					"name": "Lead",
 				}
 			]
-		}
+		},
+		{
+			"label": _("RSM"),
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Sales Order",
+				},
+				{
+					"type": "report",
+					"name": "Sales Person Accounts Receivable",
+					"doctype":"Sales Invoice",
+					"is_query_report": True
+				},
+			]
+		},			
 	]

@@ -1,2 +1,4 @@
 frappe
 erpnext
+finbyzerp
+finbyz_dashboard

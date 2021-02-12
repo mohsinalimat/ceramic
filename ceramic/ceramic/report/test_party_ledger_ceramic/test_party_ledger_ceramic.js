@@ -1,7 +1,8 @@
-// Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
-// License: GNU General Public License v3. See license.txt
+// Copyright (c) 2016, Finbyz and contributors
+// For license information, please see license.txt
+/* eslint-disable */
 
-frappe.query_reports["Accounts Receivable Ceramic"] = {
+frappe.query_reports["Test Party Ledger Ceramic"] = {
 	"filters": [
 		{
 			"fieldname":"company",

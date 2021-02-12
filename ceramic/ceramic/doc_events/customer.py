@@ -20,6 +20,9 @@ def customer_validate(self):
 		if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 			self.loyalty_program_tier = customer.loyalty_program_tier
 
+def before_save(self,method):
+	validate_name(self)
+
 def before_validate(self, method):
 	from erpnext.selling.doctype.customer.customer import Customer
 	#Customer.load_dashboard_info = override_load_dashboard_info
@@ -30,6 +33,9 @@ def validate(self, method):
 	if self.is_primary_customer:
 		self.primary_customer = self.name or self.customer_name
 
+def validate_name(self):
+	if "'" in self.customer_name:
+		frappe.throw("Please Dont use ' Character in Name")
 
 def override_load_dashboard_info(self):
 	user = frappe.session.user
@@ -124,7 +130,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 		l = frappe.get_list("Sales Invoice",{'primary_customer':party,'outstanding_amount':('>',0)},'customer',distinct=1)
 		for customer in l:
 			customer_list.append(customer['customer'])
-		customer_list_placeholder = ', '.join(f"'{i}'" for i in customer_list)
+		customer_list_placeholder = """, """.join(f"'{i}'" for i in customer_list)
 		#frappe.msgprint(str(customer_list_placeholder))
 		#
 		if l:

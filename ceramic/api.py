@@ -123,10 +123,18 @@ def set_organization_details(out, party, party_type):
 
 @frappe.whitelist()
 def restrict_access():
+	unauthorized_companies_all = frappe.get_all("Company",{'authority':'Unauthorized'})
+	unauthorized_companies = [row.name for row in unauthorized_companies_all]
 	role_permission_list = frappe.get_all("User Permission", filters = {
 		"allow": "Authority", "for_value": "Unauthorized"
 	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
-	for item in role_permission_list:
+
+	unauthorized_companies_permission_list = frappe.get_all("User Permission", filters = {
+		"allow": "Company", "for_value":('IN',unauthorized_companies)
+	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
+	final_list = role_permission_list + unauthorized_companies_permission_list
+
+	for item in final_list:
 		if not item['system_genrated']:
 			doc = get_mapped_doc("User Permission", item['name'], {
 				"User Permission": {
@@ -140,20 +148,20 @@ def restrict_access():
 				pass
 		frappe.delete_doc("User Permission", item['name'], ignore_permissions = True)
 	
-	user_list = frappe.get_all("User", filters = {'enabled': 1}, fields = ['email', 'username'], ignore_permissions = True)
+	user_list = frappe.get_all("User", filters = {'enabled': 1}, fields = ['name', 'username'], ignore_permissions = True)
 	for user in user_list:
-		if user['username'] != 'administrator' and user['email'] != 'guest@example.com':
+		if user['username'] != 'administrator' and user['name'] != 'guest@example.com':
 			
 			if not frappe.db.exists({
 				'doctype': 'User Permission',
-				'user': user['email'],
+				'user': user['name'],
 				'allow': 'Authority',
 				'for_value': 'Authorized',
 				'apply_to_all_doctypes': 1
 			}):
 				doc = frappe.new_doc("User Permission")
 
-				doc.user = user['email']
+				doc.user = user['name']
 				doc.allow = 'Authority'
 				doc.for_value = 'Authorized'
 				doc.apply_to_all_doctypes = 1

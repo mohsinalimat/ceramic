@@ -11,7 +11,7 @@ def get_itemised_tax_breakup_data(doc, account_wise=False, eway=False):
 
 	for key, value in itemised_taxable_amount.items():
 		for taxes in frappe.get_list("Sales Taxes and Charges", {'parent': doc.name}, '*'):
-			if taxes.account_head.find('GST') == -1:
+			if taxes.account_head.find('GST') == -1 and taxes.account_head.find('TCS') == -1:
 				iwtd = json.loads(taxes.item_wise_tax_detail)
 				itemised_taxable_amount[key] += iwtd[key][1]
 

@@ -230,6 +230,9 @@ doc_events = {
 		"validate": "ceramic.ceramic.doc_events.account.validate",
 		"on_trash": "ceramic.ceramic.doc_events.account.on_trash",
 	},
+	"Contact":{
+		"validate":"ceramic.ceramic.doc_events.contact.validate",
+	},
 	"Cost Center": {
 		"after_rename": "ceramic.ceramic.doc_events.warehouse.after_rename",
 		"validate": "ceramic.ceramic.doc_events.cost_center.validate",
@@ -371,6 +374,7 @@ doc_events = {
 		"before_naming": "ceramic.ceramic.doc_events.batch.batch_before_name",
 	},
 	"Customer": {
+		"before_save":"ceramic.ceramic.doc_events.customer.before_save",
 		"before_validate": "ceramic.ceramic.doc_events.customer.before_validate",
 		'validate':"ceramic.ceramic.doc_events.customer.validate",
 	},
