@@ -264,28 +264,29 @@ frappe.ui.form.on('Stock Entry', {
 	get_product_price:function(frm){
 		if (frm.doc.purpose == "Material Receipt"){
 			frm.doc.items.forEach(function (d) {
-				if (!d.basic_rate) {
-					frappe.call({
-						method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
-						args: {
-							'item_code': d.item_code
-						},
-						callback: function (r) {
-							if (r.message) {
+				
+				frappe.call({
+					method: 'ceramic.ceramic.doc_events.stock_entry.get_product_price',
+					args: {
+						'item_code': d.item_code
+					},
+					callback: function (r) {
+						console.log(r.message)
+						if (r.message) {
 
-								frappe.model.set_value(d.doctype, d.name, 'basic_rate', r.message);
-								frappe.model.set_value(d.doctype, d.name, 'valuation_rate', r.message);
-							}
-							if (r.error) {
-								frappe.throw({
-									title: __('Item Price not found'),
-									message: r.error
-								});
-							}
-
+							frappe.model.set_value(d.doctype, d.name, 'basic_rate', r.message);
+							frappe.model.set_value(d.doctype, d.name, 'valuation_rate', r.message);
 						}
-					});
-				}
+						if (r.error) {
+							frappe.throw({
+								title: __('Item Price not found'),
+								message: r.error
+							});
+						}
+
+					}
+				});
+			
 			})
 		}
 	},

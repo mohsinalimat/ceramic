@@ -869,7 +869,7 @@ frappe.ui.form.on("Sales Order Item", {
 		// })
 		
 		frappe.call({
-			method: "ceramic.ceramic.doc_events.pick_list.unpick_picked_qty_sales_order",
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 			args: {
 				'sales_order': frm.doc.name,
 				'sales_order_item': d.name,
@@ -877,6 +877,12 @@ frappe.ui.form.on("Sales Order Item", {
 			},
 			callback: function (r) {
 				frappe.msgprint(r.message);
+				frappe.call({
+					method: "ceramic.ceramic.doc_events.pick_list.correct_picked_qty",
+					args: {
+						'sales_order': frm.doc.name,
+					}
+				})
 			}
 		})
 	}

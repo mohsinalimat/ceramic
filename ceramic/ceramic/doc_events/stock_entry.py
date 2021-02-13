@@ -14,6 +14,10 @@ def validate(self,method):
 	calculate_totals(self)
 	if self._action == 'submit':
 		set_batches(self, 't_warehouse')
+	if self.stock_entry_type == "Material Receipt":
+		for row in self.items:
+			item_group = frappe.db.get_value("Item", row.item_code,'item_group')
+			row.basic_rate = frappe.db.get_value("Item Group",item_group,'production_price')
 		
 def calculate_totals(self):
 	premium_qty = 0.0
