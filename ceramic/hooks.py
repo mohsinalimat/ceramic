@@ -222,6 +222,7 @@ doctype_js = {
 	"Company": "public/js/doctype_js/company.js",
 	"Quotation": "public/js/doctype_js/quotation.js",
 	"Customer": "public/js/doctype_js/customer.js",
+	"User":"public/js/doctype_js/user.js",
 	"Bank Statement Transaction Entry": "public/js/doctype_js/bank_statement_transaction_entry.js",
 }
 
