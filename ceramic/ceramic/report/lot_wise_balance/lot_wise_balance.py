@@ -422,7 +422,7 @@ def get_picked_conditions(filters):
 	return conditions
 
 @frappe.whitelist()
-def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,batch_no,lot_no,packing_type):
+def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,date,time,batch_no,lot_no,packing_type):
 	if float(new_qty) < 0:
 		frappe.throw("Please Don't Enter Negative Qty")
 	elif float(balance_qty) > float(new_qty):
@@ -451,8 +451,9 @@ def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty
 		se_qty = abs(float(balance_qty) - float(new_qty))
 		se = frappe.new_doc("Stock Entry")
 		se.stock_entry_type = "Material Receipt"
-		se.posting_date = frappe.utils.nowdate()
-		se.posting_time = frappe.utils.nowtime()
+		se.set_posting_time = 1 
+		se.posting_date = date or frappe.utils.nowdate()
+		se.posting_time = time or frappe.utils.nowtime()
 		se.append("items",{
 			"item_code":item_code,
 			"t_warehouse":warehouse,

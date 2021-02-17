@@ -243,9 +243,13 @@ function new_qty_details(item_code,item_group, balance_qty, warehouse, buying_un
 			<td style="border: 0 !important;"><b>Lot : </b>{{data['lot_no']}}</td>
 			</tr>
 			<tr style="border: 0 !important;">
+			<td style="border: 0 !important;"><input type="date" id="{{ 'date' }}"></td>
+			<td style="border: 0 !important;"><input type="time" id="{{ 'time' }}"></td>
+			</tr>
+			<tr style="border: 0 !important;">
 			<td style="border: 0 !important;"><input type="float" style="width:50px" id="{{ 'new_qty' }}"></input>
 			<td style="border: 0 !important;">
-			<button style="margin-left:5px;border:0 !important;color: #fff; background-color: blue; padding: 3px 5px;border-radius: 5px;" type="button" warehouse = "{{ __(data['warehouse']) }}" balance_qty = "{{ __(data['balance_qty']) }}" item_code = "{{ __(data['item_code']) }}" buying_unit_price = "{{ __(data['buying_unit_price']) }}" batch_no = "{{ __(data['batch_no']) }}" lot_no = "{{ __(data['lot_no']) }}" packing_type = "{{ __(data['packing_type']) }}" onClick=create_stock_entry(this.getAttribute("warehouse"),this.getAttribute("item_code"),this.getAttribute("balance_qty"),this.getAttribute("buying_unit_price"),document.getElementById("{{ 'new_qty' }}").value,this.getAttribute("batch_no"),this.getAttribute("lot_no"),this.getAttribute("packing_type"))>Create Stock Entry</button>
+			<button style="margin-left:5px;border:0 !important;color: #fff; background-color: blue; padding: 3px 5px;border-radius: 5px;" type="button" warehouse = "{{ __(data['warehouse']) }}" balance_qty = "{{ __(data['balance_qty']) }}" item_code = "{{ __(data['item_code']) }}" buying_unit_price = "{{ __(data['buying_unit_price']) }}" batch_no = "{{ __(data['batch_no']) }}" lot_no = "{{ __(data['lot_no']) }}" packing_type = "{{ __(data['packing_type']) }}" onClick=create_stock_entry(this.getAttribute("warehouse"),this.getAttribute("item_code"),this.getAttribute("balance_qty"),this.getAttribute("buying_unit_price"),document.getElementById("{{ 'new_qty' }}").value,document.getElementById("{{ 'date' }}").value,document.getElementById("{{ 'time' }}").value,this.getAttribute("batch_no"),this.getAttribute("lot_no"),this.getAttribute("packing_type"))>Create Stock Entry</button>
 			</tr>
 		</table>`;
 		let message = frappe.template.compile(template)({ 'data': {"item_code":item_code,"item_group":item_group,"balance_qty":balance_qty,"warehouse":warehouse,"buying_unit_price":buying_unit_price,"batch_no":batch_no, "lot_no":lot_no, "packing_type":packing_type} });
@@ -256,7 +260,7 @@ function new_qty_details(item_code,item_group, balance_qty, warehouse, buying_un
 		});
 }
 
-function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,batch_no,lot_no,packing_type) {
+function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,date,time,batch_no,lot_no,packing_type) {
 	if ((new_qty) < 0){
 		frappe.throw("Please Don't Enter Negative Qty")
 	}
@@ -271,6 +275,8 @@ function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,ne
 			balance_qty:balance_qty,
 			buying_unit_price:buying_unit_price,
 			new_qty:new_qty,
+			date: date,
+			time: time,
 			batch_no:batch_no,
 			lot_no:lot_no,
 			packing_type:packing_type
