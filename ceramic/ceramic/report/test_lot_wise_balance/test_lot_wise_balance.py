@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, getdate
+from frappe.utils import cint, flt, getdate, get_url_to_form
 
 
 def execute(filters=None):
@@ -107,7 +107,6 @@ def execute(filters=None):
 						})
 	
 	for row in data:
-		frappe.msgprint(str(row))
 		if row['item_code'] and filters.get('warehouse'):
 			row['new_qty'] = """
 					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
@@ -441,9 +440,13 @@ def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty
 			"lot_no": lot_no,
 			"packing_type": packing_type
 		})
-		se.save()
-		se.submit()
-		return se.name
+		try:
+			se.save()
+			se.submit()
+			url = get_url_to_form("Stock Entry", se.name)
+			frappe.msgprint("Stock Entry <b><a href='{url}'>{name}</a></b> has been created successfully!".format(url=url, name=frappe.bold(se.name)))
+		except Exception as e:
+			frappe.msgprint(e)
 	elif float(balance_qty) < float(new_qty):
 		se_qty = abs(float(balance_qty) - float(new_qty))
 		se = frappe.new_doc("Stock Entry")
@@ -459,6 +462,10 @@ def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty
 			"lot_no": lot_no,
 			"packing_type": packing_type
 		})
-		se.save()
-		se.submit()
-		return se.name
+		try:
+			se.save()
+			se.submit()
+			url = get_url_to_form("Stock Entry", se.name)
+			frappe.msgprint("Stock Entry <b><a href='{url}'>{name}</a></b> has been created successfully!".format(url=url, name=frappe.bold(se.name)))
+		except Exception as e:
+			frappe.msgprint(e)

@@ -130,6 +130,11 @@ frappe.query_reports["Lot-Wise Balance"] = {
 				}
 			}
 		},
+		{
+			"fieldname": "warehouse",
+			"label": __("Show Warehouse"),
+			"fieldtype": "Check"
+		},
 	]
 }
 
@@ -197,7 +202,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			frappe.msgprint({
 				message: message,
 				title: "Lot-Wise Balance Details : " + item_code,
-				wide: true,
+				wide: true
 			});
 		}
 	})
@@ -205,7 +210,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 
 function remove_picked_item_lot_wise(sales_order, sales_order_item, pick_list, pick_list_item, unpick_qty) {
 	frappe.call({
-		method: "ceramic.ceramic.doc_events.pick_list.unpick_item_1",
+		method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
 		args: {
 			sales_order: sales_order,
 			sales_order_item: sales_order_item,
@@ -214,7 +219,69 @@ function remove_picked_item_lot_wise(sales_order, sales_order_item, pick_list, p
 			unpick_qty:unpick_qty
 		},
 		callback: function (r) {
+			if(r.message){
+				$(".modal").modal('hide');
+				setTimeout(function(){frappe.msgprint(r.message)}, 500);
+			}
 			$('.' + pick_list_item).hide()
+		}
+	})
+}
+
+function new_qty_details(item_code,item_group, balance_qty, warehouse, buying_unit_price, batch_no, lot_no, packing_type) {
+	let template = `
+		<table class="table table-borderless" style="border: 0 !important; font-size:95%;">
+			<tr style="border: 0 !important;">
+			<td style="border: 0 !important;"><b>Item Group: </b> {{ data['item_group'] }}</td>
+			</tr>
+			<tr style="border: 0 !important;">
+			<td style="border: 0 !important;"><b>Available Qty : </b>{{data['balance_qty']}}</td>
+			<td style="border: 0 !important;"><b>Warehouse : </b>{{data['warehouse']}}</td>
+			</tr>
+			<tr style="border: 0 !important;">
+			<td style="border: 0 !important;"><b>Batch : </b>{{data['batch_no']}}</td>
+			<td style="border: 0 !important;"><b>Lot : </b>{{data['lot_no']}}</td>
+			</tr>
+			<tr style="border: 0 !important;">
+			<td style="border: 0 !important;"><input type="float" style="width:50px" id="{{ 'new_qty' }}"></input>
+			<td style="border: 0 !important;">
+			<button style="margin-left:5px;border:0 !important;color: #fff; background-color: blue; padding: 3px 5px;border-radius: 5px;" type="button" warehouse = "{{ __(data['warehouse']) }}" balance_qty = "{{ __(data['balance_qty']) }}" item_code = "{{ __(data['item_code']) }}" buying_unit_price = "{{ __(data['buying_unit_price']) }}" batch_no = "{{ __(data['batch_no']) }}" lot_no = "{{ __(data['lot_no']) }}" packing_type = "{{ __(data['packing_type']) }}" onClick=create_stock_entry(this.getAttribute("warehouse"),this.getAttribute("item_code"),this.getAttribute("balance_qty"),this.getAttribute("buying_unit_price"),document.getElementById("{{ 'new_qty' }}").value,this.getAttribute("batch_no"),this.getAttribute("lot_no"),this.getAttribute("packing_type"))>Create Stock Entry</button>
+			</tr>
+		</table>`;
+		let message = frappe.template.compile(template)({ 'data': {"item_code":item_code,"item_group":item_group,"balance_qty":balance_qty,"warehouse":warehouse,"buying_unit_price":buying_unit_price,"batch_no":batch_no, "lot_no":lot_no, "packing_type":packing_type} });
+		frappe.msgprint({
+			message: message,
+			title: "Item Code : " + item_code,
+			wide: true,
+		});
+}
+
+function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,batch_no,lot_no,packing_type) {
+	if ((new_qty) < 0){
+		frappe.throw("Please Don't Enter Negative Qty")
+	}
+
+	$(".modal").modal('hide');
+	frappe.call({
+		method:"ceramic.ceramic.report.lot_wise_balance.lot_wise_balance.create_stock_entry",
+		args:
+		{
+			warehouse:warehouse,
+			item_code:item_code,
+			balance_qty:balance_qty,
+			buying_unit_price:buying_unit_price,
+			new_qty:new_qty,
+			batch_no:batch_no,
+			lot_no:lot_no,
+			packing_type:packing_type
+		},
+		freeze: true,
+		freeze_message: "<b>creating stock entry...<b>",
+		callback:function(r){
+			frappe.msgprint(r.message)
+			//setTimeout(function () {frappe.msgprint(r.message)}, 1000)
+			// window.location.reload();
+			//setTimeout(function () {$(".modal").modal('hide');}, 1000)	 
 		}
 	})
 }

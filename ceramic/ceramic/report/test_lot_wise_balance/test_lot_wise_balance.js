@@ -260,10 +260,10 @@ function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,ne
 	if ((new_qty) < 0){
 		frappe.throw("Please Don't Enter Negative Qty")
 	}
-	console.log(batch_no)
-	console.log(lot_no)
+
+	$(".modal").modal('hide');
 	frappe.call({
-		method:"ceramic.ceramic.report.test_lot_wise_balance.test_lot_wise_balance.create_stock_entry",
+		method:"ceramic.ceramic.report.lot_wise_balance.lot_wise_balance.create_stock_entry",
 		args:
 		{
 			warehouse:warehouse,
@@ -275,10 +275,13 @@ function create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,ne
 			lot_no:lot_no,
 			packing_type:packing_type
 		},
+		freeze: true,
+		freeze_message: "<b>creating stock entry...<b>",
 		callback:function(r){
+			frappe.msgprint(r.message)
+			//setTimeout(function () {frappe.msgprint(r.message)}, 1000)
 			// window.location.reload();
-			$(".modal").modal('hide');
-			 
+			//setTimeout(function () {$(".modal").modal('hide');}, 1000)	 
 		}
 	})
 }

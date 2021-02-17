@@ -379,6 +379,7 @@ frappe.ui.form.on('Picked Sales Orders', {
 				'unpick_qty': d.unpick_qty || 0
 			},
 			callback: function(r){
+				frappe.msgprint(r.message);
 				frm.events.get_item_qty(frm);
 
 				if (d.sales_order == frm.sales_order){
