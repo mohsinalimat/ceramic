@@ -134,6 +134,25 @@ def restrict_access():
 	}, fields = ['name', 'system_genrated'], ignore_permissions = True)
 	final_list = role_permission_list + unauthorized_companies_permission_list
 
+	report_list=[]
+	data = frappe.get_all("Testing Report Detail",filters={'parent':'Testing Report'},fields=['report'])
+	for d in data:
+		report_list.append(d['report'])
+	if report_list:
+		for report in report_list:
+			doc = get_mapped_doc("Custom Role", {'report': report}, {
+				"Custom Role": {
+					"doctype": "Backup Custom Role",
+				}
+			}, ignore_permissions = True)
+
+			try:
+				doc.save(ignore_permissions = True)
+			except:
+				pass
+			doc_name = frappe.get_all("Custom Role",{'report': report})
+			frappe.delete_doc("Custom Role", doc_name[0].name, ignore_permissions = True)
+
 	for item in final_list:
 		if not item['system_genrated']:
 			doc = get_mapped_doc("User Permission", item['name'], {
@@ -190,6 +209,19 @@ def reverse_restrict_access():
 		doc.save(ignore_permissions = True)
 		
 		frappe.delete_doc("Backup User Permission", item['name'], ignore_permissions = True)
+
+	report_permission_list = frappe.get_all("Backup Custom Role")
+	for row in report_permission_list:
+		doc = get_mapped_doc("Backup Custom Role", row['name'], {
+			"Backup Custom Role": {
+				"doctype": "Custom Role",
+			}
+		})
+
+		doc.save(ignore_permissions = True)
+		
+		frappe.delete_doc("Backup Custom Role", row['name'], ignore_permissions = True)
+
 	
 	user_permission_list = frappe.get_all("User Permission", filters = {'system_genrated': 1})
 
