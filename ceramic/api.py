@@ -866,7 +866,8 @@ def remove_authentication(user):
 	frappe.db.commit()
 
 def validate_default_user(self, method):
-	if frappe.db.get_value("User",{'default_user':1},'name'):
+	user = frappe.db.get_value("User",{'default_user':1},'name')
+	if user and user != self.name and self.default_user:
 		frappe.throw("Default User Already Exists.")
 
 	

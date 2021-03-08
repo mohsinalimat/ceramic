@@ -22,7 +22,7 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.datetime.add_days(frappe.datetime.get_today(), -3),
+			"default": frappe.datetime.add_months(frappe.datetime.get_today(), -1),
 			"reqd": 1,
 			"width": "40px"
 		},
@@ -77,7 +77,6 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			method:"finbyzerp.whatsapp_manager.get_whatsapp_settings",
 			args:{},
 			callback: function(r){
-				console.log(r.message)
 				if (r.message ==true){
 					report.page.add_menu_item(__('Send WhatsApp'), function() {
 						whatsapp_dialog(report)
@@ -175,8 +174,9 @@ function whatsapp_dialog(report){
 };
 
 function display_qr(){
-    let event = String('Party Ledger Ceramic' + frappe.session.user)
+	let event = String('Party Ledger Ceramic' + frappe.session.user)
     frappe.realtime.on(event, function(data) {
+		console.log("Event Triggered")
         var d = frappe.msgprint({
             title: __('Scan below QR Code in Whatsapp Web'),
             message: data,
