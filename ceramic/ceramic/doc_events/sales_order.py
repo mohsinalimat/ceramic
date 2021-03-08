@@ -573,6 +573,9 @@ def update_idx(self):
 def update_sales_order_total_values(self):
 	""" This function is use to change total value on submit and cancel of sales order, pick list and delivery note """
 	
+	if self.status == "Close":
+		frappe.throw("Can not create pick list against close sales order.")
+		
 	qty = 0
 	total_picked_qty = 0.0
 	total_picked_weight = 0.0
