@@ -174,7 +174,6 @@ function whatsapp_dialog(report){
 function display_qr(){
 	let event = String('Party Ledger Ceramic' + frappe.session.user)
     frappe.realtime.on(event, function(data) {
-		console.log("Event Triggered")
         var d = frappe.msgprint({
             title: __('Scan below QR Code in Whatsapp Web'),
             message: data,
