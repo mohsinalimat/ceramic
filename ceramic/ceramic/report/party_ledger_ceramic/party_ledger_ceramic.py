@@ -7,9 +7,13 @@ from __future__ import unicode_literals
 from six import iteritems
 from collections import OrderedDict
 
-import frappe
-from frappe.utils import getdate, cstr, flt, fmt_money
+import frappe, os, sys, time, json, tempfile, shutil, datetime
+from frappe.utils import getdate, cstr, flt, fmt_money, format_time, now
 from frappe import _, _dict
+
+from frappe.utils.pdf import get_pdf
+from frappe.utils.file_manager import save_file
+from frappe.utils.background_jobs import enqueue
 
 from erpnext import get_company_currency, get_default_company
 from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
@@ -17,6 +21,20 @@ from erpnext.accounts.utils import get_account_currency
 from erpnext.accounts.report.financial_statements import get_cost_centers_with_children
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
 
+# Whatsapp Import Start:
+
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+from selenium.common.exceptions import NoSuchElementException
+
+# Whatapp Import End
 
 def execute(filters=None):
 	if not filters:
@@ -480,3 +498,219 @@ def get_columns(filters):
 		},
 	]
 	return columns
+
+# Whatsapp Manager Start:
+
+@frappe.whitelist()
+def get_report_data_pdf(filters):
+	report = frappe.get_doc("Report","Party Ledger Ceramic")
+	filters = frappe.parse_json(filters) if filters else {}
+
+	columns, data = report.get_data(user = frappe.session.user,
+		filters = filters, as_dict=True, ignore_prepared_report=True)
+
+	return columns, data
+
+
+@frappe.whitelist()
+def generate_report_pdf(html):
+	filecontent = get_pdf(html,{"orientation":"Landscape"})
+	file_data = save_file("party_ledger_ceramic.pdf", filecontent, "Report","Party Ledger Ceramic",is_private=1)
+	return file_data.file_url
+
+@frappe.whitelist()
+def whatsapp_login_check():
+	user = frappe.db.get_value("User",{'default_user':1},'name')
+	profiledir = os.path.join(".", "firefox_cache")
+	if not os.path.exists(profiledir):
+		os.makedirs(profiledir)
+
+	profile = webdriver.FirefoxProfile(profiledir)
+	options = Options()
+	options.headless = True
+	options.profile = profile
+	options.add_argument("disable-infobars")
+	options.add_argument("--disable-extensions")
+	options.add_argument('--no-sandbox')
+	options.add_argument('--disable-gpu')
+	options.add_argument("--disable-dev-shm-usage")
+	options.add_argument("--disable-default-apps")
+	options.add_argument("--disable-crash-reporter")
+	options.add_argument("--disable-in-process-stack-traces")
+	options.add_argument("--disable-login-animations")
+	options.add_argument("--log-level=3")
+	options.add_argument("--no-default-browser-check")
+	options.add_argument("--disable-notifications")
+
+	driver = webdriver.Firefox(options=options,executable_path="/usr/local/bin/geckodriver")
+	driver.get('https://web.whatsapp.com/')
+	loggedin = False
+
+	local_storage_file = os.path.join(profile.path, "{}.json".format(user))
+	if os.path.exists(local_storage_file):
+		with open(local_storage_file) as f:
+			data = json.loads(f.read())
+			driver.execute_script(
+			"".join(
+				[
+					"window.localStorage.setItem('{}', '{}');".format(
+						k, v.replace("\n", "\\n") if isinstance(v, str) else v
+					)
+					for k, v in data.items()
+				]
+			))
+		driver.refresh()
+	try:
+		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two' + ',' + 'canvas')))
+	except:
+		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		driver.quit()
+		return False
+
+	try:
+		driver.find_element_by_css_selector('.two')
+		loggedin = True
+	except NoSuchElementException:
+		driver.find_element_by_css_selector('canvas')
+	except:
+		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		driver.quit()
+		return False
+
+	if not loggedin:
+		qr_hash = frappe.generate_hash(length = 15)
+		path_private_files = frappe.get_site_path('public','files') + '/{}.png'.format(user + qr_hash)
+		try:
+			WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'canvas')))
+		except:
+			frappe.log_error(frappe.get_traceback(),"Unable to generate QRCode")
+			driver.quit()
+			return False
+
+		try:
+			driver.find_element_by_css_selector("div[data-ref] > span > div").click()
+		except:
+			pass
+
+		qr = driver.find_element_by_css_selector('canvas')
+		fd = os.open(path_private_files, os.O_RDWR | os.O_CREAT)
+		fn_png = os.path.abspath(path_private_files)
+		qr.screenshot(fn_png)
+
+		msg = "<img src='/files/{}.png' alt='No Image' data-pagespeed-no-transform>".format(user + qr_hash)
+		event = str('Party Ledger Ceramic' + frappe.session.user)
+		frappe.publish_realtime(event=event, message=msg,user=frappe.session.user)
+		try:
+
+			WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two')))
+			for item in os.listdir(profile.path):
+				if item in ["parent.lock", "lock", ".parentlock"]:
+					continue
+				s = os.path.join(profile.path, item)
+				d = os.path.join(profiledir, item)
+				if os.path.isdir(s):
+					shutil.copytree(
+						s,
+						d,
+						ignore=shutil.ignore_patterns(
+							"parent.lock", "lock", ".parentlock"
+						),
+					)
+				else:
+					shutil.copy2(s, d)
+
+			with open(os.path.join(profiledir,"{}.json".format(user)), "w") as f:
+				f.write(json.dumps(driver.execute_script("return window.localStorage;")))
+			
+			# driver.quit()
+			return [driver,user,qr_hash]
+		except:
+			frappe.log_error(frappe.get_traceback(),"Unable to Save Profile.")
+			driver.quit()
+			remove_qr_code(user,qr_hash)
+			return False
+	else:
+		return [driver,user]
+		# driver.quit()
+
+
+@frappe.whitelist()
+def get_report_pdf_whatsapp(mobile_number,content,file_url):
+	if mobile_number.find(" ") != -1:
+		mobile_number = mobile_number.replace(" ","")
+	if mobile_number.find("+") != -1:
+		mobile_number = mobile_number.replace("+","")
+	if len(mobile_number) != 10:
+		frappe.throw("Please Enter Only 10 Digit Contact Number.")
+
+	login_or_not = whatsapp_login_check()
+	qr_hash = False
+	if isinstance(login_or_not,list):
+		driver = login_or_not[0]
+		user = login_or_not[1]
+		try:
+			qr_hash = login_or_not[2]
+		except:
+			pass
+	elif login_or_not == False:
+		frappe.log_error("Unable to Login Your Whatsapp")
+		return False
+
+	# enqueue(send_msg_background,queue= "long", timeout= 1800, job_name= 'Whatsapp Message',mobile_number=mobile_number,content=content,file_url=file_url)
+	send_msg_background(driver,user,qr_hash,mobile_number, content, file_url)
+
+def send_msg_background(driver,user,qr_hash,mobile_number, content, file_url):
+	path = frappe.get_site_path('private','files') + "/party_ledger_ceramic.pdf"
+	path_url = frappe.utils.get_bench_path() + "/sites" + path[1:]
+
+	send_media_whatsapp(driver,mobile_number,content,path_url)
+	remove_file_from_os(path)
+	if qr_hash:
+		remove_qr_code(user,qr_hash)
+
+	frappe.db.sql("delete from `tabFile` where file_name='party_ledger_ceramic.pdf'")
+	frappe.db.sql("delete from `tabComment` where reference_doctype='{}' and reference_name='{}' and comment_type='Attachment' and comment_email = '{}' and content LIKE '%{}%'"
+		.format('Report','Party Ledger Ceramic',frappe.session.user,file_url))
+
+
+def send_media_whatsapp(driver,mobile_number,content,path_url):
+	if len(mobile_number) == 10:
+		mobile_number = "91" + mobile_number
+
+	link = "https://web.whatsapp.com/send?phone='{}'&text&source&data&app_absent".format(mobile_number)
+	driver.get(link)
+	attach_list = []
+
+	if content:
+		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')))
+		try:
+			input_box = driver.find_element_by_xpath('//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')
+			input_box.send_keys(content)
+			input_box.send_keys(Keys.ENTER)
+		except:
+			frappe.log_error(frappe.get_traceback(),"Error while trying to send the media file.")
+ 
+	try:
+		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
+		driver.find_element_by_css_selector('span[data-icon="clip"]').click()
+		attach=driver.find_element_by_css_selector('input[type="file"]')
+		attach.send_keys(path_url)
+
+		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')))
+		whatsapp_send_button = driver.find_element_by_xpath('//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')
+		whatsapp_send_button.click()
+	except:
+		frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
+
+	time.sleep(10)
+	driver.quit()
+
+def remove_file_from_os(path):
+	if os.path.exists(path):
+		os.remove(path)
+
+def remove_qr_code(user,qr_hash):
+	qr_path = frappe.get_site_path('public','files') + "/{}.png".format(user + qr_hash)
+	remove_file_from_os(qr_path)
+
+# Whatsapp Manager End
