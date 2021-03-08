@@ -155,7 +155,8 @@ def create_main_sales_order(self):
 				},
 				"field_no_map":{
 					"authority",
-					"update_stock"
+					"update_stock",
+					"transaction_status"
 				}
 			},
 			"Sales Order Item": {

@@ -91,3 +91,11 @@ for idx,d in enumerate(query,start=0):
         frappe.db.commit()
         print("commited at " + str(idx) + " " + str(d.name))
     print(str(idx) + " "+  str(d.name))
+
+
+# update transaction_status to new 
+query = frappe.db.sql("update `tabSales Invoice` set  transaction_status = 'New' where transaction_status IS NULL")
+query = frappe.db.sql("update `tabDelivery Note` set  transaction_status = 'New' where transaction_status IS NULL")
+query = frappe.db.sql("select count(name) from `tabGL Entry` where transaction_status IS NULL")
+
+query = frappe.db.sql("update `tabGL Entry` set transaction_status = 'New' where transaction_status IS NULL")
