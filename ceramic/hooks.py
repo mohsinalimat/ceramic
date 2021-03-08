@@ -227,6 +227,9 @@ doctype_js = {
 }
 
 doc_events = {
+	"User":{
+		"validate":"ceramic.api.validate_default_user"
+	},
 	"Account": {
 		"validate": "ceramic.ceramic.doc_events.account.validate",
 		"on_trash": "ceramic.ceramic.doc_events.account.on_trash",

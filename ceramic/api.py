@@ -864,3 +864,9 @@ def remove_authentication(user):
 	frappe.db.set_default(user + '_otplogin',None)
 	frappe.msgprint("Authentication Removed")
 	frappe.db.commit()
+
+def validate_default_user(self, method):
+	if frappe.db.get_value("User",{'default_user':1},'name'):
+		frappe.throw("Default User Already Exists.")
+
+	
