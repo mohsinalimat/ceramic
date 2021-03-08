@@ -77,7 +77,6 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			method:"finbyzerp.whatsapp_manager.get_whatsapp_settings",
 			args:{},
 			callback: function(r){
-				console.log(r.message)
 				if (r.message ==true){
 					report.page.add_menu_item(__('Send WhatsApp'), function() {
 						whatsapp_dialog(report)
@@ -156,7 +155,7 @@ function whatsapp_dialog(report){
 								method:"ceramic.ceramic.report.party_ledger_ceramic.party_ledger_ceramic.get_report_pdf_whatsapp",
 								args:{
 									mobile_number:v.number,
-									content:v.content,
+									content:v.content || false,
 									file_url:p.message
 								},
 								callback: function(r){
@@ -170,8 +169,6 @@ function whatsapp_dialog(report){
     }
     });
     dialog.show();
-
-
 };
 
 function display_qr(){

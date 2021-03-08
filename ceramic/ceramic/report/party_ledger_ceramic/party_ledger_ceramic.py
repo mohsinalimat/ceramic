@@ -636,10 +636,13 @@ def whatsapp_login_check():
 
 @frappe.whitelist()
 def get_report_pdf_whatsapp(mobile_number,content,file_url):
+	content = json.loads(content)
 	if mobile_number.find(" ") != -1:
 		mobile_number = mobile_number.replace(" ","")
 	if mobile_number.find("+") != -1:
 		mobile_number = mobile_number.replace("+","")
+	if mobile_number[0] == '9' and mobile_number[1] == '1':
+		mobile_number = mobile_number[2:]
 	if len(mobile_number) != 10:
 		frappe.throw("Please Enter Only 10 Digit Contact Number.")
 
