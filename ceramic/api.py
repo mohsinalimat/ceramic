@@ -827,3 +827,8 @@ def get_payment_remark_details(filters):
 	# 			{% } %}
 	
 	
+@frappe.whitelist()
+def remove_authentication(user):
+	frappe.db.set_default(user + '_otplogin',None)
+	frappe.msgprint("Authentication Removed")
+	frappe.db.commit()
