@@ -515,8 +515,10 @@ def get_report_data_pdf(filters):
 @frappe.whitelist()
 def generate_report_pdf(html):
 	filecontent = get_pdf(html,{"orientation":"Landscape"})
-	file_data = save_file("party_ledger_ceramic.pdf", filecontent, "Report","Party Ledger Ceramic",is_private=1)
-	return file_data.file_url
+	pdf_hash = frappe.utils.generate_hash(length=10)
+	file_name = "party_ledger_ceramic" + pdf_hash + ".pdf"
+	file_data = save_file(file_name, filecontent, "Report","Party Ledger Ceramic",is_private=1)
+	return {"file_name":file_name,"file_url":file_data.file_url}
 
 @frappe.whitelist()
 def whatsapp_login_check():
@@ -635,7 +637,7 @@ def whatsapp_login_check():
 
 
 @frappe.whitelist()
-def get_report_pdf_whatsapp(mobile_number,content,file_url):
+def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name):
 	content = json.loads(content)
 	if mobile_number.find(" ") != -1:
 		mobile_number = mobile_number.replace(" ","")
@@ -660,10 +662,10 @@ def get_report_pdf_whatsapp(mobile_number,content,file_url):
 		return False
 
 	# enqueue(send_msg_background,queue= "long", timeout= 1800, job_name= 'Whatsapp Message',mobile_number=mobile_number,content=content,file_url=file_url)
-	send_msg_background(driver,user,qr_hash,mobile_number, content, file_url)
+	send_msg_background(driver,user,qr_hash,mobile_number, content, file_url,file_name)
 
-def send_msg_background(driver,user,qr_hash,mobile_number, content, file_url):
-	path = frappe.get_site_path('private','files') + "/party_ledger_ceramic.pdf"
+def send_msg_background(driver,user,qr_hash,mobile_number, content, file_url,file_name):
+	path = frappe.get_site_path('private','files') + "/" + file_name
 	path_url = frappe.utils.get_bench_path() + "/sites" + path[1:]
 
 	send_media_whatsapp(driver,mobile_number,content,path_url)
@@ -671,7 +673,7 @@ def send_msg_background(driver,user,qr_hash,mobile_number, content, file_url):
 	if qr_hash:
 		remove_qr_code(user,qr_hash)
 
-	frappe.db.sql("delete from `tabFile` where file_name='party_ledger_ceramic.pdf'")
+	frappe.db.sql("delete from `tabFile` where file_name='{}'".format(file_name))
 	frappe.db.sql("delete from `tabComment` where reference_doctype='{}' and reference_name='{}' and comment_type='Attachment' and comment_email = '{}' and content LIKE '%{}%'"
 		.format('Report','Party Ledger Ceramic',frappe.session.user,file_url))
 

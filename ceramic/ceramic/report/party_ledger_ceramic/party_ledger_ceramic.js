@@ -156,7 +156,8 @@ function whatsapp_dialog(report){
 								args:{
 									mobile_number:v.number,
 									content:v.content || false,
-									file_url:p.message
+									file_url:p.message.file_url,
+									file_name:p.message.file_name
 								},
 								callback: function(r){
 								}
