@@ -258,8 +258,7 @@ def determine_exclusive_rate(self):
 		item_tax_map = self._load_item_tax_rate(item.item_tax_rate)
 		cumulated_tax_fraction = 0
 		for i, tax in enumerate(self.doc.get("taxes")):
-			tax.tax_fraction_for_current_item = self.get_current_tax_fraction(tax, item_tax_map)
-
+			tax.tax_fraction_for_current_item , inclusive_tax_amount_per_qty = self.get_current_tax_fraction(tax, item_tax_map)
 			if i==0:
 				tax.grand_total_fraction_for_current_item = 1 + tax.tax_fraction_for_current_item
 			else:

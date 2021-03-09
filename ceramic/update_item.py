@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint
 import json
-from erpnext.controllers.accounts_controller import set_sales_order_defaults, set_purchase_order_defaults, check_and_delete_children
+from erpnext.controllers.accounts_controller import set_order_defaults, validate_and_delete_children
 from ceramic.ceramic.doc_events.pick_list import unpick_item
 from frappe.utils import get_url_to_form
 
@@ -29,7 +29,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	sales_doctypes = ['Sales Order', 'Sales Invoice', 'Delivery Note', 'Quotation']
 	parent = frappe.get_doc(parent_doctype, parent_doctype_name)
 
-	check_and_delete_children(parent, data)
+	validate_and_delete_children(parent, data)
 
 	for d in data:
 		new_child_flag = False
@@ -38,10 +38,12 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			
 		if not d.get("docname"):
 			new_child_flag = True
-			if parent_doctype == "Sales Order":
-				child_item  = set_sales_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
-			if parent_doctype == "Purchase Order":
-				child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
+			child_doctype = "Sales Order Item" if parent_doctype == "Sales Order" else "Purchase Order Item" 
+			child_item = set_order_defaults(parent_doctype, parent_doctype_name, child_doctype, child_docname, d)
+			# if parent_doctype == "Sales Order":
+			# 	child_item  = set_sales_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
+			# if parent_doctype == "Purchase Order":
+			# 	child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 		else:
 			child_item = frappe.get_doc(parent_doctype + ' Item', d.get("docname"))
 			if child_item.item_code == d.get("item_code") and (not d.get("rate") or flt(child_item.get("rate")) == flt(d.get("rate"))) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
