@@ -8,8 +8,8 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Millennium",
- "modified": "2020-12-19 13:47:43.849644",
- "modified_by": "Administrator",
+ "modified": "2021-03-08 18:55:02.325510",
+ "modified_by": "deep@millenniumtiles.in",
  "module": "Ceramic",
  "name": "Party Ledger Ceramic Admin",
  "owner": "Administrator",
@@ -19,7 +19,7 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "Local Admin"
+   "role": "System Manager"
   }
  ]
 }
