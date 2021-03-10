@@ -14,6 +14,7 @@ from frappe.desk.reportview import get_match_cond, get_filters_cond
 # from erpnext import get_company_currency
 # from erpnext.accounts.party import get_regional_address_details,set_account_and_due_date,set_address_details,set_contact_details,set_other_values,set_price_list,get_address_tax_category,set_taxes,get_pyt_term_template
 
+@frappe.whitelist()
 def get_warehouse(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
 
@@ -53,6 +54,7 @@ def get_warehouse(doctype, txt, searchfield, start, page_len, filters):
 	
 	return w_query
 
+@frappe.whitelist()
 def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 	cond = ""
 
