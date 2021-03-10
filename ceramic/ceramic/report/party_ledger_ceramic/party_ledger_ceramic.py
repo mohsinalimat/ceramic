@@ -258,7 +258,7 @@ def get_result(filters, account_details):
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
-			gle.transaction_status = 'New'
+			(gle.transaction_status = 'New' or gle.transaction_status IS NULL)
 			{conditions}
 		GROUP BY
 			gle.voucher_no, gle.party {having_cond}
@@ -638,7 +638,6 @@ def whatsapp_login_check():
 
 @frappe.whitelist()
 def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name):
-	content = json.loads(content)
 	if mobile_number.find(" ") != -1:
 		mobile_number = mobile_number.replace(" ","")
 	if mobile_number.find("+") != -1:
