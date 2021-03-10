@@ -513,10 +513,18 @@ def get_report_data_pdf(filters):
 
 
 @frappe.whitelist()
-def generate_report_pdf(html):
+def generate_report_pdf(html,filters):
+	filters = json.loads(filters)
 	filecontent = get_pdf(html,{"orientation":"Landscape"})
 	pdf_hash = frappe.utils.generate_hash(length=10)
-	file_name = "party_ledger_ceramic" + pdf_hash + ".pdf"
+	try:
+		primary_customer = filters['primary_customer']
+	except:
+		primary_customer = None
+	if not primary_customer:
+		file_name = "party_ledger_ceramic" + pdf_hash + ".pdf"
+	else:
+		file_name = primary_customer + pdf_hash + ".pdf"
 	file_data = save_file(file_name, filecontent, "Report","Party Ledger Ceramic",is_private=1)
 	return {"file_name":file_name,"file_url":file_data.file_url}
 

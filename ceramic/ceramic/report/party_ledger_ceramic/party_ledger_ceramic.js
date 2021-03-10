@@ -147,7 +147,8 @@ function whatsapp_dialog(report){
 					frappe.call({
 						method:"ceramic.ceramic.report.party_ledger_ceramic.party_ledger_ceramic.generate_report_pdf",
 						args:{
-							"html":html
+							"html":html,
+							'filters':filters
 						},
 						callback: function(p){
 							var v = dialog.get_values();
