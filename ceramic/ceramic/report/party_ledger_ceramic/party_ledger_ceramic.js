@@ -99,6 +99,7 @@ function whatsapp_dialog(report){
 				label:__("Message"),
 				fieldtype:"Small Text",
 				fieldname:"content",
+				default:"*Do Not Reply Here*\nthis is an unattended account"
 			},
 			{fieldtype: "Section Break"},
             {label:'',fieldtype:'Read Only',default:" Note : Please ensure that Internet Connection is available on your Whatsapp device."},
