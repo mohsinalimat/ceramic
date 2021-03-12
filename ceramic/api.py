@@ -869,4 +869,9 @@ def validate_default_user(self, method):
 	user = frappe.db.get_value("User",{'default_user':1},'name')
 	if user and user != self.name and self.default_user:
 		frappe.throw("Default User Already Exists.")
+
+# Override (frappe/frappe/twofactor.py - toggle_two_factor_auth): to prevent all roles enabled for two factor authentication
+def toggle_two_factor_auth(state, roles=[]):
+	'''Enable or disable 2FA in site_config and roles'''
+	pass
 	
