@@ -190,3 +190,34 @@ function display_qr(){
         setTimeout(function(){$(".modal.fade.in").modal('hide');},10000)    
     })
 };
+
+function create_account_reco(posting_date,company,alternate_company,account,alternate_account,reconciled_amount,alternate_reconciled_amount,party_type,party) {
+	frappe.confirm(
+		__('<h4><b>Are you sure you want to Create Account Reco Entry ?</b></h4>' +'<br/>\
+		Posting Date: <b>' + posting_date + '</b><br/>' + 
+		'Company: <b>' + alternate_company + '</b><br/>' + 
+		'Account: <b>' + alternate_account + '</b><br/>' + 
+		'Reconciled Amount: <b>' + alternate_reconciled_amount + '</b><br/>' + 
+		'Party Type: <b>'+ party_type + '</b><br/>' + 
+		'Party: <b>'+ party + '</b>'),
+		function(){
+			frappe.call({
+				method:"ceramic.ceramic.report.party_ledger_ceramic.party_ledger_ceramic.create_account_reco_entry",
+				freeze:true,
+				args:{
+					"posting_date":posting_date,
+					"company":company,
+					"alternate_company":alternate_company,
+					"account":account,
+					"alternate_account":alternate_account,
+					"reconciled_amount":reconciled_amount,
+					"alternate_reconciled_amount":alternate_reconciled_amount,
+					"party_type":party_type,
+					"party":party
+				}
+			})
+		}
+	)
+
+	
+}

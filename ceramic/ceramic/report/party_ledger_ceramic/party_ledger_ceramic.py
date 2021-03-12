@@ -122,6 +122,18 @@ def generate_data(filters, res):
 			d.voucher_no_trim = d.voucher_no[-4:]
 			qty_total += d.qty
 			data.append(d)
+
+			abbr, authority, alternate_company = frappe.db.get_value('Company',d.company,['abbr','authority','alternate_company'])
+			alternate_abbr, alternate_authority = frappe.db.get_value('Company',alternate_company,['abbr','authority'])
+			
+			reconciled_amount = d.total_balance if authority == "Unauthorized" else d.billed_balance
+			alternate_reconciled_amount  = d.total_balance if alternate_authority == "Unauthorized" else d.billed_balance
+			account = d.account
+			alternate_account = account.replace(abbr,alternate_abbr)
+			d['create_account_reco_entry'] = f"""
+					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
+						type='button' posting_date='{d.posting_date}' company='{d.company}' alternate_company='{alternate_company}' account='{d.account}' alternate_account='{alternate_account}' reconciled_amount='{reconciled_amount}' alternate_reconciled_amount='{alternate_reconciled_amount}' party_type='{d.party_type}' party='{d.party}'
+						onClick='create_account_reco(this.getAttribute("posting_date"),this.getAttribute("company"),this.getAttribute("alternate_company"),this.getAttribute("account"),this.getAttribute("alternate_account"),this.getAttribute("reconciled_amount"),this.getAttribute("alternate_reconciled_amount"),this.getAttribute("party_type"),this.getAttribute("party"))'>Create Account Reco</button>"""
 			
 	data += [{
 		"voucher_no": "Total",
@@ -486,6 +498,13 @@ def get_columns(filters):
 			"fieldtype": "data",
 			"width": 120
 		},
+		{
+			"label": _("Create Account Reco Entry"),
+			"fieldname": "create_account_reco_entry",
+			"fieldtype": "button",
+			"width": 120
+		},
+		
 	]
 	return columns
 
@@ -765,3 +784,27 @@ def remove_qr_code(user,qr_hash):
 	remove_file_from_os(qr_path)
 
 # Whatsapp Manager End
+
+@frappe.whitelist()
+def create_account_reco_entry(posting_date,company,alternate_company,alternate_account,account,reconciled_amount,alternate_reconciled_amount,party_type,party):
+	doc = frappe.new_doc("Account Reco")
+	doc.posting_date = posting_date
+	doc.company = company
+	doc.account = account
+	doc.reconciled_amount = reconciled_amount
+	doc.party_type = party_type
+	doc.party = party
+	doc.save(ignore_permissions=True)
+	doc.submit()
+
+	doc2 = frappe.new_doc("Account Reco")
+	doc2.posting_date = posting_date
+	doc2.company = alternate_company
+	doc2.reconciled_amount = alternate_reconciled_amount
+	doc2.account = alternate_account
+	doc2.party_type = party_type
+	doc2.party = party
+	doc2.save(ignore_permissions=True)
+	doc2.submit()
+
+	frappe.msgprint('Account Reco Entry has been Created')
