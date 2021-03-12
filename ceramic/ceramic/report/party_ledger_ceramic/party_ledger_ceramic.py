@@ -4,22 +4,14 @@
 
 from __future__ import unicode_literals
 
-from six import iteritems
-from collections import OrderedDict
-
-import frappe, os, sys, time, json, tempfile, shutil, datetime
-from frappe.utils import getdate, cstr, flt, fmt_money, format_time, now
+import frappe, os, time, json, shutil
+from frappe.utils import flt
 from frappe import _, _dict
 
 from frappe.utils.pdf import get_pdf
 from frappe.utils.file_manager import save_file
-from frappe.utils.background_jobs import enqueue
 
-from erpnext import get_company_currency, get_default_company
-from erpnext.accounts.report.utils import get_currency, convert_to_presentation_currency
-from erpnext.accounts.utils import get_account_currency
-from erpnext.accounts.report.financial_statements import get_cost_centers_with_children
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
+from erpnext import get_company_currency
 
 # Whatsapp Import Start:
 
@@ -30,8 +22,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.common.exceptions import NoSuchElementException
 
 # Whatapp Import End
@@ -662,12 +652,9 @@ def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name):
 	if frappe.db.get_value("System Settings","System Settings","default_login") == '0':
 		whatsapp_login_check()
 	# send_msg_background(mobile_number, content, file_url,file_name)
-	try:
-		enqueue(send_msg_background,queue= "long", timeout= 3600, job_name= "whatsapp message", mobile_number = mobile_number, content = content, file_url = file_url, file_name = file_name)
-	except:
-		frappe.log_error(frappe.get_traceback(),"not in queue")
+	frappe.enqueue(send_whatsapp_report,mobile_number = mobile_number, content = content, file_url = file_url, file_name = file_name)
 
-def send_msg_background(mobile_number, content, file_url,file_name):
+def send_whatsapp_report(mobile_number, content, file_url,file_name):
 	path = frappe.get_site_path('private','files') + "/" + file_name
 	path_url = frappe.utils.get_bench_path() + "/sites" + path[1:]
 
