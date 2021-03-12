@@ -12,7 +12,6 @@
   "party",
   "column_break_6",
   "posting_date",
-  "posting_time",
   "authority",
   "reconciled_amount",
   "data_11",
@@ -54,11 +53,6 @@
    "fieldname": "posting_date",
    "fieldtype": "Date",
    "label": "Posting Date"
-  },
-  {
-   "fieldname": "posting_time",
-   "fieldtype": "Time",
-   "label": "Posting Time"
   },
   {
    "fetch_from": "company.authority",
@@ -104,7 +98,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-12-23 09:57:25.602851",
+ "modified": "2021-03-12 14:58:06.066886",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Account Reco",
