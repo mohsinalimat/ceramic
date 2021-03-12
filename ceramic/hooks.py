@@ -57,6 +57,11 @@ from erpnext.accounts.party import _get_party_details as party_detail
 from ceramic.api import _get_party_details as my_party_detail
 party_detail =my_party_detail
 
+# Override (frappe/frappe/twofactor.py - toggle_two_factor_auth): to prevent all roles enabled for two factor authentication
+from frappe import twofactor
+from ceramic.api import toggle_two_factor_auth
+twofactor.toggle_two_factor_auth = toggle_two_factor_auth
+
 from erpnext.controllers.stock_controller import StockController
 from ceramic.batch_creation import make_batches as my_make_batches
 StockController.make_batches = my_make_batches
