@@ -152,10 +152,10 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			</tr>
 		</table>
 		{% if data[0]['customer'] %}
-		<table class="table table-bordered" style="margin: 0; font-size:80%;">
+		<table class="table table-bordered" style="margin: 0; font-size:80%; width:700px;align:center">
 			<thead>
 				<th>{{ __("Customer") }}</th>
-				<th>{{ __("Rank") }}</th>
+				<th>{{ __("Lock Pick Qty") }}</th>
 				<th>{{ __("Sales Order") }}</th>
 				<th>{{ __("SO Date") }}</th>
 				<th>{{ __("Pick List") }}</th>
@@ -168,7 +168,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 				{% for (let row of data ) { %}
 					<tr class="{{ __(row['pick_list_item']) }}">
 						<td>{{ __(row['customer']) }}</td>
-						<td>{{ __(row['order_rank']) }}</td>
+						<td>{{ __(row['lock_picked_qty']) }}</td>
 						<td>{{ __(row['sales_order_link']) }}</td>
 						<td>{{ __(row['date']) }}</td>
 						<td>{{ __(row['pick_list_link']) }}</td>
