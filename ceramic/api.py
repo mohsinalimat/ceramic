@@ -518,7 +518,7 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 			pl.name as pick_list, pli.name as pick_list_item, pli.item_code,
 			pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty,
 			pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty,
-			so.title as customer, so.order_rank, so.per_picked
+			so.title as customer, so.order_rank, so.per_picked, IF(so.lock_picked_qty=1,'Yes','No') as lock_picked_qty
 		FROM 
 			`tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
 			JOIN `tabSales Order` as so on pli.sales_order = so.name
