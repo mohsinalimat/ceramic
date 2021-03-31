@@ -34,9 +34,16 @@ def before_validate(self, method):
 		so_doc.db_set("customer_name",self.customer_name)
 
 def validate(self, method):
+	update_lock_qty(self)
 	validate_item_from_picklist(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)
+
+def update_lock_qty(self):
+	if self.is_new():	
+		if self.items[0].against_sales_order:
+			so_doc = frappe.get_doc("Sales Order",self.items[0].against_sales_order)
+			so_doc.db_set('lock_picked_qty',1)
 
 def validate_item_from_so(self):
 	for row in self.items:

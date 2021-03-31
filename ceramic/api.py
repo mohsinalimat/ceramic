@@ -140,18 +140,19 @@ def restrict_access():
 		report_list.append(d['report'])
 	if report_list:
 		for report in report_list:
-			doc = get_mapped_doc("Custom Role", {'report': report}, {
-				"Custom Role": {
-					"doctype": "Backup Custom Role",
-				}
-			}, ignore_permissions = True)
+			if frappe.db.exists("Custom Role",{'report': report}):
+				doc = get_mapped_doc("Custom Role", {'report': report}, {
+					"Custom Role": {
+						"doctype": "Backup Custom Role",
+					}
+				}, ignore_permissions = True)
 
-			try:
-				doc.save(ignore_permissions = True)
-			except:
-				pass
-			doc_name = frappe.get_all("Custom Role",{'report': report})
-			frappe.delete_doc("Custom Role", doc_name[0].name, ignore_permissions = True)
+				try:
+					doc.save(ignore_permissions = True)
+				except:
+					pass
+				doc_name = frappe.get_all("Custom Role",{'report': report})
+				frappe.delete_doc("Custom Role", doc_name[0].name, ignore_permissions = True)
 
 	for item in final_list:
 		if not item['system_genrated']:

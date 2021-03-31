@@ -10,10 +10,10 @@ ItemSelector = Class.extend({
 	},
 	
 	make_dialog: function(){
-		let me = this;
+		var me = this;
 		this.data = [];
 
-		let fields = 
+		var fields = 
 		[
 			{
 				label: __('Item Code'),
@@ -90,9 +90,9 @@ ItemSelector = Class.extend({
 				default: me.so_qty,
 				read_only: 0,
 				change: function(){
-					let previously_picked = this.layout.get_value('previously_picked') || 0;
-					let picked_qty = this.layout.get_value('picked_qty') || 0;
-					let so_qty = this.layout.get_value('so_qty') || 0;
+					var previously_picked = this.layout.get_value('previously_picked') || 0;
+					var picked_qty = this.layout.get_value('picked_qty') || 0;
+					var so_qty = this.layout.get_value('so_qty') || 0;
 					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty - (me.so_delivered_without_pick || 0)));
 					cur_dialog.set_value('so_real_qty', so_qty);
 				}
@@ -141,9 +141,9 @@ ItemSelector = Class.extend({
 				reqd: 0,
 				read_only: 1,
 				change: function(){
-					let previously_picked = this.layout.get_value('previously_picked') || 0;
-					let picked_qty = this.layout.get_value('picked_qty') || 0;
-					let so_qty = this.layout.get_value('so_qty') || 0;
+					var previously_picked = this.layout.get_value('previously_picked') || 0;
+					var picked_qty = this.layout.get_value('picked_qty') || 0;
+					var so_qty = this.layout.get_value('so_qty') || 0;
 					cur_dialog.set_value('remaining_to_pick', (so_qty - previously_picked - picked_qty - (me.delivered_without_pick || 0)));
 				}
 			},
@@ -170,8 +170,8 @@ ItemSelector = Class.extend({
 		me.dialog.set_primary_action(__("Add"), function(){
 			me.values = me.dialog.get_values();
 
-			let picked_qty = me.values.picked_qty + me.picked_qty
-			let so_qty = flt(me.values.so_qty)
+			var picked_qty = me.values.picked_qty + me.picked_qty
+			var so_qty = flt(me.values.so_qty)
 			if (picked_qty == 0){
 				me.dialog.hide();
 			}
@@ -183,7 +183,7 @@ ItemSelector = Class.extend({
 			}
 		});
 
-		let $package_wrapper = this.get_item_location_wrapper();
+		var $package_wrapper = this.get_item_location_wrapper();
 
 		$($package_wrapper).find('.grid-remove-rows .grid-delete-rows').click(function (event) {
 			dialog(this);
@@ -194,14 +194,14 @@ ItemSelector = Class.extend({
 		// $($package_wrapper).find('.grid-add-row').hide();
 
 		me.dialog.show();
-		let filters = {'item_code': me.item_code};
+		var filters = {'item_code': me.item_code};
 		me.get_items(filters);
 
 		this.bind_events();
 	},
 	get_items: function(filters) {
-		let me = this;
-		let item_locations = me.dialog.fields_dict.item_locations;
+		var me = this;
+		var item_locations = me.dialog.fields_dict.item_locations;
 		if(!filters['item_code']){
 			item_locations.grid.df.data = [];
 			item_locations.grid.refresh();
@@ -225,6 +225,9 @@ ItemSelector = Class.extend({
 							value.available_qty = value.available_qty - (element.picked_in_current || 0)
 						}
 					});
+					setTimeout(() => {
+						
+					}, 1000);
 					if (me.batch_no && value.batch_no == me.batch_no){
 						value.available_qty = value.available_qty + me.qty
 					}
@@ -239,7 +242,7 @@ ItemSelector = Class.extend({
 		});
 	},
 	get_item_fields: function(){
-		let me = this;
+		var me = this;
 
 		return [
 			{fieldtype:'Section Break', label: __('Item Location Details')},
@@ -340,21 +343,21 @@ ItemSelector = Class.extend({
 		];
 	},
 	cal_picked_qty: function(){
-		let me = this;
+		var me = this;
 
-		let selected_item_locations = me.get_selected_item_locations();
-		let picked_qty = frappe.utils.sum((selected_item_locations || []).map(row => row.to_pick_qty));
+		var selected_item_locations = me.get_selected_item_locations();
+		var picked_qty = frappe.utils.sum((selected_item_locations || []).map(row => row.to_pick_qty));
 		me.dialog.set_value('picked_qty', picked_qty);
 		
 	},
 	set_item_location_data: function(){
-		let me = this;
+		var me = this;
 		me.item_locations_data = me.dialog.get_value('item_locations');
 	},
 	bind_events: function($wrapper) {
-		let me = this;
+		var me = this;
 
-		let $item_location_wrapper = me.get_item_location_wrapper();
+		var $item_location_wrapper = me.get_item_location_wrapper();
 
 		$item_location_wrapper.on('click', '.grid-row-check:checkbox', (e) => {
 			me.cal_picked_qty();
@@ -362,19 +365,19 @@ ItemSelector = Class.extend({
 
 	},
 	get_item_location_wrapper: function(){
-		let me = this;
+		var me = this;
 		return me.dialog.get_field('item_locations').$wrapper;
 	},
 	get_selected_item_locations: function() {
-		let me = this;
-		let selected_item_locations = [];
-		let $item_location_wrapper = this.get_item_location_wrapper();
-		let item_locations = me.dialog.get_value('item_locations');
+		var me = this;
+		var selected_item_locations = [];
+		var $item_location_wrapper = this.get_item_location_wrapper();
+		var item_locations = me.dialog.get_value('item_locations');
 
 		$.each($item_location_wrapper.find('.form-grid > .grid-body > .rows > .grid-row'), function (idx, row) {
 			var pkg = $(row).find('.grid-row-check:checkbox');
 
-			let item_location = item_locations[idx];
+			var item_location = item_locations[idx];
 			
 			if($(pkg).is(':checked')){
 				selected_item_locations.push(item_location);
@@ -387,16 +390,16 @@ ItemSelector = Class.extend({
 		return selected_item_locations;
 	},
 	set_item_qty: function() {
-		let me = this;
-		let selected_item_locations = [];
-		let $item_location_wrapper = this.get_item_location_wrapper();
-		let item_locations = me.dialog.get_value('item_locations');
-		let remaining_to_pick = me.dialog.get_value('remaining_to_pick');
+		var me = this;
+		var selected_item_locations = [];
+		var $item_location_wrapper = this.get_item_location_wrapper();
+		var item_locations = me.dialog.get_value('item_locations');
+		var remaining_to_pick = me.dialog.get_value('remaining_to_pick');
 
 		$.each($item_location_wrapper.find('.form-grid > .grid-body > .rows > .grid-row'), function (idx, row) {
 			var pkg = $(row).find('.grid-row-check:checkbox');
 
-			let item_location = item_locations[idx];
+			var item_location = item_locations[idx];
 			
 			if($(pkg).is(':checked')){
 				selected_item_locations.push(item_location);
@@ -406,17 +409,17 @@ ItemSelector = Class.extend({
 				item_location.to_pick_qty = Math.min((remaining_to_pick || 0), (item_location.available_qty || 0))
 			}
 		});
-		let item_locations2 = me.dialog.fields_dict.item_locations;
+		var item_locations2 = me.dialog.fields_dict.item_locations;
 		item_locations2.grid.refresh();
 
 		// return selected_item_locations;
 	},
 	set_item_locations_in_frm: function () {
-		let me = this;
-		let selected_item_locations = this.get_selected_item_locations();
-		let item_code = me.values.item_code
-		let sales_order = me.values.sales_order
-		let sales_order_item = me.values.sales_order_item
+		var me = this;
+		var selected_item_locations = this.get_selected_item_locations();
+		var item_code = me.values.item_code
+		var sales_order = me.values.sales_order
+		var sales_order_item = me.values.sales_order_item
 
 		var loc = [];
 

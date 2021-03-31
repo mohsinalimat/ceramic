@@ -168,7 +168,6 @@ frappe.ui.form.on('Pick List', {
 					r.message.forEach(function(item, index){
 						if ((item.so_qty - item.picked_qty) > 0.0){
 							var d = frm.add_child('locations')
-							console.log(item.delivered_without_pick)
 							frappe.model.set_value(d.doctype, d.name, 'so_qty', item.so_qty)
 							frappe.model.set_value(d.doctype, d.name, 'qty', item.qty);
 							frappe.model.set_value(d.doctype, d.name, 'customer', item.customer);
@@ -312,8 +311,8 @@ frappe.ui.form.on('Sales Order Item Pick List', {
 				idx: d.idx,
 				picked_qty: d.picked_qty,
 				batch_no: d.batch_no,
-				delivered_qty: me.delivered_qty,
-				delivered_real_qty: me.delivered_real_qty,
+				delivered_qty: d.delivered_qty,
+				delivered_real_qty: d.delivered_real_qty,
 				wastage_qty: d.wastage_qty,
 				doctype: cdt,
 				name: cdn,
@@ -405,8 +404,8 @@ frappe.ui.keys.add_shortcut({
 				so_qty: d.so_qty,
 				company: cur_frm.doc.company,
 				customer: d.customer,
-				date: d.date, delivery_date:
-				d.delivery_date,
+				date: d.date, 
+				delivery_date:d.delivery_date,
 				picked_qty: d.picked_qty,
 				so_real_qty: d.so_real_qty,
 				remaining_to_pick: (d.so_qty - d.picked_qty - d.so_delivered_without_pick),

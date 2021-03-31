@@ -3,7 +3,7 @@ from frappe import _
 from frappe.utils import flt, cint
 import json
 from erpnext.controllers.accounts_controller import set_order_defaults, validate_and_delete_children
-from ceramic.ceramic.doc_events.pick_list import unpick_item
+from ceramic.ceramic.doc_events.pick_list import unpick_item,unpick_qty_comment
 from frappe.utils import get_url_to_form
 
 
@@ -94,8 +94,18 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}):
 				pl = frappe.get_doc("Pick List Item", picked_item.name)
 
+				user = frappe.get_doc("User",frappe.session.user)
+				role_list = [r.role for r in user.roles]
+				frappe.msgprint(str(user.name))
+				if frappe.db.get_value("Sales Order",child_item.parent,'lock_picked_qty'):
+					dispatch_person_user = frappe.db.get_value("Sales Person",frappe.db.get_value("Sales Order",child_item.parent,'dispatch_person'),'user')
+					if dispatch_person_user:
+						if user.name != dispatch_person_user:
+							return "Only {} is allowed to unpick".format(dispatch_person_user)
 				pl.cancel()
 				pl.delete()
+			
+				unpick_qty_comment(pl.parent, child_item.parent, f"Unpicked full Qty from item {child_item.item_code}")
 						
 			child_item.picked_qty = 0
 			frappe.msgprint(_(f"All Pick List For Item {child_item.item_code} has been deleted."))
