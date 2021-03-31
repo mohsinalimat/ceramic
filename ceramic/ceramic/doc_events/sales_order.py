@@ -500,16 +500,45 @@ def on_update_after_submit(self, method):
 	update_sales_order_total_values(self)
 	update_order_rank(self)
 
+#from ceramic.ceramic.doc_events.pick_list import unpick_qty_comment
 def delete_pick_list(self):
-	pick_list_list = frappe.get_list("Pick List Item", {'sales_order': self.name})
-
+	pick_list_list = frappe.get_list("Pick List Item", {'sales_order': self.name,'docstatus':1})
 	for item in pick_list_list:
 		pl = frappe.get_doc("Pick List Item", item.name)
 		if not frappe.db.exists("Sales Order Item", pl.sales_order_item):
+			user = frappe.get_doc("User",frappe.session.user)
+			role_list = [r.role for r in user.roles]
+			if frappe.db.get_value("Sales Order",self.name,'lock_picked_qty'):
+				dispatch_person_user = frappe.db.get_value("Sales Person",frappe.db.get_value("Sales Order",self.name,'dispatch_person'),'user')
+				if dispatch_person_user:
+					if user.name != dispatch_person_user and 'Local Admin' not in role_list and 'Sales Head' not in role_list:
+						frappe.throw("Only {} is allowed to unpick".format(dispatch_person_user))
 			if pl.docstatus == 1:
 				pl.cancel()
+				unpick_qty_comment(pl.parent,self.name, f"Unpicked full Qty from item {pl.item_code}")
 			pl.delete()
-	
+
+def unpick_qty_comment(reference_name, sales_order, data):
+	comment_pl_doc = frappe.new_doc("Comment")
+	comment_pl_doc.comment_type = "Updated"
+	comment_pl_doc.comment_email = frappe.session.user
+	comment_pl_doc.reference_doctype = "Pick List"
+	comment_pl_doc.reference_name = reference_name
+
+	comment_pl_doc.content = data
+
+	comment_pl_doc.save()
+
+	comment_so_doc = frappe.new_doc("Comment")
+	comment_so_doc.comment_type = "Updated"
+	comment_so_doc.comment_email = frappe.session.user
+	comment_so_doc.reference_doctype = "Sales Order"
+	comment_so_doc.reference_name = sales_order
+
+	comment_so_doc.content = data
+
+	comment_so_doc.save()
+
 def before_cancel(self,method):
 	# pass
 	cancel_main_sales_order(self)

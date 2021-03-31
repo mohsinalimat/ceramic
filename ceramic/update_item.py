@@ -89,6 +89,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		child_item.item_name = frappe.db.get_value("Item", d.get("item_code"), "item_name")
 		child_item.real_qty = flt(d.get("qty"))
 		precision = child_item.precision("rate") or 2
+
 		
 		if parent_doctype == "Sales Order" and d.get("item_code") != child_item.item_code:
 			for picked_item in frappe.get_all("Pick List Item", {'sales_order':child_item.parent, 'sales_order_item':child_item.name}):
@@ -96,12 +97,11 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 				user = frappe.get_doc("User",frappe.session.user)
 				role_list = [r.role for r in user.roles]
-				frappe.msgprint(str(user.name))
 				if frappe.db.get_value("Sales Order",child_item.parent,'lock_picked_qty'):
 					dispatch_person_user = frappe.db.get_value("Sales Person",frappe.db.get_value("Sales Order",child_item.parent,'dispatch_person'),'user')
 					if dispatch_person_user:
-						if user.name != dispatch_person_user:
-							return "Only {} is allowed to unpick".format(dispatch_person_user)
+						if user.name != dispatch_person_user and 'Local Admin' not in role_list and 'Sales Head' not in role_list:
+							frappe.throw("Only {} is allowed to unpick".format(dispatch_person_user))
 				pl.cancel()
 				pl.delete()
 			
@@ -109,7 +109,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 						
 			child_item.picked_qty = 0
 			frappe.msgprint(_(f"All Pick List For Item {child_item.item_code} has been deleted."))
-		
+
 		if parent_doctype == "Sales Order" and (flt(d.get("qty")) < flt(child_item.picked_qty) and d.get("item_code") == child_item.item_code):
 			diff_qty = flt(child_item.picked_qty) - flt(d.get("qty"))
 			unpick_item(child_item.parent, child_item.name, sales_order_differnce_qty = diff_qty)
