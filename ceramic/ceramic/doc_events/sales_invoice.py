@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from erpnext.stock.doctype.delivery_note.delivery_note import get_returned_qty_map,get_invoiced_qty_map
@@ -312,6 +313,7 @@ def create_main_sales_invoice(self):
 
 def validate(self, method):
 	update_discounted_net_total(self)
+	calculate_gst_taxable_value(self)
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
@@ -372,3 +374,19 @@ def delete_sales_invoice(self):
 	frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
 	frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
 	frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
+
+
+def calculate_gst_taxable_value(self):
+	account_list = []
+	gst_setting = frappe.get_single("GST Settings")
+	for row in gst_setting.gst_accounts:
+		if row.company == self.company:
+			account_list.append(row.cgst_account)
+			account_list.append(row.sgst_account)
+			account_list.append(row.igst_account)
+			account_list.append(row.cess_account)
+			account_list.append(row.tcs_account)
+	for d in self.taxes:
+		if d.account_head in account_list:
+			self.gst_taxable_value = flt(d.base_total) - flt(d.base_tax_amount)
+			break
