@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from erpnext.stock.doctype.delivery_note.delivery_note import get_returned_qty_map,get_invoiced_qty_map
@@ -312,6 +313,7 @@ def create_main_sales_invoice(self):
 
 def validate(self, method):
 	update_discounted_net_total(self)
+	calculate_gst_taxable_value(self)
 	validate_tax_template(self)
 
 def update_discounted_net_total(self):
@@ -388,13 +390,27 @@ def validate_tax_template(self):
 			for d in tax_doc.taxes:
 				if row.idx == d.idx:
 					if row.charge_type != d.charge_type:
-						frappe.throw("Row {} : Type is different from tax template {}".format(d.idx,self.taxes_and_charges))
+						frappe.throw("Row {} : Type is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 					if row.account_head != d.account_head:
-						frappe.throw("Row {} : Account head is different from tax template {}".format(d.idx,self.taxes_and_charges))
+						frappe.throw("Row {} : Account head is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 					if row.included_in_print_rate != d.included_in_print_rate:
-						frappe.throw("Row {} : Tax included in Basic Rate is different from tax template {}".format(d.idx,self.taxes_and_charges))
+						frappe.throw("Row {} : Tax included in Basic Rate is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 					if row.tax_exclusive != d.tax_exclusive:
-						frappe.throw("Row {} : Tax Exclusive discount is different from tax template {}".format(d.idx,self.taxes_and_charges))
+						frappe.throw("Row {} : Tax Exclusive discount is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 					if row.testing_only != d.testing_only:
-						frappe.throw("Row {} : Testing Only is different from tax template {}".format(d.idx,self.taxes_and_charges))
+						frappe.throw("Row {} : Testing Only is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 
+def calculate_gst_taxable_value(self):
+	account_list = []
+	gst_setting = frappe.get_single("GST Settings")
+	for row in gst_setting.gst_accounts:
+		if row.company == self.company:
+			account_list.append(row.cgst_account)
+			account_list.append(row.sgst_account)
+			account_list.append(row.igst_account)
+			account_list.append(row.cess_account)
+			account_list.append(row.tcs_account)
+	for d in self.taxes:
+		if d.account_head in account_list:
+			self.gst_taxable_value = flt(d.base_total) - flt(d.base_tax_amount)
+			break
