@@ -772,7 +772,7 @@ def send_media_whatsapp(mobile_number,content,path_url):
 	except:
 		frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
 
-	time.sleep(10)
+	time.sleep(15)
 	driver.quit()
 
 def remove_file_from_os(path):

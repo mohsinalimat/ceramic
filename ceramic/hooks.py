@@ -66,6 +66,11 @@ from erpnext.controllers.stock_controller import StockController
 from ceramic.batch_creation import make_batches as my_make_batches
 StockController.make_batches = my_make_batches
 
+from ceramic.api import validate_for_tax_category
+from erpnext.accounts.doctype.sales_taxes_and_charges_template import sales_taxes_and_charges_template
+sales_taxes_and_charges_template.validate_for_tax_category = validate_for_tax_category
+
+
 app_name = "ceramic"
 app_title = "Ceramic"
 app_publisher = "Finbyz"
