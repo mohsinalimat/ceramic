@@ -314,6 +314,7 @@ def create_main_sales_invoice(self):
 def validate(self, method):
 	update_discounted_net_total(self)
 	calculate_gst_taxable_value(self)
+	validate_tax_template(self)
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
@@ -375,6 +376,29 @@ def delete_sales_invoice(self):
 	frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
 	frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
 
+
+def validate_tax_template(self):
+	if self.taxes_and_charges and self.taxes:
+		if self.doctype == "Sales Invoice":
+			tax_template_doctype = "Sales Taxes and Charges Template"
+		else:
+			tax_template_doctype = "Purchase Taxes and Charges Template"
+		tax_doc = frappe.get_doc(tax_template_doctype,self.taxes_and_charges)
+		if self.tax_category != tax_doc.tax_category:
+			frappe.throw("Tax Category is different from tax template")
+		for row in self.taxes:
+			for d in tax_doc.taxes:
+				if row.idx == d.idx:
+					if row.charge_type != d.charge_type:
+						frappe.throw("Row {} : Type is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
+					if row.account_head != d.account_head:
+						frappe.throw("Row {} : Account head is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
+					if row.included_in_print_rate != d.included_in_print_rate:
+						frappe.throw("Row {} : Tax included in Basic Rate is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
+					if row.tax_exclusive != d.tax_exclusive:
+						frappe.throw("Row {} : Tax Exclusive discount is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
+					if row.testing_only != d.testing_only:
+						frappe.throw("Row {} : Testing Only is different from tax template <b>{}</b>".format(d.idx,self.taxes_and_charges))
 
 def calculate_gst_taxable_value(self):
 	account_list = []
