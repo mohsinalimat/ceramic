@@ -2,6 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt
+from ceramic.ceramic.doc_events.sales_invoice import validate_tax_template
 
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
@@ -140,6 +141,8 @@ def create_main_purchase_invoice(self):
 		self.db_set('pi_ref', pi.name)
 		pi.submit()
 	
+def validate(self,method):
+	validate_tax_template(self)
 	
 def before_validate(self, method):
 	self.flags.ignore_permissions = True

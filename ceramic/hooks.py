@@ -337,7 +337,10 @@ doc_events = {
 			"ceramic.ceramic.doc_events.purchase_invoice.before_validate", 
 			"ceramic.api.naming_series_validate"
 		],
-		"validate": "ceramic.controllers.item_validation.validate_item_authority",
+		"validate": [
+			"ceramic.controllers.item_validation.validate_item_authority",
+			"ceramic.ceramic.doc_events.purchase_invoice.validate"
+		],
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",
 		"on_cancel": "ceramic.ceramic.doc_events.purchase_invoice.on_cancel",
 		"on_trash": "ceramic.ceramic.doc_events.purchase_invoice.on_trash",
