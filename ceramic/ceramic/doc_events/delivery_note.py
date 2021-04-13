@@ -5,6 +5,7 @@ from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
 from frappe.utils import flt
 from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
+from ceramic.ceramic.doc_events.sales_invoice import validate_tax_template
 
 def before_validate(self, method):
 	self.sales_team = []
@@ -36,6 +37,8 @@ def before_validate(self, method):
 def validate(self, method):
 	update_lock_qty(self)
 	validate_item_from_picklist(self)
+	if self._action == "submit":
+		validate_tax_template(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)
 

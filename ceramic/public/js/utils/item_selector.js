@@ -225,12 +225,13 @@ ItemSelector = Class.extend({
 							value.available_qty = value.available_qty - (element.picked_in_current || 0)
 						}
 					});
-					setTimeout(function(){},1000)
+					setTimeout(function(){},2000)
 					if (me.batch_no && value.batch_no == me.batch_no){
 						value.available_qty = value.available_qty + me.qty
 					}
 					value.to_pick_qty = Math.min(me.dialog.fields_dict.remaining_to_pick.value, value.available_qty)
 					item_locations.grid.df.data.push(value)
+					item_locations.grid.refresh();
 				});
 
 				// item_locations.grid.df.data = r.message;

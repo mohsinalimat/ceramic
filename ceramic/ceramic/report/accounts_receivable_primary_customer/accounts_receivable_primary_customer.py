@@ -139,6 +139,9 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			"outstanding": 0.0,
 			"bank_outstanding": 0.0,
 			"cash_outstanding": 0.0,
+			"one": 0.0,
+			"two": 0.0,
+			"three": 0.0,
 			"range1": 0.0,
 			"range2": 0.0,
 			"range3": 0.0,
@@ -169,9 +172,13 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(_('Sales Head'), fieldname='sales_person', fieldtype='Data')
 		self.add_column(_('RSM'), fieldname='regional_sales_manager', fieldtype='Data')
 		self.add_column(_('Sales Manager'), fieldname='sales_manager', fieldtype='Data')
-		self.add_column(_('Bank Outstanding Amoun'), fieldname='bank_outstanding')
+		self.add_column(_('Bank Outstanding Amount'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
+		self.add_column(_('One'), fieldname='one')
+		self.add_column(_('Two'), fieldname='two')
+		self.add_column(_('Three'), fieldname='three')
+
 
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_('{0} Name').format(self.party_type),
