@@ -859,7 +859,7 @@ class ReceivablePayableReport(object):
 	def get_hierarchical_filters(self, doctype, key):
 		lft, rgt = frappe.db.get_value(doctype, self.filters.get(key), ["lft", "rgt"])
 
-		return """party in (select name from tabCustomer
+		return """gle.party in (select name from tabCustomer
 			where exists(select name from `tab{doctype}` where lft >= {lft} and rgt <= {rgt}
 				and name=tabCustomer.{key}))""".format(
 					doctype=doctype, lft=lft, rgt=rgt, key=key)
