@@ -20,6 +20,7 @@ def get_columns(filters):
 		{"label": _("Customer Name"), "fieldname": "name", "fieldtype": "Link","options":"Customer","width": 170},
 		{"label": _("Customer Alias"), "fieldname": "customer_alias", "fieldtype": "Data","width": 120},
 		{"label": _("Territory"), "fieldname": "territory", "fieldtype": "Link", "options": "Territory", "width": 100},
+		{"label": _("Parent Territory"), "fieldname": "parent_territory", "fieldtype": "Link", "options": "Territory", "width": 100},
 		{"label": _("Type"), "fieldname": "customer_type", "fieldtype": "Data", "width": 100},
 		{"label": _("Customer Group"), "fieldname": "customer_group", "fieldtype": "Link", "options": "Customer Group","width": 100},
 		{"label": _("Size of Business"), "fieldname": "size_of_business", "fieldtype": "Data", "width": 90},
@@ -68,9 +69,11 @@ def get_data(filters):
 
 	data = frappe.db.sql("""
 			SELECT c.name, c.customer_name, c.customer_alias, c.territory, c.customer_type, c.customer_group,
-				c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information
+				c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information,
+				t.parent_territory
 				
 			FROM `tabCustomer` as c 
+			JOIN `tabTerritory` as t ON (t.name = c.territory)
 			WHERE c.disabled = 0 %s
 			""" %(conditions), as_dict=1)
 	

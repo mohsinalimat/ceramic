@@ -16,7 +16,7 @@ frappe.query_reports["Customer Details"] = {
 			"label": __("Territory"),
 			"fieldtype": "Link",
 			"options": "Territory",
-			"width": "80",
+			"width": "80"
 		},
 		{
 			"fieldname":"customer_group",
