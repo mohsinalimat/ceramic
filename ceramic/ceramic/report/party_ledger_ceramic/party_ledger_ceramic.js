@@ -159,7 +159,8 @@ function whatsapp_dialog(report){
 									mobile_number:v.number,
 									content:v.content || false,
 									file_url:p.message.file_url,
-									file_name:p.message.file_name
+									file_name:p.message.file_name,
+									filters:p.message.filters
 								},
 								callback: function(r){
 								}
