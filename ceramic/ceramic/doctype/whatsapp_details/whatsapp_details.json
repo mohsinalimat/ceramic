@@ -1,0 +1,68 @@
+{
+ "creation": "2021-04-17 12:28:22.115355",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "from_date",
+  "to_date",
+  "primary_customer",
+  "message_info",
+  "message"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "From Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "To Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "primary_customer",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Primary Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "message_info",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Message Info",
+   "read_only": 1
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "modified": "2021-04-17 12:49:12.124054",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Whatsapp Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

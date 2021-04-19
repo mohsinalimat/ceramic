@@ -314,7 +314,8 @@ def create_main_sales_invoice(self):
 def validate(self, method):
 	update_discounted_net_total(self)
 	calculate_gst_taxable_value(self)
-	validate_tax_template(self)
+	# if self._action == "submit":
+	# 	validate_tax_template(self)
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)
@@ -379,7 +380,7 @@ def delete_sales_invoice(self):
 
 def validate_tax_template(self):
 	if self.taxes_and_charges and self.taxes:
-		if self.doctype == "Sales Invoice":
+		if self.doctype in ["Sales Invoice","Delivery Note","Sales order"]:
 			tax_template_doctype = "Sales Taxes and Charges Template"
 		else:
 			tax_template_doctype = "Purchase Taxes and Charges Template"

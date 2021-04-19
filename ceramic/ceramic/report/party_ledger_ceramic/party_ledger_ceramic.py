@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 import frappe, os, time, json, shutil
-from frappe.utils import flt
+from frappe.utils import flt,now
 from frappe import _, _dict
 
 from frappe.utils.pdf import get_pdf
@@ -535,7 +535,7 @@ def generate_report_pdf(html,filters):
 	else:
 		file_name = primary_customer + pdf_hash + ".pdf"
 	file_data = save_file(file_name, filecontent, "Report","Party Ledger Ceramic",is_private=1)
-	return {"file_name":file_name,"file_url":file_data.file_url}
+	return {"file_name":file_name,"file_url":file_data.file_url,'filters':filters}
 
 @frappe.whitelist()
 def whatsapp_login_check():
@@ -658,7 +658,7 @@ def whatsapp_login_check():
 
 
 @frappe.whitelist()
-def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name):
+def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name,filters):
 	if mobile_number.find(" ") != -1:
 		mobile_number = mobile_number.replace(" ","")
 	if mobile_number.find("+") != -1:
@@ -670,20 +670,30 @@ def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name):
 
 	if frappe.db.get_value("System Settings","System Settings","default_login") == '0':
 		whatsapp_login_check()
-	# send_msg_background(mobile_number, content, file_url,file_name)
-	frappe.enqueue(send_whatsapp_report,mobile_number = mobile_number, content = content, file_url = file_url, file_name = file_name)
+	# send_msg_background(mobile_number, content, file_url,file_name,filters)
+	frappe.enqueue(send_whatsapp_report,mobile_number = mobile_number, content = content, file_url = file_url, file_name = file_name, filters = filters)
 
-def send_whatsapp_report(mobile_number, content, file_url,file_name):
+def send_whatsapp_report(mobile_number, content, file_url,file_name,filters):
+	filters = json.loads(filters)
 	path = frappe.get_site_path('private','files') + "/" + file_name
 	path_url = frappe.utils.get_bench_path() + "/sites" + path[1:]
 
 	send_media_whatsapp(mobile_number,content,path_url)
+
+	doc = frappe.get_doc("Whatsapp Comment")
+	message_info = "You Have Sent the Whatsapp Message To: " + str(mobile_number) + " At: " + now()
+	doc.append("whatsapp_details",{"company":filters.get('company'),"from_date":filters.get('from_date'),\
+		"to_date":filters.get('to_date'),"primary_customer":filters.get('primary_customer'),\
+		"message_info":message_info,"message":str(content)})
+	doc.save(ignore_permissions=True)
+
 	remove_file_from_os(path)
 
 	frappe.db.sql("delete from `tabFile` where file_name='{}'".format(file_name))
 	frappe.db.sql("delete from `tabComment` where reference_doctype='{}' and reference_name='{}' and comment_type='Attachment' and comment_email = '{}' and content LIKE '%{}%'"
 		.format('Report','Party Ledger Ceramic',frappe.session.user,file_url))
 
+	frappe.db.commit()
 
 def send_media_whatsapp(mobile_number,content,path_url):
 	user = frappe.db.get_value("User",{'default_user':1},'name')
@@ -772,7 +782,7 @@ def send_media_whatsapp(mobile_number,content,path_url):
 	except:
 		frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
 
-	time.sleep(10)
+	time.sleep(20)
 	driver.quit()
 
 def remove_file_from_os(path):

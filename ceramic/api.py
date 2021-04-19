@@ -875,4 +875,8 @@ def validate_default_user(self, method):
 def toggle_two_factor_auth(state, roles=[]):
 	'''Enable or disable 2FA in site_config and roles'''
 	pass
-	
+
+def validate_for_tax_category(doc):
+	pass
+	# if frappe.db.exists(doc.doctype, {"company": doc.company, "tax_category": doc.tax_category, "disabled": 0,"name":("!=",doc.name)}):
+	# 	frappe.throw(_("A template with tax category {0} already exists. Only one template is allowed with each tax category").format(frappe.bold(doc.tax_category)))
