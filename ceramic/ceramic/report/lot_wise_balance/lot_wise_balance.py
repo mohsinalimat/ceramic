@@ -62,7 +62,8 @@ def execute(filters=None):
 								'item_design': qty_dict.item_design,
 								'image': qty_dict.image,
 								'so_picked_qty': so_picked_qty,
-								'warehouse': wh
+								'warehouse': wh,
+								'company': frappe.db.get_value("Warehouse",wh,"company")
 							})
 	else:
 		for item in iwb_map:
@@ -110,8 +111,8 @@ def execute(filters=None):
 		if row['item_code'] and filters.get('warehouse'):
 			row['new_qty'] = """
 					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
-						type='button' item-code='{}' item-group='{}' balance_qty='{}' warehouse='{}' buying_unit_price='{}' batch_no='{}' lot_no='{}' packing_type='{}'
-						onClick='new_qty_details(this.getAttribute("item-code"),this.getAttribute("item-group"),this.getAttribute("balance_qty"),this.getAttribute("warehouse"),this.getAttribute("buying_unit_price"),this.getAttribute("batch_no"),this.getAttribute("lot_no"),this.getAttribute("packing_type"))'>Change Qty</button>""".format(row['item_code'],row['item_group'],row['balance_qty'], row['warehouse'], frappe.db.get_value("Item Group",row['item_group'],'production_price'),row['batch_no'],row['lot_no'],row['packing_type'])
+						type='button' company='{}' item-code='{}' item-group='{}' balance_qty='{}' warehouse='{}' buying_unit_price='{}' batch_no='{}' lot_no='{}' packing_type='{}'
+						onClick='new_qty_details(this.getAttribute("company"),this.getAttribute("item-code"),this.getAttribute("item-group"),this.getAttribute("balance_qty"),this.getAttribute("warehouse"),this.getAttribute("buying_unit_price"),this.getAttribute("batch_no"),this.getAttribute("lot_no"),this.getAttribute("packing_type"))'>Change Qty</button>""".format(row['company'],row['item_code'],row['item_group'],row['balance_qty'], row['warehouse'], frappe.db.get_value("Item Group",row['item_group'],'production_price'),row['batch_no'],row['lot_no'],row['packing_type'])
 
 
 	return columns, data
@@ -422,12 +423,13 @@ def get_picked_conditions(filters):
 	return conditions
 
 @frappe.whitelist()
-def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty,date,time,batch_no,lot_no,packing_type):
+def create_stock_entry(company,warehouse,item_code,balance_qty,buying_unit_price,new_qty,date,time,batch_no,lot_no,packing_type):
 	if float(new_qty) < 0:
 		frappe.throw("Please Don't Enter Negative Qty")
 	elif float(balance_qty) > float(new_qty):
 		se_qty = abs(float(balance_qty) - float(new_qty))
 		se = frappe.new_doc("Stock Entry")
+		se.company =company
 		se.stock_entry_type = "Material Issue"
 		se.posting_date = frappe.utils.nowdate()
 		se.posting_time = frappe.utils.nowtime()
@@ -450,6 +452,7 @@ def create_stock_entry(warehouse,item_code,balance_qty,buying_unit_price,new_qty
 	elif float(balance_qty) < float(new_qty):
 		se_qty = abs(float(balance_qty) - float(new_qty))
 		se = frappe.new_doc("Stock Entry")
+		se.company =company
 		se.stock_entry_type = "Material Receipt"
 		se.set_posting_time = 1 
 		se.posting_date = date or frappe.utils.nowdate()
