@@ -66,37 +66,57 @@ def get_data(filters):
 			conditions += " and exists (select name from `tabCustomer_group` t \
 				where t.lft >= %s and t.rgt <= %s and c.customer_group = t.name)"%(customer_group_details.lft,
 				customer_group_details.rgt)
-
-	data = frappe.db.sql("""
-			SELECT c.name, c.customer_name, c.customer_alias, c.territory, c.customer_type, c.customer_group,
-				c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information,
-				t.parent_territory
-				
-			FROM `tabCustomer` as c 
-			JOIN `tabTerritory` as t ON (t.name = c.territory)
-			WHERE c.disabled = 0 %s
-			""" %(conditions), as_dict=1)
+	
+	if not filters.get('show_detail') and not filters.get('show_contact'):
+		data = frappe.db.sql("""
+				SELECT c.name, c.customer_name, c.customer_alias, c.territory, c.customer_type, c.customer_group,
+					c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information,
+					t.parent_territory
+					
+				FROM `tabCustomer` as c 
+				JOIN `tabTerritory` as t ON (t.name = c.territory)
+				WHERE c.disabled = 0 %s
+				ORDER BY
+					c.name asc
+				""" %(conditions), as_dict=1)
 	
 	if filters.get('show_detail') and not filters.get('show_contact'):
-		sales_data_map= get_sales_details()
-		for row in data:
-			if sales_data_map.get(row.name):
-				row.update(sales_data_map[row.name])
+		# sales_data_map= get_sales_details()
+		# for row in data:
+		# 	if sales_data_map.get(row.name):
+		# 		row.update(sales_data_map[row.name])
+		data = frappe.db.sql("""
+				SELECT c.name, c.customer_name, c.customer_alias, c.territory, c.customer_type, c.customer_group,
+					c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information,
+					t.parent_territory, st.sales_person, st.company, st.regional_sales_manager, st.sales_manager	
+				FROM `tabCustomer` as c 
+				JOIN `tabTerritory` as t ON (t.name = c.territory)
+				LEFT JOIN `tabSales Team` as st ON st.parenttype = "Customer" and st.parent = c.name
+				WHERE c.disabled = 0 %s
+				ORDER BY
+					c.name asc
+				""" %(conditions), as_dict=1)
 
 	if filters.get('show_contact') and not filters.get('show_detail'):
-		contact_data_map = get_contact_details()
-		for row in data:
-			if contact_data_map.get(row.name):
-				row.update(contact_data_map[row.name])
+		# contact_data_map = get_contact_details()
+		# for row in data:
+		# 	if contact_data_map.get(row.name):
+		# 		row.update(contact_data_map[row.name])
+		data = frappe.db.sql("""
+				SELECT c.name, c.customer_name, c.customer_alias, c.territory, c.customer_type, c.customer_group,
+					c.size_of_business, c.payment_performance_or_relations, c.cash_and_carry, c.primary_customer, c.reference_reviews_and_other_information,
+					t.parent_territory, dl.link_name,CONCAT_WS(" ",contact.first_name, contact.middle_name, contact.last_name) as full_name ,contact.mobile_no, contact.email_id,contact.unsubscribed	
+				FROM `tabCustomer` as c 
+				JOIN `tabTerritory` as t ON (t.name = c.territory)
+				LEFT JOIN  `tabDynamic Link` as dl ON (dl.link_name= c.name and dl.parenttype = 'Contact')
+				RIGHT JOIN `tabContact` as contact ON (contact.name = dl.parent)
+				WHERE c.disabled = 0 %s
+				ORDER BY
+					c.name asc
+				""" %(conditions), as_dict=1)
 
 	if filters.get('show_contact') and filters.get('show_detail'):
-		sales_data_map= get_sales_details()
-		contact_data_map = get_contact_details()
-		for row in data:
-			if sales_data_map.get(row.name):
-				row.update(sales_data_map[row.name])
-			if contact_data_map.get(row.name):
-				row.update(contact_data_map[row.name])
+		data = []
 
 	return data
 
