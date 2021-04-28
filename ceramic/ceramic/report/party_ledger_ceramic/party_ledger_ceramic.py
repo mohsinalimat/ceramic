@@ -687,11 +687,12 @@ def send_whatsapp_report(mobile_number, content, file_url,file_name,filters):
 		"message_info":message_info,"message":str(content)})
 	doc.save(ignore_permissions=True)
 
+	time.sleep(20)
 	remove_file_from_os(path)
 
 	frappe.db.sql("delete from `tabFile` where file_name='{}'".format(file_name))
-	frappe.db.sql("delete from `tabComment` where reference_doctype='{}' and reference_name='{}' and comment_type='Attachment' and comment_email = '{}' and content LIKE '%{}%'"
-		.format('Report','Party Ledger Ceramic',frappe.session.user,file_url))
+	frappe.db.sql("delete from `tabComment` where reference_doctype='{}' and reference_name='{}' and comment_type='Attachment' and content LIKE '%{}%'"
+		.format('Report','Party Ledger Ceramic',file_name))
 
 	frappe.db.commit()
 
@@ -741,6 +742,7 @@ def send_media_whatsapp(mobile_number,content,path_url):
 	except:
 		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
 		driver.quit()
+		frappe.db.set_value("System Settings","System Settings","default_login",0)
 		return False
 
 	try:
@@ -771,7 +773,8 @@ def send_media_whatsapp(mobile_number,content,path_url):
 			frappe.log_error(frappe.get_traceback(),"Error while trying to send the media file.")
  
 	try:
-		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
+		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
+		WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
 		driver.find_element_by_css_selector('span[data-icon="clip"]').click()
 		attach=driver.find_element_by_css_selector('input[type="file"]')
 		attach.send_keys(path_url)
@@ -782,7 +785,7 @@ def send_media_whatsapp(mobile_number,content,path_url):
 	except:
 		frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
 
-	time.sleep(20)
+	time.sleep(30)
 	driver.quit()
 
 def remove_file_from_os(path):

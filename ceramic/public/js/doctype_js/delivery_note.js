@@ -134,7 +134,7 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 	// Finbyz Changes to override for Make Sales Invoice Test
 	make_sales_invoice_test: function() {
 		frappe.model.open_mapped_doc({
-			method: "erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice",
+			method: "ceramic.ceramic.doc_events.delivery_note.create_invoice_test",
 			frm: this.frm
 		});
 	}

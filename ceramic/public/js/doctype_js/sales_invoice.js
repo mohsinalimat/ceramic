@@ -183,6 +183,11 @@ frappe.ui.form.on('Sales Invoice', {
 		else{
 			cur_frm.set_df_property("primary_customer", "allow_on_submit", 0);
 		}
+		if(!frm.doc.cost_center){
+			frappe.db.get_value("Company",frm.doc.company,'cost_center',function(r){
+				frm.set_value('cost_center',r.cost_center)
+			})
+		}
 	},
 	customer: function (frm) {
 		if (frm.doc.customer){
