@@ -240,7 +240,7 @@ def on_cancel(self, method):
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'delivered_real_qty', flt(delivered_real_qty))
 			frappe.db.set_value("Sales Order Item", sales_order_item.name, 'wastage_qty', flt(wastage_qty))
 			if item.against_pick_list:
-				if sales_order_item.picked_qty + item.wastage_qty > sales_order_item.qty:
+				if sales_order_item.picked_qty + wastage_qty > sales_order_item.qty:
 					frappe.throw(f"Please Unpick {sales_order_item.picked_qty + wastage_qty - sales_order_item.qty} for Sales Order {sales_order_item.parent} Row: {sales_order_item.idx}")
 				
 				frappe.db.set_value("Sales Order Item", sales_order_item.name, 'picked_qty', flt(sales_order_item.picked_qty + item.wastage_qty))
