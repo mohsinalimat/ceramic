@@ -15,18 +15,22 @@ def before_validate(self, method):
 
 	if self.invoice_company == self.company or not self.invoice_company:
 		self.invoice_company = frappe.db.get_value("Company", self.company, "alternate_company")
-	for item in self.items:
-		item.discounted_amount = item.discounted_rate * item.real_qty
-		item.discounted_net_amount = item.discounted_amount
+
+	if self.si_ref:
+		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
+
+		for item in self.items:
+			item.discounted_amount = invoice_net_total * item.net_amount / self.net_total
+			item.discounted_net_amount = item.discounted_amount
 
 		# if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
 			# frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
-
+	for item in self.items:
 		if (not item.rate) and (item.so_detail):
 			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'rate')
 		
-		if (not item.discounted_rate) and (item.so_detail):
-			item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
+		# if (not item.discounted_rate) and (item.so_detail):
+		# 	item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
 	validate_item_from_so(self)
 	sales_order_list = list(set([x.against_sales_order for x in self.items if x.against_sales_order]))
 
@@ -163,6 +167,7 @@ def before_submit(self, method):
 	check_item_without_pick(self)
 	update_status_pick_list_and_sales_order(self)
 
+
 def update_status_pick_list(self):
 	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
 
@@ -188,8 +193,9 @@ def update_status_pick_list(self):
 def on_submit(self,method):
 	validate_addresses(self)
 	wastage_stock_entry(self)
-	check_qty_rate(self)
 	check_rate_qty(self)
+	if self.si_ref:
+		frappe.db.set_value("Sales Invoice",self.si_ref,"dn_ref",self.name)
 	for item in self.items:
 		if item.against_sales_order:
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
@@ -225,6 +231,9 @@ def check_qty_rate(self):
 
 
 def on_cancel(self, method):
+	if self.si_ref:
+		self.db_set('si_ref',None)
+		
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
@@ -503,7 +512,8 @@ def create_invoice_test(source_name, target_doc=None):
 				"is_return": "is_return",
 				"posting_date":"posting_date",
 				"posting_time":"posting_time",
-				"set_posting_time":"set_posting_time"
+				"set_posting_time":"set_posting_time",
+				"si_ref":"si_ref",
 			},
 			"validation": {
 				"docstatus": ["=", 1]
@@ -535,6 +545,11 @@ def create_invoice_test(source_name, target_doc=None):
 		}
 	}, target_doc, set_missing_values)
 
+	if doc.si_ref:
+		si_company_series, si_naming_series, si_series_value = frappe.db.get_value("Sales Invoice",doc.si_ref,["company_series","naming_series","series_value"])
+		doc.naming_series =  'A' + str(si_company_series) + si_naming_series
+		doc.series_value = si_series_value
+		doc.save(ignore_permissions=True)
 	return doc
 
 

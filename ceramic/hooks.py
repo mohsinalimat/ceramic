@@ -289,10 +289,10 @@ doc_events = {
 	"Delivery Note": {
 		"before_validate": [
 			"ceramic.ceramic.doc_events.delivery_note.before_validate", 
-			"ceramic.api.naming_series_validate"
+			"ceramic.api.naming_series_validate",
+			"ceramic.controllers.item_validation.validate_item_authority"
 		],
 		"validate": [
-			"ceramic.controllers.item_validation.validate_item_authority", 
 			"ceramic.ceramic.doc_events.delivery_note.validate"
 		],
 		"before_save": "ceramic.ceramic.doc_events.delivery_note.before_save",
@@ -306,7 +306,6 @@ doc_events = {
 		],
 		"before_validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.before_validate", 
-			"ceramic.ceramic.doc_events.purchase_order.before_validate"
 		],
 		"validate": [
 			"ceramic.ceramic.doc_events.sales_invoice.validate",

@@ -8,16 +8,16 @@ from frappe.contacts.doctype.address.address import get_company_address
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
-	
-	for item in self.items:
-		if not item.rate and item.delivery_childname:
-			item.rate = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'discounted_rate')
-		
-		if not item.qty and item.delivery_childname:
-			item.qty = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'real_qty')
-		
-		item.discounted_amount = (item.discounted_rate or 0)  * (item.real_qty or 0)
-		item.discounted_net_amount = item.discounted_amount
+			
+	if self.si_ref:
+		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
+
+		for item in self.items:
+			item.discounted_amount = invoice_net_total * item.net_amount / self.net_total
+			item.discounted_net_amount = item.discounted_amount
+
+			# if not item.rate and item.delivery_childname:
+			# 	item.rate = frappe.db.get_value("Delivery Note Item", item.delivery_childname, 'discounted_rate')
 	
 	if self.authority == "Unauthorized":
 		for item in self.items:
@@ -40,6 +40,10 @@ def before_validate(self, method):
 		for item in self.items:
 			item.full_qty = item.qty
 
+	# if company is authorized then update_stock should be 1
+	if self.authority == "Authorized" and not (self.items[0].delivery_note or self.items[0].delivery_docname):
+		self.update_stock = 1
+
 def before_naming(self, method):
 	if self.is_opening == "Yes":
 		if not self.get('name'):
@@ -48,7 +52,13 @@ def before_naming(self, method):
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
 	create_main_sales_invoice(self)
-
+	if self.si_ref:
+		si_ref = frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref")
+		if not si_ref:
+			frappe.db.set_value("Sales Invoice",self.si_ref,"si_ref",self.name)
+		elif si_ref != self.name:
+			frappe.throw("Sales Invoice already generated for: {}".format(frappe.bold(self.si_ref)))
+			
 def before_update_after_submit(self, method):
 	"""On Update after Submit Custom Function for Sales Invoice"""
 	update_linked_invoice(self)
@@ -352,6 +362,14 @@ def update_linked_invoice(self):
 
 # Cancel Invoice on Cancel
 def cancel_main_sales_invoice(self):
+	dn_ref_list = frappe.db.get_list('Delivery Note',
+		filters={
+			'si_ref':('in',[self.name,self.si_ref])
+		},
+		fields=['name'])
+	for dn in dn_ref_list:
+		frappe.db.set_value("Delivery Note",dn.name,'si_ref','')
+		
 	if self.si_ref:
 		si = frappe.get_doc("Sales Invoice", {'si_ref':self.name})
 	else:
@@ -371,11 +389,18 @@ def cancel_main_sales_invoice(self):
 		for i in self.items:
 			change_delivery_authority(i.delivery_docname)
 
-def delete_sales_invoice(self):
-	ref_name = self.si_ref
-	frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
-	frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
-	frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
+def delete_sales_invoice(self): 
+	if self.docstatus == 0 and self.si_ref:
+		self.db_set('si_ref', '')
+		# for item in self.items:
+		# 	if item.delivery_docname:
+		# 		item.db_set('delivery_docname',None,update_modified=False)
+
+	if self.si_ref:
+		ref_name = self.si_ref
+		frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
+		frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
+		frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
 
 
 def validate_tax_template(self):

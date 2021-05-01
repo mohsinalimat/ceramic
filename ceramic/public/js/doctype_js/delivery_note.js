@@ -102,14 +102,16 @@ erpnext.stock.DeliveryNoteController = erpnext.stock.DeliveryNoteController.exte
 			});
 
 			if(!from_sales_invoice) {
-				if(doc.discounted_grand_total != 0){
-				this.frm.add_custom_button(__('Sales Invoice'), function() {me.make_sales_invoice()}, 
+				this.frm.add_custom_button(__('Sales Invoice'), function() { me.make_sales_invoice_test() },
 					__('Create'));
-				}
-				else{	
-				this.frm.add_custom_button(__('Sales Invoice Test'), function() { me.make_sales_invoice_test() },
-					__('Create'));
-				}
+				// if(doc.discounted_grand_total != 0){
+				// this.frm.add_custom_button(__('Sales Invoice'), function() {me.make_sales_invoice()}, 
+				// 	__('Create'));
+				// }
+				// else{	
+				// this.frm.add_custom_button(__('Sales Invoice Test'), function() { me.make_sales_invoice_test() },
+				// 	__('Create'));
+				// }
 			}
 		}
 
@@ -176,7 +178,6 @@ this.frm.cscript.onload = function (frm) {
 	});
 	this.frm.set_query("warehouse", "items", function (doc, cdt, cdn) {
 		let d = locals[cdt][cdn];
-		console.log('tese')
 		return {
 			query: "ceramic.query.get_warehouse",
 			filters: {
@@ -220,9 +221,6 @@ cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (do
 	}
 }
 frappe.ui.form.on('Delivery Note', {
-	refresh: function(frm) {
-		
-	},
 	onload: function (frm) {
 		if (frm.doc__islocal) {
 			frappe.db.get_value("Company", frm.doc.company, 'alternate_company', function (r) {
@@ -231,15 +229,26 @@ frappe.ui.form.on('Delivery Note', {
 		}
 	},
 	refresh: function(frm) {
+		frappe.db.get_value("Company",frm.doc.company,"alternate_company",function(r){
+			frm.fields_dict["si_ref"].get_query = function(doc) {
+					return {
+						filters: {
+							"customer":frm.doc.customer,
+							"company":r.alternate_company,
+							"docstatus":1
+						}
+					};
+				}
+		})
 		if (frm.doc__islocal == 1) {
 			frappe.db.get_value("Company", frm.doc.company, 'alternate_company', function (r) {
 				frm.set_value('invoice_company', r.alternate_company)
 			})
 		}
 		frm.trigger('add_get_items_button')
-		if (frm.doc.tax_category && frm.doc.docstatus ==0) {
-			frm.trigger('get_taxes')
-		}
+		// if (frm.doc.tax_category && frm.doc.docstatus ==0) {
+		// 	frm.trigger('get_taxes')
+		// }
 		if (frm.doc.__islocal){
 			frm.trigger('naming_series');
 		}
@@ -248,6 +257,31 @@ frappe.ui.form.on('Delivery Note', {
 	before_save: function (frm) {
 		if (!frm.doc.primary_customer) {
 			frm.set_value('primary_customer', frm.doc.customer)
+		}
+		frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["tax_paid","tax_category"], function(r){
+			if (frm.doc.tax_paid != r.tax_paid){
+				frm.set_value('tax_paid',r.tax_paid)
+			}
+			if(frm.doc.tax_category != r.tax_category){
+				frm.set_value('tax_category',r.tax_category)
+			} 
+		})
+	},
+
+	validate: function(frm){
+		if(!frm.doc.si_ref){
+			return new Promise((resolve, reject) => {
+				frappe.confirm(
+					'Are you sure to Save this document without Sales Invoice?',
+					function(){
+						resolve();
+					},
+					function(){
+						reject();
+						window.close();
+					}
+				)
+			})
 		}
 	},
 	customer: function (frm) {
@@ -411,30 +445,28 @@ frappe.ui.form.on("Delivery Note Item", {
 	real_qty: function (frm, cdt, cdn) {
 		frm.events.calculate_total(frm)
 	},
-	qty: function (frm, cdt, cdn) {
-		let d = locals[cdt][cdn];
-		if (!d.against_sales_invoice && !d.against_pick_list){
-			frappe.call({
-				method: "ceramic.ceramic.doc_events.delivery_note.get_rate_discounted_rate",
-				args: {
-					"item_code": d.item_code,
-					"customer": frm.doc.customer,
-					"company": frm.doc.company,
-					"so_number": frm.doc.name || null
-				},
-				callback: function (r) {
-					if (r.message) {
-						if (!d.rate){
-							frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
-						}
-						if (!d.discounted_rate){
-							frappe.model.set_value(cdt, cdn, 'discounted_rate', r.message.discounted_rate);
-						}
-					}
-				}
-			});
-		}
-
-		// this.calculate_taxes_and_totals();
-	},
+	// qty: function (frm, cdt, cdn) {
+	// 	let d = locals[cdt][cdn];
+	// 	if (!d.against_sales_invoice && !d.against_pick_list){
+	// 		frappe.call({
+	// 			method: "ceramic.ceramic.doc_events.delivery_note.get_rate_discounted_rate",
+	// 			args: {
+	// 				"item_code": d.item_code,
+	// 				"customer": frm.doc.customer,
+	// 				"company": frm.doc.company,
+	// 				"so_number": frm.doc.name || null
+	// 			},
+	// 			callback: function (r) {
+	// 				if (r.message) {
+	// 					if (!d.rate){
+	// 						frappe.model.set_value(cdt, cdn, 'rate', r.message.rate);
+	// 					}
+	// 					if (!d.discounted_rate){
+	// 						frappe.model.set_value(cdt, cdn, 'discounted_rate', r.message.discounted_rate);
+	// 					}
+	// 				}
+	// 			}
+	// 		});
+	// 	}
+	// },
 });

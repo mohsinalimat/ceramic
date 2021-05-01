@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from datetime import date,timedelta,datetime
 from frappe.utils import flt, cint
+from frappe.model.utils import get_fetch_values
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from erpnext.accounts.party import get_party_details
@@ -135,9 +136,9 @@ def create_main_sales_order(self):
 			if source_doc.warehouse:
 				target_doc.warehouse = source_doc.warehouse.replace(source_company_abbr, target_company_abbr)
 			
-			for i in source_parent.items:
-				target_item = frappe.db.get_value("Item", i.item_code, "item_series")
-				target_doc.item_code = target_item
+			# for i in source_parent.items:
+			# 	target_item = frappe.db.get_value("Item", i.item_code, "item_series")
+			# 	target_doc.item_code = target_item
 
 
 			# if source_doc.income_account:
@@ -310,6 +311,7 @@ def create_main_sales_order(self):
 		so.transaction_date = self.transaction_date
 		if self.amended_from:
 			so.amended_from = frappe.db.get_value("Sales Order", {"so_ref": self.amended_from}, "name")
+		so.ignore_item_validate = True
 		so.save(ignore_permissions = True)
 		for tax in so.taxes:
 			if tax.tax_exclusive and tax.charge_type != "Actual":

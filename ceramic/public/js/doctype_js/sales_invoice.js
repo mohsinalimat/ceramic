@@ -188,6 +188,12 @@ frappe.ui.form.on('Sales Invoice', {
 				frm.set_value('cost_center',r.cost_center)
 			})
 		}
+		// if(frm.doc.docstatus == 0 && frm.doc.si_ref && frm.doc.name.includes("New Sales Invoice")){
+		// 	frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["company_series","naming_series","series_value"],function(r){
+		// 		frm.set_value("naming_series",'A' + String(r.company_series) + r.naming_series)
+		// 		frm.set_value("series_value",r.series_value)
+		// 	})
+		// }
 	},
 	customer: function (frm) {
 		if (frm.doc.customer){
