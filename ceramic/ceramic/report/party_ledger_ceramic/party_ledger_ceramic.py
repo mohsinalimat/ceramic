@@ -411,12 +411,12 @@ def get_columns(filters):
 			"width": 180,
 			"hidden": 1
 		},
-		# {
-		# 	"label": _("Qty".format(currency)),
-		# 	"fieldname": "qty",
-		# 	"fieldtype": "Float",
-		# 	"width": 80
-		# },
+		{
+			"label": _("Qty"),
+			"fieldname": "qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
 		{
 			"label": _("Billed Debit ({0})".format(currency)),
 			"fieldname": "billed_debit",
