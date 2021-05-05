@@ -270,7 +270,7 @@ frappe.ui.form.on('Delivery Note', {
 		})
 	},
 
-	validate: function(frm){
+	before_submit: function(frm){
 		if(!frm.doc.si_ref){
 			return new Promise((resolve, reject) => {
 				frappe.confirm(
