@@ -169,7 +169,22 @@ def before_submit(self, method):
 	check_invoice_company(self)
 	check_item_without_pick(self)
 	update_status_pick_list_and_sales_order(self)
+	validate_taxes_sales_invoice(self)
 
+def validate_taxes_sales_invoice(self):
+	tax_map={}
+	source_company_abbr = frappe.db.get_value("Company", self.company, "abbr")
+
+	if self.si_ref:
+		for tax in self.taxes:
+			tax_map.setdefault(tax.account_head,tax.tax_amount)
+
+		si_ref_doc = frappe.get_doc("Sales Invoice",self.si_ref)
+		target_company_abbr = frappe.db.get_value("Company", si_ref_doc.company, "abbr")
+
+		for si_tax in si_ref_doc.taxes:
+			if si_tax.tax_amount != tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr)):
+				frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
 
 def update_status_pick_list(self):
 	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
