@@ -234,6 +234,7 @@ frappe.ui.form.on('Delivery Note', {
 					return {
 						filters: {
 							"customer":frm.doc.customer,
+							"primary_customer":frm.doc.primary_customer,
 							"company":r.alternate_company,
 							"docstatus":1
 						}
