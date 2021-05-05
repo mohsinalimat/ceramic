@@ -233,10 +233,7 @@ def check_qty_rate(self):
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 
-def on_cancel(self, method):
-	if self.si_ref:
-		self.db_set('si_ref',None)
-		
+def on_cancel(self, method):		
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)

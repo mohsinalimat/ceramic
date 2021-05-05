@@ -362,32 +362,48 @@ def update_linked_invoice(self):
 
 # Cancel Invoice on Cancel
 def cancel_main_sales_invoice(self):
-	dn_ref_list = frappe.db.get_list('Delivery Note',
-		filters={
-			'si_ref':('in',[self.name,self.si_ref])
-		},
-		fields=['name'])
-	for dn in dn_ref_list:
-		frappe.db.set_value("Delivery Note",dn.name,'si_ref','')
+	if self.authority == "Authorized":
+		if self.si_ref:
+			si = frappe.get_doc("Sales Invoice", {'si_ref':self.name})
+		else:
+			si = None
 		
-	if self.si_ref:
-		si = frappe.get_doc("Sales Invoice", {'si_ref':self.name})
-	else:
-		si = None
-	
-	if si:
-		if si.docstatus == 1:
-			si.flags.ignore_permissions = True
-			try:
-				si.cancel()
-				for i in self.items:
-					change_delivery_authority(i.delivery_docname)
-			except Exception as e:
-				frappe.db.rollback()
-				frappe.throw(_(str(e)))
-	else:
-		for i in self.items:
-			change_delivery_authority(i.delivery_docname)
+		if si:
+			if si.docstatus == 1:
+				si.flags.ignore_permissions = True
+				try:
+					si.cancel()
+					for i in self.items:
+						change_delivery_authority(i.delivery_docname)
+				except Exception as e:
+					frappe.db.rollback()
+					frappe.throw(_(str(e)))
+		else:
+			for i in self.items:
+				change_delivery_authority(i.delivery_docname)
+				
+		dn_ref_list = frappe.db.get_list('Delivery Note',
+			filters={
+				'si_ref':('in',[self.name,self.si_ref])
+			},
+			fields=['name'])
+		for dn in dn_ref_list:
+			dn_doc = frappe.get_doc("Delivery Note",dn)
+			dn_doc.db_set("si_ref",None)
+
+			if dn_doc.docstatus == 1:
+				dn_doc.flags.ignore_permissions = True
+				try:
+					dn_doc.cancel()
+				except Exception as e:
+					frappe.db.rollback()
+					frappe.throw(_(str(e)))
+		
+
+	elif self.authority == "Unauthorized":
+		if self.si_ref:
+			frappe.db.set_value('Sales Invoice',self.si_ref,'si_ref',None)
+			self.db_set('si_ref',None)
 
 def delete_sales_invoice(self): 
 	if self.docstatus == 0 and self.si_ref:
