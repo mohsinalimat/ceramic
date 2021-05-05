@@ -260,14 +260,16 @@ frappe.ui.form.on('Delivery Note', {
 		if (!frm.doc.primary_customer) {
 			frm.set_value('primary_customer', frm.doc.customer)
 		}
-		frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["tax_paid","tax_category"], function(r){
-			if (frm.doc.tax_paid != r.tax_paid){
-				frm.set_value('tax_paid',r.tax_paid)
-			}
-			if(frm.doc.tax_category != r.tax_category){
-				frm.set_value('tax_category',r.tax_category)
-			} 
-		})
+		if(frm.doc.si_ref){
+			frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["tax_paid","tax_category"], function(r){
+				if (frm.doc.tax_paid != r.tax_paid){
+					frm.set_value('tax_paid',r.tax_paid)
+				}
+				if(frm.doc.tax_category != r.tax_category){
+					frm.set_value('tax_category',r.tax_category)
+				} 
+			})
+		}
 	},
 
 	before_submit: function(frm){
