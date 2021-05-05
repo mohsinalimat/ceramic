@@ -212,8 +212,6 @@ def on_submit(self,method):
 	validate_addresses(self)
 	wastage_stock_entry(self)
 	check_rate_qty(self)
-	if self.si_ref:
-		frappe.db.set_value("Sales Invoice",self.si_ref,"dn_ref",self.name)
 	for item in self.items:
 		if item.against_sales_order:
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
