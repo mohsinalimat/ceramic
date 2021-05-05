@@ -236,6 +236,7 @@ frappe.ui.form.on('Delivery Note', {
 							"customer":frm.doc.customer,
 							"primary_customer":frm.doc.primary_customer,
 							"company":r.alternate_company,
+							"si_ref":'',
 							"docstatus":1
 						}
 					};

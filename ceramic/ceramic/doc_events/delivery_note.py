@@ -10,6 +10,9 @@ from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_n
 
 
 def before_validate(self, method):
+	if self.si_ref:
+		if frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref"):
+			frappe.throw("Sales Invoice is already selected.please select correct invoice.")
 	self.sales_team = []
 	self.flags.ignore_permissions = True
 
