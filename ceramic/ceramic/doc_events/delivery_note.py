@@ -10,27 +10,18 @@ from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_n
 
 
 def before_validate(self, method):
-	if self.si_ref:
-		if frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref"):
-			frappe.throw("Sales Invoice is already selected.please select correct invoice.")
 	self.sales_team = []
 	self.flags.ignore_permissions = True
 
 	if self.invoice_company == self.company or not self.invoice_company:
 		self.invoice_company = frappe.db.get_value("Company", self.company, "alternate_company")
 
-	if self.si_ref:
-		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
-
-		for item in self.items:
-			item.discounted_amount = invoice_net_total * item.net_amount / self.net_total
-			item.discounted_net_amount = item.discounted_amount
-
-		# if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
-			# frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 	for item in self.items:
 		if (not item.rate) and (item.so_detail):
 			item.rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'rate')
+
+		# if frappe.db.get_value("Item", item.item_code, 'is_stock_item') and (not item.against_sales_order or not item.against_pick_list):
+			# frappe.throw(f"Row: {item.idx} No Sales Order or Pick List found for item {item.item_code}")
 		
 		# if (not item.discounted_rate) and (item.so_detail):
 		# 	item.discounted_rate = frappe.db.get_value("Sales Order Item", item.so_detail, 'discounted_rate')
@@ -44,12 +35,25 @@ def before_validate(self, method):
 		so_doc.db_set("customer_name",self.customer_name)
 
 def validate(self, method):
+	check_rate_qty(self)
+	calculate_items_discounted_fields(self)
 	update_lock_qty(self)
 	validate_item_from_picklist(self)
 	if self._action == "submit":
 		validate_tax_template(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)
+
+def calculate_items_discounted_fields(self):
+	if self.si_ref:
+		if frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref"):
+			frappe.throw("Sales Invoice is already selected.please select correct invoice.")
+
+		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
+
+		for item in self.items:
+			item.discounted_amount = flt(invoice_net_total) * flt(item.net_amount) / flt(self.net_total)
+			item.discounted_net_amount = flt(item.discounted_amount)
 
 def update_lock_qty(self):
 	if self.is_new():	
@@ -85,9 +89,9 @@ def update_discounted_net_total(self):
 		if tax.testing_only:
 			testing_only_tax += tax.tax_amount
 	
-	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
+	self.discounted_grand_total = flt(self.discounted_net_total) + flt(self.total_taxes_and_charges) - flt(testing_only_tax)
 	self.discounted_rounded_total = round(self.discounted_grand_total)
-	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
+	self.real_difference_amount = flt(self.rounded_total) - flt(self.discounted_rounded_total)
 
 
 def calculate_totals(self):
@@ -211,7 +215,6 @@ def update_status_pick_list(self):
 def on_submit(self,method):
 	validate_addresses(self)
 	wastage_stock_entry(self)
-	check_rate_qty(self)
 	for item in self.items:
 		if item.against_sales_order:
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
@@ -246,7 +249,9 @@ def check_qty_rate(self):
 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 
-def on_cancel(self, method):		
+def on_cancel(self, method):
+	if self.si_ref:
+		self.db_set('si_ref',None)		
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)
