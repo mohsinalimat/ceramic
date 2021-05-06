@@ -384,20 +384,21 @@ def cancel_main_sales_invoice(self):
 				
 		dn_ref_list = frappe.db.get_list('Delivery Note',
 			filters={
-				'si_ref':('in',[self.name,self.si_ref])
+				'si_ref':self.name
 			},
 			fields=['name'])
-		for dn in dn_ref_list:
-			dn_doc = frappe.get_doc("Delivery Note",dn)
-			dn_doc.db_set("si_ref",None)
+		if dn_ref_list:
+			for dn in dn_ref_list:
+				dn_doc = frappe.get_doc("Delivery Note",dn)
+				dn_doc.db_set("si_ref",None)
 
-			if dn_doc.docstatus == 1:
-				dn_doc.flags.ignore_permissions = True
-				try:
-					dn_doc.cancel()
-				except Exception as e:
-					frappe.db.rollback()
-					frappe.throw(_(str(e)))
+				if dn_doc.docstatus == 1:
+					dn_doc.flags.ignore_permissions = True
+					try:
+						dn_doc.cancel()
+					except Exception as e:
+						frappe.db.rollback()
+						frappe.throw(_(str(e)))
 		
 
 	elif self.authority == "Unauthorized":
