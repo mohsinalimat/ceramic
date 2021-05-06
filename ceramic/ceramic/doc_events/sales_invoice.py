@@ -8,7 +8,7 @@ from frappe.contacts.doctype.address.address import get_company_address
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
-			
+	self.dont_replicate = 1
 	if self.si_ref:
 		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
 
