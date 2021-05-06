@@ -622,8 +622,15 @@ frappe.ui.form.on('Sales Order', {
 						$.each(cus_doc.sales_team, function (index, row) {
 							if (row.company == frm.doc.company) {
 							frm.set_value('sales_head',row.sales_person)
-							frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							if (!row.regional_sales_manager){
+								frm.set_value('regional_sales_manager',row.sales_person)
+							}
+							else{
+								frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							}
 							frm.set_value('dispatch_person',row.sales_manager)
+							
+							if(row.sales_person){
 								let st = frm.add_child("sales_team");
 								st.sales_person = row.sales_person
 								st.contact_no = row.contact_no
@@ -632,9 +639,11 @@ frappe.ui.form.on('Sales Order', {
 								st.commission_rate = row.commission_rate
 								st.incentives = row.incentives
 								st.company = row.company
-								st.regional_sales_manager = row.regional_sales_manager
+								st.regional_sales_manager = frm.doc.regional_sales_manager
 								st.sales_manager = row.sales_manager
+								}
 							}
+
 						})
 
 						frm.refresh_field("sales_team");
@@ -652,18 +661,26 @@ frappe.ui.form.on('Sales Order', {
 					$.each(cus_doc.sales_team, function (index, row) {
 						if (row.company == frm.doc.company) {
 							frm.set_value('sales_head',row.sales_person)
-							frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							if (!row.regional_sales_manager){
+								frm.set_value('regional_sales_manager',row.sales_person)
+							}
+							else{
+								frm.set_value('regional_sales_manager',row.regional_sales_manager)
+							}
 							frm.set_value('dispatch_person',row.sales_manager)
-							let st = frm.add_child("sales_team");
-							st.sales_person = row.sales_person
-							st.contact_no = row.contact_no
-							st.allocated_percentage = row.allocated_percentage
-							st.allocated_amount = row.allocated_amount
-							st.commission_rate = row.commission_rate
-							st.incentives = row.incentives
-							st.company = row.company
-							st.regional_sales_manager = row.regional_sales_manager
-							st.sales_manager = row.sales_manager
+
+							if(row.sales_person){
+								let st = frm.add_child("sales_team");
+								st.sales_person = row.sales_person
+								st.contact_no = row.contact_no
+								st.allocated_percentage = row.allocated_percentage
+								st.allocated_amount = row.allocated_amount
+								st.commission_rate = row.commission_rate
+								st.incentives = row.incentives
+								st.company = row.company
+								st.regional_sales_manager = frm.doc.regional_sales_manager
+								st.sales_manager = row.sales_manager
+						}
 						}
 					})
 
