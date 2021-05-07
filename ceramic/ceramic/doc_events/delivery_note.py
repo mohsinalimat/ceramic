@@ -49,12 +49,14 @@ def calculate_items_discounted_fields(self):
 		if frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref"):
 			frappe.throw("Sales Invoice is already selected.please select correct invoice.")
 
-		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
+		invoice_company, invoice_net_total, total_qty = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total","total_qty"])
 
 		for item in self.items:
 			item.discounted_amount = flt(invoice_net_total) * flt(item.net_amount) / flt(self.net_total)
 			item.discounted_net_amount = flt(item.discounted_amount)
 
+		self.total_si_qty = flt(total_qty)
+		
 def update_lock_qty(self):
 	if self.is_new():	
 		if self.items[0].against_sales_order:
@@ -99,7 +101,6 @@ def calculate_totals(self):
 		#d.wastage_qty = flt(d.picked_qty - d.qty)
 		d.total_weight = flt(d.weight_per_unit * d.qty)
 	self.total_qty = sum([row.qty for row in self.items])
-	self.total_real_qty = sum([row.real_qty for row in self.items])
 	self.total_net_weight = sum([row.total_weight for row in self.items])
 
 def check_invoice_company(self):
@@ -187,7 +188,7 @@ def validate_taxes_sales_invoice(self):
 		target_company_abbr = frappe.db.get_value("Company", si_ref_doc.company, "abbr")
 
 		for si_tax in si_ref_doc.taxes:
-			if si_tax.tax_amount != tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr)):
+			if round(si_tax.tax_amount,2) != round(tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr)),2):
 				frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
 
 def update_status_pick_list(self):
@@ -241,12 +242,12 @@ def check_rate_qty(self):
 		if not item.qty or item.qty == 0:
 			frappe.throw(f"Row: {item.idx} Quantity can not be 0 ")
 
-def check_qty_rate(self):
-	for item in self.items:
-		if not item.discounted_rate:
-			frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
-		if not item.real_qty:
-			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+# def check_qty_rate(self):
+# 	for item in self.items:
+# 		if not item.discounted_rate:
+# 			frappe.msgprint(f"Row {item.idx}: Discounted rate is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
+# 		if not item.real_qty:
+# 			frappe.msgprint(f"Row {item.idx}: Real qty is 0, you will not be able to create invoice in {frappe.db.get_value('Company', self.company, 'alternate_company')}")
 
 
 def on_cancel(self, method):
@@ -281,7 +282,7 @@ def on_cancel(self, method):
 
 def before_save(self, method):
 	for row in self.items:
-		row.full_qty = max(row.qty,row.real_qty)
+		row.full_qty = flt(row.qty)
 
 def change_delivery_authority(name):
 	dn_status = frappe.get_value("Delivery Note", name, "status")

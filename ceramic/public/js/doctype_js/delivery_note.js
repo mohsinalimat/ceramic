@@ -270,6 +270,7 @@ frappe.ui.form.on('Delivery Note', {
 				} 
 			})
 		}
+		frm.trigger('get_taxes');
 	},
 
 	before_submit: function(frm){
@@ -324,17 +325,14 @@ frappe.ui.form.on('Delivery Note', {
 	},
 	calculate_total: function (frm) {
 		let total_qty = 0.0
-		let total_real_qty = 0.0
 		let total_net_weight = 0.0
 
 		frm.doc.items.forEach(function (d) {
 			total_qty += flt(d.qty);
-			total_real_qty += flt(d.real_qty);
 			//d.wastage_qty = flt(d.picked_qty - d.qty)
 		});
 
 		frm.set_value("total_qty", total_qty);
-		frm.set_value("total_real_qty", total_real_qty);
 		frm.set_value("total_net_weight", total_net_weight);
 		frm.set_value("material_weight", flt(frm.doc.final_weight - frm.doc.initial_weight));
 	},
@@ -357,24 +355,29 @@ frappe.ui.form.on('Delivery Note', {
 		}
 	},
 	get_taxes: function (frm) {
-		frappe.call({
-			method: "ceramic.ceramic.doc_events.sales_order.get_tax_template",
-			args: {
-				'tax_paid': frm.doc.tax_paid,
-				'tax_category': frm.doc.tax_category,
-				'company': frm.doc.company
-			},
-			callback: function (r) {
-				if (r.message) {
-					frm.set_value('taxes_and_charges', r.message)
+		if(frm.doc.tax_category){
+			console.log('called')
+			frappe.call({
+				method: "ceramic.ceramic.doc_events.sales_order.get_tax_template",
+				args: {
+					'tax_paid': frm.doc.tax_paid,
+					'tax_category': frm.doc.tax_category,
+					'company': frm.doc.company
+				},
+				callback: function (r) {
+					if (r.message) {
+						if(r.message != frm.doc.taxes_and_charges){
+							frm.set_value('taxes_and_charges', r.message)
+						}
+					}
+					else {
+						frm.set_value('taxes_and_charges', null)
+						frm.set_value('taxes', [])
+					}
+					frm.refresh_field("taxes");
 				}
-				else {
-					frm.set_value('taxes_and_charges', null)
-					frm.set_value('taxes', [])
-				}
-				frm.refresh_field("taxes");
-			}
-		})
+			})
+		}
 	},
 	customer: function (frm) {
 		if (frm.doc.customer) {
@@ -446,9 +449,9 @@ frappe.ui.form.on("Delivery Note Item", {
 		let d = locals[cdt][cdn];
 		frm.events.calculate_total(frm)
 	},
-	real_qty: function (frm, cdt, cdn) {
-		frm.events.calculate_total(frm)
-	},
+	// real_qty: function (frm, cdt, cdn) {
+	// 	frm.events.calculate_total(frm)
+	// },
 	// qty: function (frm, cdt, cdn) {
 	// 	let d = locals[cdt][cdn];
 	// 	if (!d.against_sales_invoice && !d.against_pick_list){
