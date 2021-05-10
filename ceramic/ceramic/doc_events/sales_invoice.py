@@ -13,6 +13,7 @@ def before_validate(self, method):
 			if item.delivery_docname:
 				item.delivery_docname = None
 				item.delivery_childname = None
+			
 	self.dont_replicate = 1
 	if self.si_ref:
 		invoice_company, invoice_net_total = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total"])
@@ -409,7 +410,8 @@ def cancel_main_sales_invoice(self):
 	elif self.authority == "Unauthorized":
 		if self.si_ref:
 			frappe.db.set_value('Sales Invoice',self.si_ref,'si_ref',None)
-			self.db_set('si_ref',None)
+			self.flags.ignore_permissions = True
+			# self.db_set('si_ref',None)
 
 def delete_sales_invoice(self): 
 	if self.docstatus == 0 and self.si_ref:
