@@ -423,8 +423,9 @@ def delete_sales_invoice(self):
 	if self.si_ref:
 		ref_name = self.si_ref
 		frappe.db.set_value("Sales Invoice", self.name, 'si_ref', '')    
-		frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '') 
-		frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
+		frappe.db.set_value("Sales Invoice", ref_name, 'si_ref', '')
+		if self.authority == "Authorized":
+			frappe.delete_doc("Sales Invoice", ref_name, force = 1, ignore_permissions=True)  
 
 
 def validate_tax_template(self):
