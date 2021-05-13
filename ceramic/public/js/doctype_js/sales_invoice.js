@@ -140,12 +140,14 @@ cur_frm.fields_dict.items.grid.get_field("warehouse").get_query = function(doc) 
         }
     }
 };
-cur_frm.fields_dict.taxes_and_charges.get_query = function(doc) {
-    return {
-        filters: {
-            "company": doc.company
-        }
-    }
+cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
+	return {
+		filters: {
+			"company": doc.company,
+			"tax_paid": doc.tax_paid || 0,
+			"tax_category":doc.tax_category
+		}
+	}
 };
 cur_frm.fields_dict.customer.get_query = function(doc) {
     return {

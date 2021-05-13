@@ -36,6 +36,7 @@ def before_validate(self, method):
 
 def validate(self, method):
 	check_rate_qty(self)
+	validate_si_ref(self)
 	calculate_items_discounted_fields(self)
 	update_lock_qty(self)
 	validate_item_from_picklist(self)
@@ -44,11 +45,26 @@ def validate(self, method):
 	update_discounted_net_total(self)
 	calculate_totals(self)
 
+def validate_si_ref(self):
+	if self.si_ref:
+		si_ref, customer, primary_customer, docstatus, company = frappe.db.get_value("Sales Invoice",self.si_ref,["si_ref","customer","primary_customer","docstatus","company"])
+		if si_ref:
+			frappe.throw("Please select correct invoice, Sales Invoice already generated.")
+
+		if customer != self.customer:
+			frappe.throw("Please Select Correct Invoice, Wrong Customer Selected.")
+
+		if primary_customer != self.primary_customer:
+			frappe.throw("Please Select Correct Invoice, Wrong Primary Customer Selected.")
+
+		if docstatus != 1:
+			frappe.throw("Please Select Correct Invoice, Selected Document is in Draft State.")
+
+		if company != frappe.db.get_value("Company", self.company, "alternate_company"):
+			frappe.throw("Please Select Correct Invoice, Wrong Company.")
+
 def calculate_items_discounted_fields(self):
 	if self.si_ref:
-		if frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref"):
-			frappe.throw("Sales Invoice is already selected.please select correct invoice.")
-
 		invoice_company, invoice_net_total, total_qty = frappe.db.get_value("Sales Invoice",self.si_ref,["company","net_total","total_qty"])
 
 		for item in self.items:
@@ -188,7 +204,7 @@ def validate_taxes_sales_invoice(self):
 		target_company_abbr = frappe.db.get_value("Company", si_ref_doc.company, "abbr")
 
 		for si_tax in si_ref_doc.taxes:
-			if round(si_tax.tax_amount,2) != round(tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr)),2):
+			if si_tax.tax_amount != tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr)):
 				frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
 
 def update_status_pick_list(self):
