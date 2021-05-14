@@ -132,9 +132,9 @@ def generate_data(filters, res):
 			alternate_account = account.replace(abbr,alternate_abbr)
 			d['create_account_reco_entry'] = f"""
 					<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
-						type='button' posting_date='{d.posting_date}' company='{d.company}' alternate_company='{alternate_company}' account='{d.account}' alternate_account='{alternate_account}' reconciled_amount='{reconciled_amount}' alternate_reconciled_amount='{alternate_reconciled_amount}' party_type='{d.party_type}' party='{d.party}'
-						onClick='create_account_reco(this.getAttribute("posting_date"),this.getAttribute("company"),this.getAttribute("alternate_company"),this.getAttribute("account"),this.getAttribute("alternate_account"),this.getAttribute("reconciled_amount"),this.getAttribute("alternate_reconciled_amount"),this.getAttribute("party_type"),this.getAttribute("party"))'>Create Account Reco</button>"""
-			
+						type='button' posting_date='{d.posting_date}' company='{d.company}' alternate_company='{alternate_company}' account='{d.account}' alternate_account='{alternate_account}' reconciled_amount='{reconciled_amount}' alternate_reconciled_amount='{alternate_reconciled_amount}' party_type='{d.party_type}' party='{d.primary_customer if d.party_type == "Customer" else d.party}'
+						onClick='create_account_reco(this.getAttribute("posting_date"),this.getAttribute("company"),this.getAttribute("alternate_company"),this.getAttribute("account"),this.getAttribute("alternate_account"),this.getAttribute("reconciled_amount"),this.getAttribute("alternate_reconciled_amount"),this.getAttribute("party_type"),this.getAttribute("party"))'>Clear Transactions</button>"""
+
 	data += [{
 		"voucher_no": "Total",
 		"qty":qty_total,
