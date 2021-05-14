@@ -196,6 +196,13 @@ frappe.ui.form.on('Sales Invoice', {
         // 	})
         // }
     },
+    onload: function (frm) {
+		if(frm.doc.company){
+            frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
+                frm.set_value("bank_account",r.name);
+            })
+        }
+	},
     customer: function(frm) {
         if (frm.doc.customer) {
             frm.set_value("primary_customer", '')
@@ -323,7 +330,13 @@ frappe.ui.form.on('Sales Invoice', {
 
         })
 
-
+        if(frm.doc.company){
+            frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
+                if(r.name){
+                    frm.set_value("bank_account",r.name);
+                }
+            })
+        }
 
     },
     company_series: function(frm) {
