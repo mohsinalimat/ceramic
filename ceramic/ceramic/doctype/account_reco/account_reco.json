@@ -41,10 +41,11 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.account == 'Debtors - MVT' || doc.account == 'Creditors - MVT' ||doc.account == 'Debtors - MVTT' || doc.account == 'Creditors - MVTT'\n",
+   "depends_on": "eval:(doc.account == 'Debtors - MVT' || doc.account == 'Creditors - MVT' ||doc.account == 'Debtors - MVTT' || doc.account == 'Creditors - MVTT')\n",
    "fieldname": "party",
    "fieldtype": "Dynamic Link",
    "label": "Party",
+   "no_copy": 1,
    "options": "party_type",
    "reqd": 1
   },
@@ -98,7 +99,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2021-03-12 14:58:06.066886",
+ "modified": "2021-05-14 11:53:51.613576",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Account Reco",

@@ -8,24 +8,40 @@ from frappe.model.document import Document
 
 class AccountReco(Document):
 	def on_submit(self):
-		frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'Old' where name!='a'
-			and company = '{company}' and account = '{account}' and party_type = '{party_type}'
-			and party = '{party}' and posting_date <= '{posting_date}'
-			""".format(company=self.company, account=self.account, party_type=self.party_type, \
-					party=self.party, posting_date=self.posting_date))
-	
-		data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
-			and company = '{company}' and account = '{account}' and party_type = '{party_type}'
-			and party = '{party}' and posting_date <= '{posting_date}'
-			""".format(company=self.company, account=self.account, party_type=self.party_type, \
-					party=self.party, posting_date=self.posting_date),as_dict=1)
+		if self.party_type != "Customer":
+			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'Old' where name!='a'
+				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
+				and party = '{party}' and posting_date <= '{posting_date}'
+				""".format(company=self.company, account=self.account, party_type=self.party_type, \
+						party=self.party, posting_date=self.posting_date))
+		
+			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
+				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
+				and party = '{party}' and posting_date <= '{posting_date}'
+				""".format(company=self.company, account=self.account, party_type=self.party_type, \
+						party=self.party, posting_date=self.posting_date),as_dict=1)
 
-		if data:
-			for row in data:
-				frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='Old' where name = '{voucher_no}'
-				""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
+			if data:
+				for row in data:
+					frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='Old' where name = '{voucher_no}'
+					""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
 		
 		if self.party_type == "Customer":
+			for doctype in ['Sales Invoice','Payment Entry','Journal Entry']:
+				frappe.db.sql("""
+				update 
+					`tabGL Entry` as gle, `tab{doctype}` as voucher
+				SET
+					gle.transaction_status = 'Old', voucher.transaction_status = 'Old'
+				where
+					gle.voucher_no = voucher.name and gle.name != 'a'
+					and gle.company = '{company}' and gle.account = '{account}' and gle.party_type = 'Customer'
+					and voucher.primary_customer = '{party}'
+					and gle.posting_date <= '{posting_date}'
+					""".format(doctype=doctype, company=self.company, account=self.account, party=self.party, \
+							posting_date=self.posting_date))
+
+
 			doc = frappe.get_doc("Customer",self.party)
 			if doc.sales_team:
 				for sales in doc.sales_team:
@@ -35,24 +51,39 @@ class AccountReco(Document):
 						sales.db_update()
 
 	def on_cancel(self):
-		frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'New' where name!='a'
-			and company = '{company}' and account = '{account}' and party_type = '{party_type}'
-			and party = '{party}' and posting_date <= '{posting_date}'
-			""".format(company=self.company, account=self.account, party_type=self.party_type, \
-					party=self.party, posting_date=self.posting_date))		
+		if self.party_type != "Customer":
+			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'New' where name!='a'
+				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
+				and party = '{party}' and posting_date <= '{posting_date}'
+				""".format(company=self.company, account=self.account, party_type=self.party_type, \
+						party=self.party, posting_date=self.posting_date))		
 
-		data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
-			and company = '{company}' and account = '{account}' and party_type = '{party_type}'
-			and party = '{party}' and posting_date <= '{posting_date}'
-			""".format(company=self.company, account=self.account, party_type=self.party_type, \
-					party=self.party, posting_date=self.posting_date),as_dict=1)
+			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
+				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
+				and party = '{party}' and posting_date <= '{posting_date}'
+				""".format(company=self.company, account=self.account, party_type=self.party_type, \
+						party=self.party, posting_date=self.posting_date),as_dict=1)
 
-		if data:
-			for row in data:
-				frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='New' where name = '{voucher_no}'
-				""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
+			if data:
+				for row in data:
+					frappe.db.sql("""update `tab{voucher_type}` SET transaction_status='New' where name = '{voucher_no}'
+					""".format(voucher_type = row.voucher_type,voucher_no = row.voucher_no))
 
 		if self.party_type == "Customer":
+			for doctype in ['Sales Invoice','Payment Entry','Journal Entry']:
+				frappe.db.sql("""
+				update 
+					`tabGL Entry` as gle, `tab{doctype}` as voucher
+				SET
+					gle.transaction_status = 'New', voucher.transaction_status = 'New'
+				where
+					gle.voucher_no = voucher.name and gle.name != 'a'
+					and gle.company = '{company}' and gle.account = '{account}' and gle.party_type = 'Customer'
+					and voucher.primary_customer = '{party}'
+					and gle.posting_date <= '{posting_date}'
+					""".format(doctype=doctype, company=self.company, account=self.account, party=self.party, \
+							posting_date=self.posting_date))
+
 			doc = frappe.get_doc("Customer",self.party)
 			if doc.sales_team:
 				for sales in doc.sales_team:
