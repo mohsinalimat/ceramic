@@ -820,4 +820,4 @@ def create_account_reco_entry(posting_date,company,alternate_company,alternate_a
 	doc2.save(ignore_permissions=True)
 	doc2.submit()
 
-	frappe.msgprint('Account Reco Entry has been Created')
+	frappe.msgprint('Transactions has been cancelled')
