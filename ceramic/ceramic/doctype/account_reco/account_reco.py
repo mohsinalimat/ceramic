@@ -7,6 +7,10 @@ import frappe
 from frappe.model.document import Document
 
 class AccountReco(Document):
+	def before_validate(self):
+		if self.party_type == "Customer" and self.party:
+			if frappe.db.get_value("Customer",self.party,"is_primary_customer") != 1:
+				frappe.throw("Please Select Correct Primary Customer.")
 	def on_submit(self):
 		if self.party_type != "Customer":
 			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'Old' where name!='a'
