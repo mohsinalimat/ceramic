@@ -199,7 +199,9 @@ def get_outward_data(filters,date_list):
 			LEFT JOIN `tabSales Invoice` as si on si.name = sle.voucher_no
 			LEFT JOIN `tabSales Invoice Item` as sii on sii.name = sle.voucher_detail_no
 		where 
-			sle.actual_qty < 0 and si.gst_category != 'Deemed Export' and
+			sle.actual_qty < 0 and (si.gst_category not in ('Deemed Export','Overseas')
+			or (si.gst_category in ('Deemed Export','Overseas') and si.export_type = 'Without Payment of Tax')
+			or (si.gst_category is null or si.gst_category = '')) and
 			sle.company = '{company}' and sle.posting_date between '{from_date}' and '{to_date}' {conditions}
 		group by sle.posting_date{groupby_cond}
 	""".format(company = filters.get('company'),from_date=filters.get('from_date'),to_date=filters.get('to_date'),
@@ -214,7 +216,7 @@ def get_outward_data(filters,date_list):
 			LEFT JOIN `tabSales Invoice` as si on si.name = sle.voucher_no
 			LEFT JOIN `tabSales Invoice Item` as sii on sii.name = sle.voucher_detail_no
 		where 
-			sle.actual_qty < 0 and si.gst_category = 'Deemed Export' and
+			sle.actual_qty < 0 and si.gst_category in ('Deemed Export','Overseas') and si.export_type = 'With Payment of Tax' and
 			sle.company = '{company}' and sle.posting_date between '{from_date}' and '{to_date}' {conditions}
 		group by sle.posting_date{groupby_cond}
 	""".format(company = filters.get('company'),from_date=filters.get('from_date'),to_date=filters.get('to_date'),
