@@ -1,0 +1,31 @@
+{
+ "add_total_row": 1,
+ "creation": "2021-05-19 14:02:04.832389",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Millennium",
+ "modified": "2021-05-19 14:08:22.031082",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Daily Stock Summary",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Stock Ledger Entry",
+ "report_name": "Daily Stock Summary",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Local Admin"
+  },
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Sales User"
+  }
+ ]
+}

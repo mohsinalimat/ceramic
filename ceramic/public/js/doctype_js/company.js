@@ -43,3 +43,10 @@ cur_frm.fields_dict.meis_receivable_account.get_query = function (doc) {
         }
     }
 };
+cur_frm.fields_dict.default_warehouse_for_production.get_query = function (doc) {
+    return {
+        filters: {
+            "company": doc.name
+        }
+    }
+};
