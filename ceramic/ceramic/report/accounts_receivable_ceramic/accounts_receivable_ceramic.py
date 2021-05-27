@@ -77,34 +77,22 @@ class ReceivablePayableReport(object):
 				row.bank_paid = row.paid
 				row.bank_outstanding = row.outstanding
 				row.billed_credit_note = row.credit_note
-				#row.one = round(row.bank_outstanding/1000)
-
-				if row.reference_doc:
-					
-					row_data = self.data_map[row.reference_doc][row.party]
 				
+				if row.reference_doc:
+					row_data = self.data_map[row.reference_doc][row.party]
 					row.invoiced = row_data.invoiced
 					row.paid = row_data.paid
-					# row.outstanding = row_data.outstanding
-					# if not row.outstanding:
-					# 	row.three = 0
-					# else:
-					# 	row.three = round(row.outstanding/1000)
+					row.outstanding = row_data.outstanding		
 					row.credit_note = row_data.credit_note
 					covered_vouchers.append(row.reference_doc)
 				else:
 					row.invoiced = 0
 					row.paid = 0
-					row.outstanding = 0
-					#row.three = 0
+					row.outstanding = 0	
 				
 				row.cash_amount = flt(row.invoiced) - flt(row.billed_amount)
 				row.cash_paid = flt(row.paid) - flt(row.bank_paid)
 				row.cash_outstanding = flt(row.outstanding) - flt(row.bank_outstanding)
-				# if not row.cash_outstanding:
-				# 	row.two = 0
-				# else:
-				# 	row.two = round(row.cash_outstanding/1000)
 				row.cash_credit_note = flt(row.credit_note) - flt(row.billed_credit_note)
 
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
@@ -113,17 +101,12 @@ class ReceivablePayableReport(object):
 				row.cash_amount = row.invoiced
 				row.cash_paid = row.paid
 				row.cash_outstanding = row.outstanding
-				# if not row.cash_outstanding:
-				# 	row.two = 0
-				# else:
-				# 	row.two = round(row.cash_outstanding/1000)
 				row.cash_credit_note = row.credit_note
 
-				row.billed_amount = 0
 				row.bank_paid = 0
 				row.bank_outstanding = 0
-				#row.one = 0
 				row.billed_credit_note = 0
+				row.billed_amount = 0
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
 					self.data.append(row)
 			else:
@@ -135,33 +118,16 @@ class ReceivablePayableReport(object):
 				row.cash_amount = row.invoiced
 				row.cash_paid = row.paid
 				row.cash_outstanding = row.outstanding
-				# if not row.cash_outstanding:
-				# 	row.two = 0
-				# else:
-				# 	row.two = round(row.outstanding/1000)
 				row.cash_credit_note = row.credit_note
 
 				row.billed_amount = 0
 				row.bank_paid = 0
 				row.bank_outstanding = 0
-				#row.one = 0
 				row.billed_credit_note = 0
+				
 				self.data.append(row)
 		
-		for row in self.data:
-			if row['bank_outstanding']:
-				row['one'] = round(row['bank_outstanding']/1000)
-			else:
-				row['one'] = 0
-			if row['cash_outstanding']:
-				row['two'] = round(row['cash_outstanding']/1000)
-			else:
-				row['two'] = 0
-			if row['outstanding']:
-				row['three'] = round(row['outstanding']/1000)
-			else:
-				row['three'] = 0
-
+		
 	def difference(self, lst1, lst2): 
 		return (list(set(lst1) - set(lst2))) 
 
@@ -377,7 +343,7 @@ class ReceivablePayableReport(object):
 		# as we can use this to filter out invoices without outstanding
 		for key, row in self.voucher_balance.items():
 			row.outstanding = flt(row.invoiced - row.paid - row.credit_note, self.currency_precision)
-			#row.three = round(flt((row.invoiced - row.paid - row.credit_note)/1000))
+			row.three = round(flt((row.invoiced - row.paid - row.credit_note)/1000))
 			row.invoice_grand_total = row.invoiced
 
 			# non-zero oustanding, we must consider this row

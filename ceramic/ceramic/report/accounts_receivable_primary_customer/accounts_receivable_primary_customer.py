@@ -116,8 +116,14 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 			# Add all amount columns
 			for k in list(self.party_total[d.primary_customer]):
-				if k not in ["currency", "sales_person", "party", "primary_customer","regional_sales_manager","sales_manager","territory","customer_group"]:
+				if k not in ["currency", "sales_person", "party", "primary_customer","regional_sales_manager","sales_manager","territory","customer_group","one","two","three"]:
 					self.party_total[d.primary_customer][k] += d.get(k, 0.0)
+					if k == 'bank_outstanding':
+						self.party_total[d.primary_customer]['one'] = self.party_total[d.primary_customer][k]/1000
+					if k == 'cash_outstanding':
+						self.party_total[d.primary_customer]['two'] = self.party_total[d.primary_customer][k]/1000
+					if k == 'outstanding':
+						self.party_total[d.primary_customer]['three'] = self.party_total[d.primary_customer][k]/1000
 
 				# if k in ["invoiced", "billed_amount", "cash_amount", "paid","cash_paid","bank_paid","credit_note","outstanding","bank_outstanding","cash_outstanding","range1","range2","range3","range4","range5"]:
 				# 	self.party_total[d.primary_customer][k] += d.get(k, 0.0)
@@ -175,9 +181,9 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(_('Bank Outstanding Amount'), fieldname='bank_outstanding')
 		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('One'), fieldname='one')
-		self.add_column(_('Two'), fieldname='two')
-		self.add_column(_('Three'), fieldname='three')
+		self.add_column(_('One'), fieldname='one',fieldtype='Int')
+		self.add_column(_('Two'), fieldname='two',fieldtype='Int')
+		self.add_column(_('Three'), fieldname='three',fieldtype='Int')
 
 
 		if self.party_naming_by == "Naming Series":
