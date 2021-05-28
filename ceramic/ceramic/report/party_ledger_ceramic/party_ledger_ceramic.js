@@ -70,6 +70,11 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"fieldname": "print_with_item",
 			"fieldtype": "Check"
 		},	
+		{
+			"label": __("Show Unlinked Transactions"),
+			"fieldname": "show_unlinked_transactions",
+			"fieldtype": "Check"
+		},	
 	],
 	onload: function(report){
 		display_qr()

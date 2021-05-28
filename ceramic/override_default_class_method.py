@@ -52,6 +52,7 @@ def create_payment_entry(self, pe):
 	payment.posting_date = pe.transaction_date
 	payment.payment_type = "Receive" if pe.party_type == "Customer" else "Pay"
 	payment.primary_customer = pe.primary_customer
+	payment.dont_replicate = pe.dont_replicate
 	payment.company = self.company
 	payment.mode_of_payment = "Wire Transfer"
 	payment.party_type = pe.party_type

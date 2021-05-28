@@ -84,7 +84,8 @@ def update_payment_entries(self):
 
 def on_submit(self, method):
 	"""On Submit Custom Function for Payment Entry"""
-	create_payment_entry(self)
+	if not self.dont_replicate:
+		create_payment_entry(self)
 	set_status(self)
 
 

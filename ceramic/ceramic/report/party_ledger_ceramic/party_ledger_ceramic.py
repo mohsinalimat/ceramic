@@ -76,6 +76,8 @@ def generate_data(filters, res):
 		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
+		if not filters.get('show_unlinked_transactions') and d.authority == 'Authorized' and not d.reference_doc:
+			continue
 		flag = False
 					
 		if d.company != filters.company:
@@ -252,6 +254,7 @@ def get_result(filters, account_details):
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return, jv.user_remark as remark,
+			IFNULL(si.authority, IFNULL(pi.authority, pe.authority)) as authority,
 			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc{primary_customer_pe_fields}
 		FROM
 			`tabGL Entry` as gle
