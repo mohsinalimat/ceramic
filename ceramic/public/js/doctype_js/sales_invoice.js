@@ -212,10 +212,12 @@ frappe.ui.form.on('Sales Invoice', {
             if (!frm.doc.primary_customer) {
                 setTimeout(function() {
                     frm.doc.sales_team = []
+                    frappe.db.get_value("Company",frm.doc.company,"alternate_company", function(r){
                     frappe.model.with_doc("Customer", frm.doc.customer, function() {
+                        
                         var cus_doc = frappe.model.get_doc("Customer", frm.doc.customer)
                         $.each(cus_doc.sales_team, function(index, row) {
-                            if (row.company == frm.doc.company) {
+                            if (row.company == frm.doc.company || row.company == r.alternate_company) {
                                 frm.set_value('sales_head', row.sales_person)
                                 if (!row.regional_sales_manager) {
                                     frm.set_value('regional_sales_manager', row.sales_person)
@@ -238,9 +240,9 @@ frappe.ui.form.on('Sales Invoice', {
                                 }
                             }
                         })
-
                         frm.refresh_field("sales_team");
                     });
+                })
                 }, 1000);
             }
         }
@@ -249,6 +251,7 @@ frappe.ui.form.on('Sales Invoice', {
         if (frm.doc.primary_customer) {
             setTimeout(function() {
                 frm.doc.sales_team = []
+                frappe.db.get_value("Company",frm.doc.company,"alternate_company", function(r){
                 frappe.model.with_doc("Customer", frm.doc.primary_customer, function() {
                     var cus_doc = frappe.model.get_doc("Customer", frm.doc.primary_customer)
                     $.each(cus_doc.sales_team, function(index, row) {
@@ -276,6 +279,7 @@ frappe.ui.form.on('Sales Invoice', {
                     })
 
                     frm.refresh_field("sales_team");
+                })
                 });
             }, 2000);
         }

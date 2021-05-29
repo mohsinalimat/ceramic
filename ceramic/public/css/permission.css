@@ -7,6 +7,11 @@ option[value="System Manager"]{
 tr:has([data-role="System Manager"]){
     display: none;
 }
+@media (min-width: 768px){
+.modal-dialog {
+    width: 742px!important;
+    margin: 30px auto;
+}}
 
 
 

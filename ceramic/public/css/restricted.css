@@ -4,3 +4,8 @@ button.restricted-list.form-group {
 /* .modal-content {
     width: fit-content;
 } */
+@media (min-width: 768px){
+    .modal-dialog {
+        width: 742px!important;
+        margin: 30px auto;
+    }}
