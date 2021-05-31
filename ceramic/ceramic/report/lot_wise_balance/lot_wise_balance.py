@@ -29,8 +29,10 @@ def execute(filters=None):
 						qty_dict = iwb_map[item][wh][batch]
 						try:
 							picked_qty = item_pick_map[item][batch].pickedqty
+							unlocked_qty = item_pick_map[item][batch].unlocked_qty
 						except KeyError:
 							picked_qty = 0.0
+							unlocked_qty = 0.0
 						# frappe.db.sql(f"""
 						# SELECT sum(pli.qty - (pli.wastage_qty + pli.delivered_qty)) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 						# WHERE pli.item_code = '{item}' AND pli.batch_no='{batch}' and pl.docstatus = 1 {conditions} AND pl.company = '{filters.get('company')}'
@@ -51,6 +53,7 @@ def execute(filters=None):
 								'packing_type': qty_dict.packing_type,
 								'balance_qty': flt(qty_dict.bal_qty, float_precision),
 								'picked_qty': picked_qty,
+								'unlocked_qty': unlocked_qty,
 								'remaining_qty': flt(qty_dict.bal_qty, float_precision) - picked_qty,
 								'picked_detail': detail_button,
 								'opening_qty': flt(qty_dict.opening_qty, float_precision),
@@ -72,8 +75,10 @@ def execute(filters=None):
 					qty_dict = iwb_map[item][batch]
 					try:
 						picked_qty = item_pick_map[item][batch].pickedqty
+						unlocked_qty = item_pick_map[item][batch].unlocked_qty
 					except KeyError:
 						picked_qty = 0.0
+						unlocked_qty = 0.0
 					# frappe.db.sql(f"""
 					# SELECT sum(pli.qty - (pli.wastage_qty + pli.delivered_qty)) FROM `tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name 
 					# WHERE pli.item_code = '{item}' AND pli.batch_no='{batch}' and pl.docstatus = 1 {conditions} AND pl.company = '{filters.get('company')}'
@@ -94,6 +99,7 @@ def execute(filters=None):
 							'packing_type': qty_dict.packing_type,
 							'balance_qty': flt(qty_dict.bal_qty, float_precision),
 							'picked_qty': picked_qty,
+							'unlocked_qty': unlocked_qty,
 							'remaining_qty': flt(qty_dict.bal_qty, float_precision) - picked_qty,
 							'picked_detail': detail_button,
 							'opening_qty': flt(qty_dict.opening_qty, float_precision),
@@ -144,6 +150,12 @@ def get_columns(filters):
 		{
 			"label": _("Balance Qty"),
 			"fieldname": "balance_qty",
+			"fieldtype": "Float",
+			"width": 80
+		},
+		{
+			"label": _("Unlocked Qty"),
+			"fieldname": "unlocked_qty",
 			"fieldtype": "Float",
 			"width": 80
 		},
@@ -367,20 +379,22 @@ def get_picked_qty(filters,float_precision):
 	for d in picked:
 		picked_map.setdefault(d.item_code, {})\
 			.setdefault(d.batch_no, frappe._dict({
-				"pickedqty": 0.0
+				"pickedqty": 0.0,"unlocked_qty": 0.0
 			}))
 		picked_dict = picked_map[d.item_code][d.batch_no]
 		picked_dict.pickedqty = flt(picked_dict.pickedqty, float_precision) + flt(d.pickedqty, float_precision)
-
+		picked_dict.unlocked_qty += d.unlocked_qty
 	return picked_map
 
 def get_picked_items(filters):
 	conditions = get_picked_conditions(filters)
 	return frappe.db.sql(f"""
-				SELECT pli.item_code, pli.batch_no, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as pickedqty
+				SELECT pli.item_code, pli.batch_no, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as pickedqty,
+				IF(so.lock_picked_qty=0,(pli.qty - (pli.wastage_qty + pli.delivered_qty)),0) as unlocked_qty
 				FROM `tabPick List Item` as pli 
 				JOIN `tabPick List` as pl on pli.parent = pl.name 
 				JOIN `tabItem` as i on i.item_code = pli.item_code
+				JOIN `tabSales Order`as so on so.name = pli.sales_order
 				WHERE pl.docstatus = 1 {conditions}
 				""", as_dict=1)
 	
