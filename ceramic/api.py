@@ -508,7 +508,7 @@ def get_lot_wise_data(item_code, company, from_date, to_date):
 	return data
 
 @frappe.whitelist()
-def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty, lot_no):
+def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, total_picked_qty, total_remaining_qty,lot_no):
 	float_precision = 2
 	from_date = datetime.datetime.strptime(from_date, '%Y-%m-%d').date()
 	to_date = datetime.datetime.strptime(to_date, '%Y-%m-%d').date()
@@ -519,7 +519,8 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 			pl.name as pick_list, pli.name as pick_list_item, pli.item_code,
 			pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty,
 			pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty,
-			so.title as customer, so.order_rank, so.per_picked, IF(so.lock_picked_qty=1,'Yes','No') as lock_picked_qty
+			so.title as customer, so.order_rank, so.per_picked, IF(so.lock_picked_qty=1,'Yes','No') as lock_picked_qty,
+			IF(so.lock_picked_qty=0,pli.qty,0) as unlocked_qty
 		FROM 
 			`tabPick List Item` as pli JOIN `tabPick List` as pl on pli.parent = pl.name
 			JOIN `tabSales Order` as so on pli.sales_order = so.name
@@ -532,24 +533,27 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 		ORDER BY
 			so.order_rank
 	""", as_dict = 1)
-	
+	total_unlocked_qty = 0.0
 	for item in picked_item:
 		url = get_url_to_form("Sales Order", item.sales_order)
 		sales_order_link = "<a href='{url}'>{name}</a>".format(url=url, name=item.sales_order)
 		pickurl = get_url_to_form("Pick List", item.pick_list)
 		pick_list_link = "<a href='{pickurl}'>{name}</a>".format(pickurl=pickurl, name=item.pick_list)		
+		total_unlocked_qty += flt(item.unlocked_qty)
 		item.sales_order_link = sales_order_link
 		item.pick_list_link = pick_list_link
 		item.bal_qty = bal_qty
 		item.total_picked_qty = total_picked_qty
 		item.total_remaining_qty = total_remaining_qty
 		item.lot_no = lot_no
+		item.unlocked_qty = total_unlocked_qty
 	
 	if not picked_item:
 		picked_item = [{
 			'bal_qty': bal_qty,
 			'total_picked_qty': total_picked_qty,
 			'total_remaining_qty': total_remaining_qty,
+			'unlocked_qty': 0,
 			'lot_no': lot_no,
 			'item_name': frappe.db.get_value("Item", item_code, 'item_name')
 		}]

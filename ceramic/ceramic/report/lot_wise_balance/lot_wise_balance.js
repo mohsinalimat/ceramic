@@ -150,6 +150,10 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 				<td style="border: 0 !important;"><b>Qty: </b> {{ data[0]['bal_qty'] }}</td>
 				<td style="border: 0 !important;"><b>Available Qty: </b> {{ data[0]['total_remaining_qty'] }}</td>
 			</tr>
+			<tr style="border: 0 !important;">
+				<td style="border: 0 !important;"></td>
+				<td style="border: 0 !important;"><b>Unlocked Qty: </b>{{ data[data.length-1].unlocked_qty }} </td>
+			</tr>
 		</table>
 		{% if data[0]['customer'] %}
 		<table class="table table-bordered" style="margin: 0; font-size:80%; width:700px;align:center">
@@ -165,7 +169,9 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 				<th></th>
 			</thead>
 			<tbody>
+				
 				{% for (let row of data ) { %}
+				
 					<tr class="{{ __(row['pick_list_item']) }}">
 						<td>{{ __(row['customer']) }}</td>
 						<td>{{ __(row['lock_picked_qty']) }}</td>
@@ -198,6 +204,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			lot_no: lot_no
 		},
 		callback: function (r) {
+			console.log(r.message)
 			let message = frappe.template.compile(template)({ 'data': r.message });
 			frappe.msgprint({
 				message: message,
