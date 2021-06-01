@@ -113,6 +113,11 @@ frappe.query_reports["Lot-Wise Balance"] = {
 			"options": "Tile Quality",
 		},
 		{
+			"fieldname": "print_with_unlocked_qty",
+			"label": __("Print With Unlocked Qty"),
+			"fieldtype": "Check",
+		},
+		{
 			"fieldname": "sales_order",
 			"label": __("Sales Order"),
 			"fieldtype": "Link",
@@ -204,7 +209,6 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 			lot_no: lot_no
 		},
 		callback: function (r) {
-			console.log(r.message)
 			let message = frappe.template.compile(template)({ 'data': r.message });
 			frappe.msgprint({
 				message: message,

@@ -173,6 +173,11 @@
                                                     <p class="field-title">Picked</p>
                                                 </td>
                                             {% } %}
+                                            {% if(filters.print_with_unlocked_qty==1){ %}
+                                                <td align="right">
+                                                    <p class="field-title">Unlocked</p>
+                                                </td>
+                                            {% } %}
                                             <td align="right">
                                                 <p class="field-title">Available</p>
                                             </td>
@@ -202,6 +207,11 @@
                                             <td align="right">
                                                 <p class="text-size">{{data[i].picked_qty}}</p>
                                             </td>
+                                            {% } %}
+                                            {% if(filters.print_with_unlocked_qty==1){ %}
+                                            <td align="right">
+                                                <p class="text-size">{{data[i].unlocked_qty}}</p>
+                                            </td>  
                                             {% } %}
                                             <td align="right">
                                                 <p class="text-size">{{data[i].remaining_qty}}</p>
