@@ -330,8 +330,13 @@ def create_main_sales_invoice(self):
 def validate(self, method):
 	update_discounted_net_total(self)
 	calculate_gst_taxable_value(self)
+	validate_payment_terms_template(self)
 	# if self._action == "submit":
 	# 	validate_tax_template(self)
+
+def validate_payment_terms_template(self):
+	if self._action == "submit" and self.authority == "Unauthorized" and not self.payment_terms_template:
+		frappe.throw("Please Enter Payment Terms")
 
 def update_discounted_net_total(self):
 	self.discounted_total = sum(x.discounted_amount for x in self.items)

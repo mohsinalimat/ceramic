@@ -904,3 +904,11 @@ frappe.ui.form.on("Sales Order Item", {
 		})
 	}
 });
+
+cur_frm.fields_dict.sales_team.grid.get_field("company_").get_query = function(doc) {
+    return {
+        "filters": [
+                ["authority", "in", ["Authorized"]]
+        ]
+    };
+};
