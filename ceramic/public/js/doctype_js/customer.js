@@ -12,6 +12,8 @@ cur_frm.set_query('territory', function () {
         }
     }
 });
+
+
 frappe.ui.form.on('Customer', {
     is_primary_customer: function (frm) {
         if (frm.doc.is_primary_customer) {
@@ -20,7 +22,17 @@ frappe.ui.form.on('Customer', {
             frm.set_value('primary_customer', null)
         }
     },
-    refresh: function (frm) {
+    onload: function (frm) {
+        frm.doc.sales_team.foreach(function(d){
+            if(d.company_ && !d.company){
+                frappe.db.get_value("Comapany",d.company_,"alterante_company",function(r){
+                    frm.set_value("company",r.alterante_company)
+                });
+            }
+            frm.refresh("sales_team")
+        });
+    },
+        refresh: function (frm) {
         if (frm.doc.__onload && frm.doc.__onload.dashboard_info) {
             // frm.dashboard.stats_area_row.addClass('hidden');
             frm.dashboard.stats_area_row.find('.col-sm-6.indicator-column').addClass('hidden');
@@ -95,3 +107,11 @@ frappe.ui.form.on('Customer', {
         return indicator;
     },
 })
+
+cur_frm.fields_dict.sales_team.grid.get_field("company_").get_query = function(doc) {
+    return {
+		"filters": {
+            "authority":"Authorized"
+        }
+	};
+};

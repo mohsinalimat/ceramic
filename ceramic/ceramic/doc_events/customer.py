@@ -22,6 +22,7 @@ def customer_validate(self):
 
 def before_save(self,method):
 	validate_name(self)
+	
 
 def before_validate(self, method):
 	from erpnext.selling.doctype.customer.customer import Customer
@@ -32,10 +33,16 @@ def before_validate(self, method):
 def validate(self, method):
 	if self.is_primary_customer:
 		self.primary_customer = self.name or self.customer_name
+	validate_company(self)
 
 def validate_name(self):
 	if "'" in self.customer_name:
 		frappe.throw("Please Dont use ' Character in Name")
+
+def validate_company(self):
+	for each in self.sales_team:
+		if frappe.db.get_value("Company",each.company_,"authority") == "Unauthorized":
+			frappe.throw("Company {} is not authorized Selected on Row {} in Sales Team Table".format(each.company,each.idx))
 
 def override_load_dashboard_info(self):
 	user = frappe.session.user
