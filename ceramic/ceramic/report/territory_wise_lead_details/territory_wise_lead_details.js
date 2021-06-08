@@ -18,6 +18,13 @@ frappe.query_reports["Territory wise Lead Details"] = {
 			"options": "Customer Group",
 			"width": "80",
 		},
+		{
+			"fieldname":"size_of_business",
+			"label": __("Size of Business"),
+			"fieldtype": "Select",
+			"options": [" ","Small","Medium","Large"],
+			"width": "80",
+		},
 		// {
 		// 	"fieldname":"products_looking_for",
 		// 	"label": __("Products Looking For"),

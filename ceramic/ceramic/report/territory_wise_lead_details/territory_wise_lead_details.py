@@ -38,7 +38,11 @@ def get_data(filters):
 	conditions = ''
 
 	if filters.get("lead_owner"):
-		conditions +=  " and c.name IN ({})" %(filters.get('lead_owner'))
+		lead_owner_placeholder= ', '.join(f"'{i}'" for i in filters["lead_owner"])
+		conditions += " and l.lead_owner in (%s)" % lead_owner_placeholder
+
+	if filters.get("size_of_business"):
+		conditions +=  " and l.size_of_business = '%s'" %(filters.get('size_of_business'))
 
 	if filters.get("territory"):
 		territory_details = frappe.db.get_value("Territory",
@@ -59,7 +63,7 @@ def get_data(filters):
 	data = frappe.db.sql("""
 		select l.name, l.status, l.lead_name, l.territory, t.parent_territory, l.state, l.customer_group, 
 		l.size_of_business, pl.product_looking_for_details as products_looking_for, l.cash_and_carry, l.reference_reviews_and_other_information, 
-		l.payment_performance_or_relations, l.source, pd.previous_details_item as previously_worked_with, l.owner
+		l.payment_performance_or_relations, l.source, pd.previous_details_item as previously_worked_with, l.lead_owner
 		from `tabLead` as l 
 		JOIN `tabTerritory` as t ON (t.name = l.territory)
 		LEFT JOIN `tabProduct Looking For Details` as pl ON (pl.parent = l.name)
