@@ -51,6 +51,12 @@ def get_data(filters):
 	if filters.get('customer'):
 		conditions += " and c.name = '%s'" %(filters.get('customer'))
 
+	if filters.get("size_of_business"):
+		conditions +=  " and c.size_of_business = '%s'" %(filters.get('size_of_business'))
+
+	if filters.get("payment_performance_or_relations"):
+		conditions +=  " and c.payment_performance_or_relations = '%s'" %(filters.get('payment_performance_or_relations'))
+
 	if filters.get("territory"):
 		territory_details = frappe.db.get_value("Territory",
 			filters.get("territory"), ["lft", "rgt"], as_dict=1)

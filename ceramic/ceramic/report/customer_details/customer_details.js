@@ -26,6 +26,20 @@ frappe.query_reports["Customer Details"] = {
 			"width": "80",
 		},
 		{
+			"fieldname":"size_of_business",
+			"label": __("Size of Business"),
+			"fieldtype": "Select",
+			"options": [" ","Small","Medium","Large"],
+			"width": "80",
+		},
+		{
+			"fieldname":"payment_performance_or_relations",
+			"label": __("Payment Performance"),
+			"fieldtype": "Select",
+			"options": [" ","Excellent","Good","Fair","Poor","Terrible","N/A"],
+			"width": "80",
+		},
+		{
 			"fieldname": 'show_detail',
 			"label": __('Show Detail'),
 			"fieldtype": 'Check'

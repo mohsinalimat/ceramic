@@ -24,14 +24,7 @@ frappe.query_reports["Territory wise Lead Details"] = {
 			"fieldtype": "Select",
 			"options": [" ","Small","Medium","Large"],
 			"width": "80",
-		},
-		// {
-		// 	"fieldname":"products_looking_for",
-		// 	"label": __("Products Looking For"),
-		// 	"fieldtype": "Link",
-		// 	"options": "Product Looking For Details",
-		// 	"width": "80",
-		// },
+		},	
 		{
 			"fieldname":"lead_owner",
 			"label": __("Lead Owner"),
@@ -41,5 +34,11 @@ frappe.query_reports["Territory wise Lead Details"] = {
 			},
 			"width": "80"
 		},
+		{
+			"fieldname":"show_product",
+			"label": __("Show Product"),
+			"fieldtype": "Check",
+			"width": "80",
+		}
 	]
 };
