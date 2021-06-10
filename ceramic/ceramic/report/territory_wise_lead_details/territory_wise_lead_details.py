@@ -30,6 +30,7 @@ def get_columns(filters):
 		{"label": _("Source"), "fieldname": "source", "fieldtype": "Link", "options": "Lead Source", "width": 100},
 		{"label": _("Current/Previously worked with Company"), "fieldname": "previously_worked_with", "fieldtype": "Link", "options": "Previous Details Item", "width": 100},
 		{"label": _("Lead Owner"), "fieldname": "lead_owner", "fieldtype": "Link", "options": "User","width": 90},
+		{"label": _("Organization"), "fieldname": "company_name", "fieldtype": "Data", "width": 110},
 		{"label": _("Mobile No (Whatsapp)"), "fieldname": "phone", "fieldtype": "Data", "width": 110},
 		{"label": _("Mobile No 1"), "fieldname": "mobile_no", "fieldtype": "Data", "width": 110},
 		{"label": _("Phone/Mobile No 2"), "fieldname": "fax", "fieldtype": "Data", "width": 110},
@@ -67,7 +68,7 @@ def get_data(filters):
 	
 	if filters.get('show_product'):
 		data = frappe.db.sql("""
-			select l.name, l.status, l.lead_name, l.territory, t.parent_territory, l.state, l.customer_group, 
+			select l.name, l.status, l.lead_name, l.territory, t.parent_territory, l.state, l.customer_group, l.company_name,
 			l.size_of_business, pl.product_looking_for_details as products_looking_for, l.cash_and_carry, l.reference_reviews_and_other_information, 
 			l.payment_performance_or_relations, l.source, pd.previous_details_item as previously_worked_with, l.lead_owner, l.phone, l.mobile_no, l.fax
 			from `tabLead` as l 
@@ -78,7 +79,7 @@ def get_data(filters):
 		""".format(conditions), as_dict= True)
 	else:
 		data = frappe.db.sql("""
-			select l.name, l.status, l.lead_name, l.territory, t.parent_territory, l.state, l.customer_group, 
+			select l.name, l.status, l.lead_name, l.territory, t.parent_territory, l.state, l.customer_group, l.company_name,
 			l.size_of_business, l.cash_and_carry, l.reference_reviews_and_other_information, 
 			l.payment_performance_or_relations, l.source, pd.previous_details_item as previously_worked_with, l.lead_owner, l.phone, l.mobile_no, l.fax
 			from `tabLead` as l 

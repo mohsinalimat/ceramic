@@ -204,6 +204,15 @@ override_whitelisted_methods = {
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
+
+
+# e invoice ceramic
+
+import erpnext
+from ceramic.e_invoice_ceramic import validate_einvoice_fields,validate_document_name
+erpnext.regional.india.e_invoice.utils.validate_einvoice_fields = validate_einvoice_fields
+erpnext.regional.india.utils.validate_document_name = validate_document_name
+
 override_doctype_dashboards = {
 	"Sales Order": "ceramic.ceramic.dashboard.sales_order.get_data",
 	"Pick List": "ceramic.ceramic.dashboard.pick_list.get_data",

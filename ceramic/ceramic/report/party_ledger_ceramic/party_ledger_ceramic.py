@@ -76,10 +76,14 @@ def generate_data(filters, res):
 		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
-		if not filters.get('show_unlinked_transactions') and d.authority == 'Authorized' and not d.reference_doc:
+		if filters.get('show_only_unlinked_transactions') and d.authority == 'Authorized' and d.reference_doc:
+			continue
+		elif filters.get('show_only_unlinked_transactions') and d.authority == 'Unauthorized':
+			continue
+		elif not filters.get('show_unlinked_transactions') and d.authority == 'Authorized' and not d.reference_doc:
 			continue
 		flag = False
-					
+					 
 		if d.company != filters.company:
 			flag = True
 			d.billed_credit = d.credit
