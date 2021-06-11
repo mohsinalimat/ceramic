@@ -5,7 +5,7 @@ from frappe import _
 from frappe.utils.data import cstr, cint, flt
 from frappe.utils import getdate
 from erpnext.regional.india.e_invoice.utils import (GSPConnector,raise_document_name_too_long_error,read_json,get_transaction_details,\
-	get_item_list,validate_mandatory_fields,get_doc_details,get_overseas_address_details,get_return_doc_reference,\
+	validate_mandatory_fields,get_doc_details,get_overseas_address_details,get_return_doc_reference,\
 	get_eway_bill_details,validate_totals,show_link_to_error_log,santize_einvoice_fields,safe_json_load,get_payment_details,\
 	validate_eligibility,update_item_taxes,get_invoice_value_details,get_party_details,update_other_charges)
 
@@ -61,7 +61,7 @@ def make_einvoice(invoice):
 		buyer_details.update(dict(place_of_supply=place_of_supply))
 
 	seller_details.update(dict(legal_name=invoice.company))
-	buyer_details.update(dict(legal_name=invoice.billing_address_title or invoice.customer_name or invoice.customer))
+	buyer_details.update(dict(legal_name=invoice.billing_address_title or invoice.customer_name or invoice.customer)) # finbyz change add billing address title
 	
 	shipping_details = payment_details = prev_doc_details = eway_bill_details = frappe._dict({})
 	if invoice.shipping_address_name and invoice.customer_address != invoice.shipping_address_name:
@@ -99,6 +99,49 @@ def make_einvoice(invoice):
 	validate_totals(einvoice)
 
 	return einvoice
+
+
+def get_item_list(invoice):
+	item_list = []
+
+	for d in invoice.items:
+		einvoice_item_schema = read_json('einv_item_template')
+		item = frappe._dict({})
+		item.update(d.as_dict())
+
+		item.sr_no = d.idx
+		item.description = json.dumps(d.item_group or d.item_name)[1:-1] # finbyz change add item group
+
+		item.qty = abs(item.qty)
+
+		if invoice.apply_discount_on == 'Net Total' and invoice.discount_amount:
+			item.discount_amount = abs(item.base_amount - item.base_net_amount)
+		else:
+			item.discount_amount = 0
+
+		item.unit_rate = abs((abs(item.taxable_value) - item.discount_amount)/ item.qty)
+		item.gross_amount = abs(item.taxable_value) + item.discount_amount
+		item.taxable_value = abs(item.taxable_value)
+
+		item.batch_expiry_date = frappe.db.get_value('Batch', d.batch_no, 'expiry_date') if d.batch_no else None
+		item.batch_expiry_date = format_date(item.batch_expiry_date, 'dd/mm/yyyy') if item.batch_expiry_date else None
+		#finbyz Changes
+		if frappe.db.get_value('Item', d.item_code, 'is_stock_item') or frappe.db.get_value('Item', d.item_code, 'is_not_service_item'):
+			item.is_service_item = 'N'  
+		else:
+			item.is_service_item = 'Y'
+		#finbyz changes enditem.serial_no = ""
+
+		item = update_item_taxes(invoice, item)
+		
+		item.total_value = abs(
+			item.taxable_value + item.igst_amount + item.sgst_amount +
+			item.cgst_amount + item.cess_amount + item.cess_nadv_amount + item.other_charges
+		)
+		einv_item = einvoice_item_schema.format(item=item)
+		item_list.append(einv_item)
+
+	return ', '.join(item_list)
 
 # india utils.py
 

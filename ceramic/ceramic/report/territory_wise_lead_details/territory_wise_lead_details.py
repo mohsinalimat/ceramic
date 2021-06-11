@@ -18,6 +18,7 @@ def get_columns(filters):
 	columns = [
 		{"label": _("Name"), "fieldname": "name", "fieldtype": "Link","options":"Lead","width": 100},
 		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data","width": 100},
+		{"label": _("Organization"), "fieldname": "company_name", "fieldtype": "Data", "width": 110},
 		{"label": _("Person Name"), "fieldname": "lead_name", "fieldtype": "Data","width": 170},
 		{"label": _("Territory"), "fieldname": "territory", "fieldtype": "Link", "options": "Territory", "width": 100},
 		{"label": _("Parent Territory"), "fieldname": "parent_territory", "fieldtype": "Link", "options": "Territory", "width": 100},
@@ -30,7 +31,6 @@ def get_columns(filters):
 		{"label": _("Source"), "fieldname": "source", "fieldtype": "Link", "options": "Lead Source", "width": 100},
 		{"label": _("Current/Previously worked with Company"), "fieldname": "previously_worked_with", "fieldtype": "Link", "options": "Previous Details Item", "width": 100},
 		{"label": _("Lead Owner"), "fieldname": "lead_owner", "fieldtype": "Link", "options": "User","width": 90},
-		{"label": _("Organization"), "fieldname": "company_name", "fieldtype": "Data", "width": 110},
 		{"label": _("Mobile No (Whatsapp)"), "fieldname": "phone", "fieldtype": "Data", "width": 110},
 		{"label": _("Mobile No 1"), "fieldname": "mobile_no", "fieldtype": "Data", "width": 110},
 		{"label": _("Phone/Mobile No 2"), "fieldname": "fax", "fieldtype": "Data", "width": 110},

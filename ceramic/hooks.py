@@ -209,9 +209,11 @@ override_whitelisted_methods = {
 # e invoice ceramic
 
 import erpnext
-from ceramic.e_invoice_ceramic import validate_einvoice_fields,validate_document_name
+from ceramic.e_invoice_ceramic import validate_einvoice_fields,validate_document_name,make_einvoice,get_item_list
 erpnext.regional.india.e_invoice.utils.validate_einvoice_fields = validate_einvoice_fields
 erpnext.regional.india.utils.validate_document_name = validate_document_name
+erpnext.regional.india.e_invoice.utils.make_einvoice = make_einvoice
+erpnext.regional.india.e_invoice.utils.get_item_list = get_item_list
 
 override_doctype_dashboards = {
 	"Sales Order": "ceramic.ceramic.dashboard.sales_order.get_data",
