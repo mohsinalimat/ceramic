@@ -43,17 +43,17 @@
 			<th width="14%" colspan="2" valign="top">
  
 			</th>
-			<th width="33%" colspan="3" valign="top">
+			<th width="30%"  valign="top">
 				<p style="font-size: 14px;" align="center">
 				<b>	<strong>DR</strong></b>
 				</p>
 			</th>
-			<th width="30%" colspan="3" valign="top">
+			<th width="30%" valign="top">
 				<p style="font-size: 14px; " align="center">
 					<b><strong>CR</strong></b>
 				</p>
 			</th>
-			<th width="22%" colspan="3" valign="top">
+			<th width="25%" valign="top">
 				<p align="center">
 					<strong>Balance</strong>
 				</p>
@@ -71,17 +71,17 @@
 				</p>
 			</th>
 			
-			<th width="20%" valign="top" colspan="3">
+			<th width="20%" valign="top">
 				<p>
 					<strong></strong>
 				</p>
 			</th>
-			<th width="4%" valign="top" colspan="3">
+			<th width="4%" valign="top">
 				<p>
 					<strong></strong>
 				</p>
 			</th>
-			<th width="8%" valign="top" colspan="3">
+			<th width="8%" valign="top">
 				<p>
 					<strong></strong>
 				</p>
@@ -162,7 +162,7 @@
 			</td>
 		  
 			{% } %}
-			<td width="12%" valign="top" colspan="3">
+			<td width="12%" valign="top">
 			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_debit %}
@@ -203,7 +203,7 @@
 				{% } %}
 			   
 			</td>
-			<td width="8%" valign="top" colspan="3">
+			<td width="8%" valign="top">
 			{% if(i != 0 && i != l - 2 && i != l - 1){ %}
 			{% if data[i].voucher_type == 'Payment Entry' ||  data[i].voucher_type == 'Journal Entry' %}  
 			{% if data[i].cash_credit %}
