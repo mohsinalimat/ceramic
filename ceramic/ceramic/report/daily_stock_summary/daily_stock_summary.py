@@ -401,10 +401,16 @@ def _create_stock_entry(date,item_code,company,se_qty):
 	
 def create_stock_entry(date,company,item_code,warehouse,se_qty,rate):
 	# If any production entry is exists for given date then delete all entries if that date
-	if frappe.db.exists("Stock Entry",{"stock_entry_type":"Production","posting_date":date}):
-		doc_list = frappe.db.get_list("Stock Entry",fields=["name"],filters={"stock_entry_type":"Production","posting_date":date})
-		for doc in doc_list:
-			doc = frappe.get_doc("Stock Entry",doc)
+	stock_exists = frappe.db.sql("""
+		select se.name from `tabStock Entry` as se
+		JOIN `tabStock Entry Detail` as see on see.parent = se.name
+		where se.stock_entry_type = 'Production' and se.posting_date = '{}' and see.item_code = '{}' and se.company = '{}'
+	""".format(date,item_code,company),as_dict=1)
+
+	if stock_exists:
+		# doc_list = frappe.db.get_list("Stock Entry",fields=["name"],filters={"stock_entry_type":"Production","posting_date":date})
+		for se_doc in stock_exists:
+			doc = frappe.get_doc("Stock Entry",se_doc.name)
 			doc.flags.ignore_permissions = True
 			if doc.docstatus == 1:
 				try:

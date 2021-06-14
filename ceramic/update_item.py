@@ -57,7 +57,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if d.get('qty') != child_item.qty:
 			comment += f" Qty Change From {child_item.qty} to {d.get('qty')}."
 		if d.get('rate') != child_item.rate or d.get('discounted_rate') != child_item.discounted_rate:
-			comment += f" Rate Changed from {child_item.rate} to {d.get('rate')}"
+			comment += f" Rate Changed in Item: {d.get('item_code')}"
 		
 		if parent_doctype == "Sales Order" and flt(d.get("qty")) < flt(child_item.delivered_qty):
 			frappe.throw(_("Cannot set quantity less than delivered quantity"))
