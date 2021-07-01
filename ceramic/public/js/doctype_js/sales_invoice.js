@@ -197,7 +197,7 @@ frappe.ui.form.on('Sales Invoice', {
         // }
     },
     onload: function (frm) {
-		if(frm.doc.company){
+		if(frm.doc.company && frm.doc.__islocal){
             frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
                 frm.set_value("bank_account",r.name);
             })

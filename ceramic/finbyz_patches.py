@@ -99,3 +99,57 @@ query = frappe.db.sql("update `tabDelivery Note` set  transaction_status = 'New'
 query = frappe.db.sql("select count(name) from `tabGL Entry` where transaction_status IS NULL")
 
 query = frappe.db.sql("update `tabGL Entry` set transaction_status = 'New' where transaction_status IS NULL")
+
+
+# Patch Start: Change Primary customer Logic
+#(in testing company primary customer should be set as customer in DN,SI,PE,JV)
+
+# First Check if company is unauthorized and document is authorized
+# For Delivery Note and Sales Invoice
+documents_list = ["Delivery Note","Sales Invoice"]
+remaining = []
+for document in documents_list:
+    lst = frappe.db.get_all(document,{"company":"Millennium Vitrified Tiles Pvt. Ltd. Testing","docstatus":1},["name","customer","primary_customer"])
+        
+    for idx,doc in enumerate(lst):
+        if doc.primary_customer and doc.primary_customer != doc.customer:
+            frappe.db.set_value(document,doc.name,"customer",doc.primary_customer,update_modified=False)
+            frappe.db.set_value(document,doc.name,"customer_name",frappe.db.get_value("Customer",doc.primary_customer,"customer_name"),update_modified=False)
+            frappe.db.sql("update `tabGL Entry` set party='{}' where voucher_type='{}' and voucher_no = '{}' and (party != '' or party IS NOT NULL)".format(doc.primary_customer,document,doc.name))
+
+        if idx % 500 == 0:
+            frappe.db.commit()
+
+# For Payment Entry
+
+lst = frappe.db.get_all("Payment Entry",{"company":"Millennium Vitrified Tiles Pvt. Ltd. Testing","docstatus":1,"party_type":"Customer"},["name","party","primary_customer"])
+document = "Payment Entry"
+for idx,doc in enumerate(lst):
+    if doc.primary_customer and doc.primary_customer != doc.party:
+        frappe.db.set_value(document,doc.name,"party",doc.primary_customer,update_modified=False)
+        frappe.db.set_value(document,doc.name,"party_name",frappe.db.get_value("Customer",doc.primary_customer,"customer_name"),update_modified=False)
+        frappe.db.sql("update `tabGL Entry` set party='{}' where voucher_type='{}' and voucher_no = '{}' and (party != '' or party IS NOT NULL)".format(doc.primary_customer,document,doc.name))
+
+    if idx % 500 == 0:
+        frappe.db.commit()
+
+
+# For Journal Entry
+jv_list = frappe.db.sql("""select jv.name
+            from `tabJournal Entry` as jv
+            JOIN `tabJournal Entry Account` as jva on jva.parent = jv.name
+            where jva.party_type = 'Customer' and jva.party != jv.primary_customer
+            and (jv.primary_customer != '' or jv.primary_customer IS NOT NULL)
+            and jv.docstatus = 1 and jv.company = 'Millennium Vitrified Tiles Pvt. Ltd. Testing'
+            """,as_dict=1)
+document = "Journal Entry"
+
+for jv in jv_list:
+    doc = frappe.get_doc("Journal Entry",jv)
+    if doc.primary_customer:
+        for acc in doc.accounts:
+            if acc.party_type == 'Customer' and acc.party and acc.party != doc.primary_customer:
+                frappe.db.sql("update `tabGL Entry` set party='{}' where voucher_type='Journal Entry' and voucher_no = '{}' and party = '{}' and (party != '' or party IS NOT NULL)".format(doc.primary_customer,doc.name,acc.party))
+                acc.db_set('party',doc.primary_customer,update_modified=False)
+
+# Patch End

@@ -46,6 +46,17 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 						name : ['in', ['Customer', 'Supplier']]
 					}
 				}
+			},
+			"on_change": function(){
+				if (frappe.query_report.get_filter_value('party_type') == 'Customer'){
+					frappe.query_report.get_filter('primary_customer').toggle(true)
+					frappe.query_report.get_filter('party').toggle(false)
+				}
+				else{
+					frappe.query_report.get_filter('party').toggle(true)
+					frappe.query_report.get_filter('primary_customer').toggle(false)
+				}
+				frappe.query_report.refresh();				
 			}
 		},
 		{
@@ -53,7 +64,8 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"label": __("Party"),
 			"fieldtype": "Dynamic Link",
 			"options": "party_type",
-			"width": "80px"
+			"width": "80px",
+			"hidden":1,
 		},
 		{
 			"fieldname":"primary_customer",
@@ -63,7 +75,8 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"width": "80px",
 			get_query: () => {
 				return { query: "ceramic.controllers.queries.new_customer_query" }
-			}
+			},
+			"hidden":1,
 		},
 		{
 			"label": __("Print With Item"),
@@ -82,6 +95,15 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 		},	
 	],
 	onload: function(report){
+		if (frappe.query_report.get_filter_value('party_type') == 'Customer'){
+			frappe.query_report.get_filter('primary_customer').toggle(true)
+			frappe.query_report.get_filter('party').toggle(false)
+		}
+		else{
+			frappe.query_report.get_filter('party').toggle(true)
+			frappe.query_report.get_filter('primary_customer').toggle(false)
+		}
+
 		display_qr()
 		frappe.call({
 			method:"finbyzerp.whatsapp_manager.get_whatsapp_settings",

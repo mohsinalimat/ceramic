@@ -177,7 +177,8 @@ def create_payment_entry(self):
 			"Payment Entry": {
 				"doctype": "Payment Entry",
 				"field_map": {
-					'series_value': 'series_value'
+					'series_value': 'series_value',
+					'primary_customer':'party'
 				},
 				"field_no_map": {
 					"party_balance",
