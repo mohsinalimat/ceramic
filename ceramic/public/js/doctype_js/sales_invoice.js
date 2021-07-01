@@ -197,19 +197,14 @@ frappe.ui.form.on('Sales Invoice', {
         // }
     },
     onload: function (frm) {
-        if (frm.doc.irn_cancelled && frm.doc.eway_bill_cancelled && frm.doc.__islocal && frm.doc.amended_from){
-            frm.set_value("irn",'')
-            frm.set_value("irn_cancelled",0)
-        }
-
-		if(frm.doc.company){
+		if(frm.doc.company && frm.doc.__islocal){
             frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
                 frm.set_value("bank_account",r.name);
             })
         }
 	},
     customer: function(frm) {
-        if (frm.doc.customer) {
+        if(frm.doc.company && frm.doc.__islocal){ 
             frm.set_value("primary_customer", '')
             frappe.db.get_value("Customer", frm.doc.customer, 'primary_customer').then(function(r) {
                 frm.set_value("primary_customer", r.message.primary_customer)

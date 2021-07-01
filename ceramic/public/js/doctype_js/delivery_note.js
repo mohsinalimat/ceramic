@@ -233,8 +233,7 @@ frappe.ui.form.on('Delivery Note', {
 			frm.fields_dict["si_ref"].get_query = function(doc) {
 					return {
 						filters: {
-							"customer":frm.doc.customer,
-							"primary_customer":frm.doc.primary_customer,
+							"primary_customer":frm.doc.customer,
 							"company":r.alternate_company,
 							"si_ref":'',
 							"docstatus":1

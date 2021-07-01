@@ -51,10 +51,10 @@ def validate_si_ref(self):
 		if si_ref:
 			frappe.throw("Please select correct invoice, Sales Invoice already generated.")
 
-		if customer != self.customer:
-			frappe.throw("Please Select Correct Invoice, Wrong Customer Selected.")
+		# if customer != self.primary_customer:
+		# 	frappe.throw("Please Select Correct Invoice, Wrong Customer Selected.")
 
-		if primary_customer != self.primary_customer:
+		if primary_customer != self.customer:
 			frappe.throw("Please Select Correct Invoice, Wrong Primary Customer Selected.")
 
 		if docstatus != 1:
@@ -205,8 +205,8 @@ def validate_taxes_sales_invoice(self):
 
 		for si_tax in si_ref_doc.taxes:
 			if round(flt(si_tax.tax_amount),1) != round(flt(tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr))),1):
-				frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
-
+				# frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
+				pass
 def update_status_pick_list(self):
 	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
 
