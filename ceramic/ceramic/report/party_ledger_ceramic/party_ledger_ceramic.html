@@ -40,48 +40,48 @@
 <table border="2px" cellspacing="0" cellpadding="0" width="100%">
 	<thead>
 		<tr>
-			<th width="14%" colspan="2" valign="top">
+			<th width="55%" colspan="2" valign="top">
  
 			</th>
-			<th width="30%"  valign="top">
+			<th width="15%"  valign="top">
 				<p style="font-size: 14px;" align="center">
 				<b>	<strong>DR</strong></b>
 				</p>
 			</th>
-			<th width="30%" valign="top">
+			<th width="15%" valign="top">
 				<p style="font-size: 14px; " align="center">
 					<b><strong>CR</strong></b>
 				</p>
 			</th>
-			<th width="25%" valign="top">
+			<th width="15%" valign="top">
 				<p align="center">
 					<strong>Balance</strong>
 				</p>
 			</th>
 		</tr>
 		<tr>
-			<th width="7%" valign="top">
+			<th  valign="top">
 				<p style="font-size: 14px;" align="center">
 					<b><strong>Date</strong></b>
 				</p>
 			</th>
-			<th width="8%" valign="top">
+			<th  valign="top">
 				<p style="font-size: 14px; " align="center">
 					<b><strong>Voucher Type</strong></b>
 				</p>
 			</th>
 			
-			<th width="20%" valign="top">
+			<th  valign="top">
 				<p>
 					<strong></strong>
 				</p>
 			</th>
-			<th width="4%" valign="top">
+			<th  valign="top">
 				<p>
 					<strong></strong>
 				</p>
 			</th>
-			<th width="8%" valign="top">
+			<th  valign="top">
 				<p>
 					<strong></strong>
 				</p>
@@ -131,12 +131,12 @@
 				</p> -->
 			</td>
 			{% } else { %}
-			<td>
+			<td width="6%">
 				<p style="font-size: 14px;">
 				<strong>{{ frappe.format(data[i].posting_date , {'fieldtype': ' Date'})}} </strong>
 				</p>
 			</td>
-			<td  width="12%" valign="top">
+			<td  width="16%" valign="top">
 				{% if data[i].voucher_no != "Closing (Opening + Total)" %}
 				<p style="font-size: 14px;" >
 					{% if(data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Primary Customer Payment"){ %}
