@@ -21,7 +21,7 @@ def validate_einvoice_fields(doc):
 		return
 
 	# Finbyz Changes Start: dont change posting date after irn generated
-	if doc.irn and doc.docstatus == 0 and doc._action == 'save':
+	if doc.irn and doc.docstatus == 0:
 		if doc.posting_date != frappe.db.get_value("Sales Invoice",doc.name,"posting_date"):
 			frappe.throw(_('You cannot edit the invoice after generating IRN'), title=_('Edit Not Allowed'))
 
