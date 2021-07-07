@@ -501,6 +501,13 @@ def on_update_after_submit(self, method):
 	delete_pick_list(self)
 	update_sales_order_total_values(self)
 	update_order_rank(self)
+	update_item_series(self)
+
+def update_item_series(self):
+	for item in self.items:
+		item_series = frappe.db.get_value("Item",item.item_code,"item_series")
+		if item_series != item.item_series:
+			frappe.db.set_value("Sales Order Item",item.name,"item_series",item_series)
 
 #from ceramic.ceramic.doc_events.pick_list import unpick_qty_comment
 def delete_pick_list(self):

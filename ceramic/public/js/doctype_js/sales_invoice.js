@@ -197,7 +197,12 @@ frappe.ui.form.on('Sales Invoice', {
         // }
     },
     onload: function (frm) {
-		if(frm.doc.company && frm.doc.__islocal){
+        if ((frm.doc.irn_cancelled || frm.doc.eway_bill_cancelled) && frm.doc.__islocal && frm.doc.amended_from){
+            frm.set_value("irn",'')
+            frm.set_value("irn_cancelled",0)
+        }
+
+		if(frm.doc.company){
             frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
                 frm.set_value("bank_account",r.name);
             })
