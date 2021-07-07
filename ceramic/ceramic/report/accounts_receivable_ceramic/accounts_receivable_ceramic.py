@@ -61,8 +61,7 @@ class ReceivablePayableReport(object):
 	def make_data_map(self):
 		self.data_map = {}
 		for d in self.data:
-			self.data_map.setdefault(d.voucher_no, {})\
-				.setdefault(d.party, d)
+			self.data_map.setdefault(d.voucher_no, d)
 	
 	def update_data(self):
 		data = self.data
@@ -79,7 +78,7 @@ class ReceivablePayableReport(object):
 				row.billed_credit_note = row.credit_note
 				
 				if row.reference_doc:
-					row_data = self.data_map[row.reference_doc][row.party]
+					row_data = self.data_map[row.reference_doc]
 					row.invoiced = row_data.invoiced
 					row.paid = row_data.paid
 					row.outstanding = row_data.outstanding		

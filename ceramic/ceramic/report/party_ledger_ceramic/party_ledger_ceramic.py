@@ -70,13 +70,13 @@ def generate_data(filters, res):
 	cash_balance_total = opening['cash_balance']
 	qty_total = 0
 
-	if filters.get('print_with_item'):
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance,i.qty, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
-	else:
-		reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
+	# if filters.get('print_with_item'):
+	reference_doc_map = {(i.voucher_no): (i.credit, i.debit, i.balance,i.qty, i.si_details) for i in res if i.company == filters.company and i.reference_doc}
+	# else:
+	# 	reference_doc_map = {(i.party, i.voucher_no): (i.credit, i.debit, i.balance, i.qty) for i in res if i.company == filters.company and i.reference_doc}
 
 	for d in res:
-		if filters.get('show_only_unlinked_transactions') and d.authority == 'Authorized' and d.reference_doc:
+		if filters.get('show_only_unlinked_transactions') and (d.authority == 'Authorized' and d.reference_doc):
 			continue
 		elif filters.get('show_only_unlinked_transactions') and d.authority == 'Unauthorized':
 			continue
@@ -91,10 +91,10 @@ def generate_data(filters, res):
 			d.billed_balance = d.balance
 			
 			if d.reference_doc:
-				if filters.get('print_with_item'):
-					d.total_credit, d.total_debit, d.total_balance,d.qty, d.si_details = reference_doc_map[(d.party, d.reference_doc)]
-				else:
-					d.total_credit, d.total_debit, d.total_balance,d.qty = reference_doc_map[(d.party, d.reference_doc)]
+				# if filters.get('print_with_item'):
+				d.total_credit, d.total_debit, d.total_balance,d.qty, d.si_details = reference_doc_map[(d.reference_doc)]
+				# else:
+					# d.total_credit, d.total_debit, d.total_balance,d.qty = reference_doc_map[(d.party, d.reference_doc)]
 
 			else:
 				d.total_credit = d.total_debit = d.total_balance = 0
@@ -258,7 +258,7 @@ def get_result(filters, account_details):
 			IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer,
 			IFNULL(pi.total_qty, IFNULL(si.total_qty, 0)) as qty,
 			IFNULL(si.is_return, 0) as is_return, jv.user_remark as remark,
-			IFNULL(si.authority, IFNULL(pi.authority, pe.authority)) as authority,
+			IFNULL(si.authority, IFNULL(pi.authority, IFNULL(pe.authority,jv.authority))) as authority,
 			IFNULL(si.si_ref, IFNULL(pi.pi_ref, pe.pe_ref)) as reference_doc{primary_customer_pe_fields}
 		FROM
 			`tabGL Entry` as gle
