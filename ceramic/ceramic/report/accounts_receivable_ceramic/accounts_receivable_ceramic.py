@@ -97,10 +97,10 @@ class ReceivablePayableReport(object):
 				if (row.outstanding or row.bank_outstanding or row.cash_outstanding):
 					self.data.append(row)
 			elif row.company in self.filters.company and not row.reference_doc:
-				row.cash_amount = row.invoiced
-				row.cash_paid = row.paid
-				row.cash_outstanding = row.outstanding
-				row.cash_credit_note = row.credit_note
+				row.cash_amount = flt(row.invoiced)
+				row.cash_paid = flt(row.paid)
+				row.cash_outstanding = flt(row.outstanding)
+				row.cash_credit_note = flt(row.credit_note)
 
 				row.bank_paid = 0
 				row.bank_outstanding = 0
@@ -113,18 +113,17 @@ class ReceivablePayableReport(object):
 
 		for item in self.difference(uncovered_voucher, covered_vouchers):
 			rows = self.data_map[item]
-			for key, row in rows.items():
-				row.cash_amount = row.invoiced
-				row.cash_paid = row.paid
-				row.cash_outstanding = row.outstanding
-				row.cash_credit_note = row.credit_note
+			rows.cash_amount = flt(rows.get('invoiced'))
+			rows.cash_paid = flt(rows.get('paid'))
+			rows.cash_outstanding = flt(rows.get('outstanding'))
+			rows.cash_credit_note = flt(rows.get('credit_note'))
 
-				row.billed_amount = 0
-				row.bank_paid = 0
-				row.bank_outstanding = 0
-				row.billed_credit_note = 0
-				
-				self.data.append(row)
+			rows.billed_amount = 0
+			rows.bank_paid = 0
+			rows.bank_outstanding = 0
+			rows.billed_credit_note = 0
+			
+			self.data.append(rows)
 		
 		
 	def difference(self, lst1, lst2): 
