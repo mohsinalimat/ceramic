@@ -47,6 +47,11 @@ frappe.query_reports["Production Planning Summary"] = {
 			fieldname:"order_priority",
 			label: __("Order Priority"),
 			fieldtype: "Int",
+		},
+		{
+			fieldname:"show_locked_qty",
+			label: __("Show Locked Qty"),
+			fieldtype: "Check",
 		}
 	]
 };

@@ -116,7 +116,7 @@ def get_data(filters):
 	total_qty_data_conditions = get_conditions_total_qty(filters)
 	data = frappe.db.sql(f"""
 		SELECT
-			soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, i.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
+			so.lock_picked_qty, soi.`item_code`, SUM(soi.delivered_qty) as delivered_qty, i.`item_name`, i.`item_group`, SUM(soi.`qty`) as `ordered_qty`, SUM(soi.`qty` - soi.delivered_qty) as `pending_qty`,
 			SUM(soi.picked_qty - soi.delivered_qty - soi.wastage_qty) as picked_total, SUM(soi.qty - soi.picked_qty) as to_pick,
 			SUM(soi.`picked_qty`) as `picked_qty`, soi.packing_type as packing_type, i.punch_no, COUNT(DISTINCT soi.parent) as so_no
 		FROM
@@ -133,7 +133,7 @@ def get_data(filters):
 
 	total_qty_data = frappe.db.sql(f"""
 		SELECT
-			soi.`item_code`, SUM(soi.`qty` - soi.delivered_qty) as `total_pending_qty`, SUM(soi.qty - soi.picked_qty) as total_to_pick,
+			so.lock_picked_qty, soi.`item_code`, SUM(soi.`qty` - soi.delivered_qty) as `total_pending_qty`, SUM(soi.qty - soi.picked_qty) as total_to_pick,
 			soi.packing_type as packing_type
 		FROM
 			`tabSales Order Item` as soi JOIN
@@ -180,7 +180,10 @@ def get_conditions(filters):
 
 	if filters.get('item_group'):
 		conditions += f" AND i.`item_group` = '{filters.get('item_group')}'"
-	
+
+	if filters.get('show_locked_qty'):
+		conditions += f" AND so.`lock_picked_qty` = '{filters.get('show_locked_qty')}'"
+
 	if filters.get('item_code'):
 		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
 	
@@ -201,6 +204,9 @@ def get_conditions_total_qty(filters):
 	
 	if filters.get('item_code'):
 		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
+	
+	if filters.get('show_locked_qty'):
+		conditions += f" AND so.`lock_picked_qty` = '{filters.get('show_locked_qty')}'"
 	
 	conditions += " AND so.status not in ('On Hold', 'Completed' , 'Closed')"
 	

@@ -7,21 +7,23 @@ from __future__ import unicode_literals
 import frappe, os, time, json, shutil
 from frappe.utils import flt,now
 from frappe import _, _dict
-
+from frappe.utils import get_url_to_form
 from frappe.utils.pdf import get_pdf
 from frappe.utils.file_manager import save_file
 
 from erpnext import get_company_currency
 
 # Whatsapp Import Start:
-
+from PIL import Image
+from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
+# from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
 # Whatapp Import End
@@ -548,49 +550,36 @@ def generate_report_pdf(html,filters):
 def whatsapp_login_check():
 	user = frappe.db.get_value("User",{'default_user':1},'name')
 
-	profiledir = os.path.join(".", "firefox_cache")
+	profiledir = os.path.join("./profiles/", "{}".format(user))
 	if not os.path.exists(profiledir):
 		os.makedirs(profiledir)
 
-	profile = webdriver.FirefoxProfile(profiledir)
-	options = Options()
-	options.headless = True
-	options.profile = profile
-	options.add_argument("disable-infobars")
+	options = webdriver.ChromeOptions()
+	options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36")
+	options.add_argument("--headless")
+	options.add_argument("user-data-dir={}".format(os.path.join("./profiles/", "{}".format(frappe.session.user))))
+	options.add_argument("--disable-infobars")
 	options.add_argument("--disable-extensions")
+	options.add_argument("--disable-crash-reporter")
 	options.add_argument('--no-sandbox')
 	options.add_argument('--disable-gpu')
 	options.add_argument("--disable-dev-shm-usage")
-	options.add_argument("--disable-default-apps")
-	options.add_argument("--disable-crash-reporter")
-	options.add_argument("--disable-in-process-stack-traces")
-	options.add_argument("--disable-login-animations")
-	options.add_argument("--log-level=3")
 	options.add_argument("--no-default-browser-check")
-	options.add_argument("--disable-notifications")
-
-	driver = webdriver.Firefox(options=options,executable_path="/usr/local/bin/geckodriver")
+	driver = webdriver.Chrome(options=options,executable_path="/usr/local/bin/chromedriver")
 	driver.get('https://web.whatsapp.com/')
 	loggedin = False
 
-	local_storage_file = os.path.join(profile.path, "{}.json".format(user))
-	if os.path.exists(local_storage_file):
-		with open(local_storage_file) as f:
-			data = json.loads(f.read())
-			driver.execute_script(
-			"".join(
-				[
-					"window.localStorage.setItem('{}', '{}');".format(
-						k, v.replace("\n", "\\n") if isinstance(v, str) else v
-					)
-					for k, v in data.items()
-				]
-			))
-		driver.refresh()
+
 	try:
-		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two' + ',' + 'canvas')))
+		WebDriverWait(driver, 120).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two' + ',' + 'canvas')))
 	except:
-		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		ss_name_first =  'whatsapp error ' + frappe.session.user + 'first' +  frappe.generate_hash(length=5) +'.png'
+		f_first = save_file(ss_name_first, '', '','')
+		driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_first.file_name)
+		error_log_first = frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		f_first.db_set('attached_to_doctype','Error Log')
+		f_first.db_set('attached_to_name',error_log_first.name)
+		frappe.db.commit()
 		driver.quit()
 		return False
 
@@ -598,9 +587,15 @@ def whatsapp_login_check():
 		driver.find_element_by_css_selector('.two')
 		loggedin = True
 	except NoSuchElementException:
-		driver.find_element_by_css_selector('canvas')
+		element = driver.find_element_by_css_selector('canvas')
 	except:
-		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		ss_name_second =  'whatsapp error ' + frappe.session.user + 'second' + frappe.generate_hash(length=5) + '.png'
+		f_second = save_file(ss_name_second, '', '','')
+		driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_second.file_name)
+		error_log_second = frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		f_second.db_set('attached_to_doctype','Error Log')
+		f_second.db_set('attached_to_name',error_log_second.name)
+		frappe.db.commit()
 		driver.quit()
 		return False
 
@@ -608,9 +603,20 @@ def whatsapp_login_check():
 		qr_hash = frappe.generate_hash(length = 15)
 		path_private_files = frappe.get_site_path('public','files') + '/{}.png'.format(user + qr_hash)
 		try:
+			driver.find_element_by_css_selector('._1a-np')
+			driver.find_element_by_name('rememberMe').click()
+		except:
+			pass
+		try:
 			WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'canvas')))
 		except:
-			frappe.log_error(frappe.get_traceback(),"Unable to generate QRCode")
+			ss_name_third =  'whatsapp error ' + frappe.session.user + 'third' + frappe.generate_hash(length=5) +'.png'
+			f_third = save_file(ss_name_third, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_third.file_name)
+			error_log_third = frappe.log_error(frappe.get_traceback(),"Unable to generate QRCode")
+			f_third.db_set('attached_to_doctype','Error Log')
+			f_third.db_set('attached_to_name',error_log_third.name)
+			frappe.db.commit()
 			driver.quit()
 			return False
 
@@ -619,42 +625,29 @@ def whatsapp_login_check():
 		except:
 			pass
 
-		qr = driver.find_element_by_css_selector('canvas')
-		fd = os.open(path_private_files, os.O_RDWR | os.O_CREAT)
-		fn_png = os.path.abspath(path_private_files)
-		qr.screenshot(fn_png)
-
-		msg = "<img src='/files/{}.png' alt='No Image' data-pagespeed-no-transform>".format(user + qr_hash)
+		png = driver.get_screenshot_as_png()
+		qr = Image.open(BytesIO(png))
+		qr = qr.crop((element.location['x'], element.location['y'], element.location['x'] + element.size['width'], element.location['y'] + element.size['height']))
+		qr.save(path_private_files)
+		msg = "<img src='/files/{}.png' alt='No Image' data-pagespeed-no-transform>".format(frappe.session.user + qr_hash)
 		event = str('Party Ledger Ceramic' + frappe.session.user)
 		frappe.publish_realtime(event=event, message=msg,user=frappe.session.user)
+
+
 		try:
-
-			WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two')))
-			for item in os.listdir(profile.path):
-				if item in ["parent.lock", "lock", ".parentlock"]:
-					continue
-				s = os.path.join(profile.path, item)
-				d = os.path.join(profiledir, item)
-				if os.path.isdir(s):
-					shutil.copytree(
-						s,
-						d,
-						ignore=shutil.ignore_patterns(
-							"parent.lock", "lock", ".parentlock"
-						),
-					)
-				else:
-					shutil.copy2(s, d)
-
-			with open(os.path.join(profiledir,"{}.json".format(user)), "w") as f:
-				f.write(json.dumps(driver.execute_script("return window.localStorage;")))
-			
+			WebDriverWait(driver, 120).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two')))
 			driver.quit()
 			remove_qr_code(user,qr_hash)
 			frappe.db.set_value("System Settings","System Settings","default_login",1)
 			# return [driver,user,qr_hash]
 		except:
-			frappe.log_error(frappe.get_traceback(),"Unable to Save Profile.")
+			ss_name_fourth =  'whatsapp error ' + frappe.session.user + 'fourth' + frappe.generate_hash(length=5) + '.png'
+			f_fourth = save_file(ss_name_fourth, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_fourth.file_name)
+			error_log_fourth = frappe.log_error(frappe.get_traceback(),"Unable to Save Profile.")
+			f_fourth.db_set('attached_to_doctype','Error Log')
+			f_fourth.db_set('attached_to_name',error_log_fourth.name)
+			frappe.db.commit()
 			driver.quit()
 			remove_qr_code(user,qr_hash)
 			return False
@@ -675,8 +668,8 @@ def get_report_pdf_whatsapp(mobile_number,content,file_url,file_name,filters):
 	if len(mobile_number) != 10:
 		frappe.throw("Please Enter Only 10 Digit Contact Number.")
 
-	if frappe.db.get_value("System Settings","System Settings","default_login") == '0':
-		whatsapp_login_check()
+	# if frappe.db.get_value("System Settings","System Settings","default_login") == '0':
+		# whatsapp_login_check()
 	# send_msg_background(mobile_number, content, file_url,file_name,filters)
 	frappe.enqueue(send_whatsapp_report,mobile_number = mobile_number, content = content, file_url = file_url, file_name = file_name, filters = filters)
 
@@ -685,16 +678,26 @@ def send_whatsapp_report(mobile_number, content, file_url,file_name,filters):
 	path = frappe.get_site_path('private','files') + "/" + file_name
 	path_url = frappe.utils.get_bench_path() + "/sites" + path[1:]
 
-	send_media_whatsapp(mobile_number,content,path_url)
+	send_msg = send_media_whatsapp(mobile_number,content,path_url)
 
-	doc = frappe.get_doc("Whatsapp Comment")
-	message_info = "You Have Sent the Whatsapp Message To: " + str(mobile_number) + " At: " + now()
-	doc.append("whatsapp_details",{"company":filters.get('company'),"from_date":filters.get('from_date'),\
-		"to_date":filters.get('to_date'),"primary_customer":filters.get('primary_customer'),\
-		"message_info":message_info,"message":str(content)})
-	doc.save(ignore_permissions=True)
+	if send_msg == True:
+		comment_whatsapp = frappe.new_doc("Comment")
+		comment_whatsapp.comment_type = "WhatsApp"
+		comment_whatsapp.comment_email = frappe.session.user
+		comment_whatsapp.reference_doctype = "Customer"
+		comment_whatsapp.reference_name = filters.get('primary_customer')
 
-	time.sleep(20)
+		comment_whatsapp.content = "You Have Sent the Whatsapp Message To: " + str(mobile_number) + " At: " + now()
+
+		comment_whatsapp.save(ignore_permissions=True)
+
+		doc = frappe.get_doc("Whatsapp Comment")
+		message_info = "You Have Sent the Whatsapp Message To: " + str(mobile_number) + " At: " + now()
+		doc.append("whatsapp_details",{"company":filters.get('company'),"from_date":filters.get('from_date'),\
+			"to_date":filters.get('to_date'),"primary_customer":filters.get('primary_customer'),\
+			"message_info":message_info,"message":str(content)})
+		doc.save(ignore_permissions=True)
+
 	remove_file_from_os(path)
 
 	frappe.db.sql("delete from `tabFile` where file_name='{}'".format(file_name))
@@ -702,83 +705,160 @@ def send_whatsapp_report(mobile_number, content, file_url,file_name,filters):
 		.format('Report','Party Ledger Ceramic',file_name))
 
 	frappe.db.commit()
+	if not send_msg == True and send_msg:
+		return str(get_url_to_form("Error Log", str(send_msg)))
 
 def send_media_whatsapp(mobile_number,content,path_url):
 	user = frappe.db.get_value("User",{'default_user':1},'name')
 	if len(mobile_number) == 10:
 		mobile_number = "91" + mobile_number
-	profiledir = os.path.join(".", "firefox_cache")
 
-	profile = webdriver.FirefoxProfile(profiledir)
-	options = Options()
-	options.headless = True
-	options.profile = profile
-	options.add_argument("disable-infobars")
+	profiledir = os.path.join("./profiles/", "{}".format(user))
+	if not os.path.exists(profiledir):
+		os.makedirs(profiledir)
+
+	options = webdriver.ChromeOptions()
+	options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36")
+	options.add_argument("--headless")
+	options.add_argument("user-data-dir={}".format(os.path.join("./profiles/", "{}".format(frappe.session.user))))
+	options.add_argument("--disable-infobars")
 	options.add_argument("--disable-extensions")
+	options.add_argument("--disable-crash-reporter")
 	options.add_argument('--no-sandbox')
 	options.add_argument('--disable-gpu')
 	options.add_argument("--disable-dev-shm-usage")
-	options.add_argument("--disable-default-apps")
-	options.add_argument("--disable-crash-reporter")
-	options.add_argument("--disable-in-process-stack-traces")
-	options.add_argument("--disable-login-animations")
-	options.add_argument("--log-level=3")
 	options.add_argument("--no-default-browser-check")
-	options.add_argument("--disable-notifications")
-
-	driver = webdriver.Firefox(options=options,executable_path="/usr/local/bin/geckodriver")
+	driver = webdriver.Chrome(options=options,executable_path="/usr/local/bin/chromedriver")
 	driver.get('https://web.whatsapp.com/')
 	loggedin = False
 
-	local_storage_file = os.path.join(profile.path, "{}.json".format(user))
-	if os.path.exists(local_storage_file):
-		with open(local_storage_file) as f:
-			data = json.loads(f.read())
-			driver.execute_script(
-			"".join(
-				[
-					"window.localStorage.setItem('{}', '{}');".format(
-						k, v.replace("\n", "\\n") if isinstance(v, str) else v
-					)
-					for k, v in data.items()
-				]
-			))
-		driver.refresh()
 	try:
-		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two' + ',' + 'canvas')))
+		WebDriverWait(driver, 120).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two' + ',' + 'canvas')))
 	except:
-		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
-		driver.quit()
+		ss_name_first =  'whatsapp error ' + frappe.session.user + 'first' +  frappe.generate_hash(length=5) +'.png'
+		f_first = save_file(ss_name_first, '', '','')
+		driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_first.file_name)
+		error_log_first = frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		f_first.db_set('attached_to_doctype','Error Log')
+		f_first.db_set('attached_to_name',error_log_first.name)
 		frappe.db.set_value("System Settings","System Settings","default_login",0)
-		return False
+		frappe.db.commit()
+		driver.quit()
+		return error_log_first.name
 
 	try:
 		driver.find_element_by_css_selector('.two')
 		loggedin = True
 	except NoSuchElementException:
-		driver.find_element_by_css_selector('canvas')
+		element = driver.find_element_by_css_selector('canvas')
 	except:
-		frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		ss_name_second =  'whatsapp error ' + frappe.session.user + 'second' + frappe.generate_hash(length=5) + '.png'
+		f_second = save_file(ss_name_second, '', '','')
+		driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_second.file_name)
+		error_log_second = frappe.log_error(frappe.get_traceback(),"Unable to connect your whatsapp")
+		f_second.db_set('attached_to_doctype','Error Log')
+		f_second.db_set('attached_to_name',error_log_second.name)
+		frappe.db.set_value("System Settings","System Settings","default_login",0)
+		frappe.db.commit()
 		driver.quit()
-		return False
+		return error_log_second.name
 	
 	if not loggedin:
-		frappe.log_error(frappe.get_traceback(),"Unable to login into whatsapp, please try again.")
-		driver.quit()
-		return False
+		qr_hash = frappe.generate_hash(length = 15)
+		path_private_files = frappe.get_site_path('public','files') + '/{}.png'.format(user + qr_hash)
+		try:
+			driver.find_element_by_css_selector('._1a-np')
+			driver.find_element_by_name('rememberMe').click()
+		except:
+			pass
+		try:
+			WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'canvas')))
+		except:
+			ss_name_third =  'whatsapp error ' + frappe.session.user + 'third' + frappe.generate_hash(length=5) +'.png'
+			f_third = save_file(ss_name_third, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_third.file_name)
+			error_log_third = frappe.log_error(frappe.get_traceback(),"Unable to generate QRCode")
+			f_third.db_set('attached_to_doctype','Error Log')
+			f_third.db_set('attached_to_name',error_log_third.name)
+			frappe.db.commit()
+			driver.quit()
+			return error_log_third.name
+
+		try:
+			driver.find_element_by_css_selector("div[data-ref] > span > div").click()
+		except:
+			pass
+
+		png = driver.get_screenshot_as_png()
+		qr = Image.open(BytesIO(png))
+		qr = qr.crop((element.location['x'], element.location['y'], element.location['x'] + element.size['width'], element.location['y'] + element.size['height']))
+		qr.save(path_private_files)
+		msg = "<img src='/files/{}.png' alt='No Image' data-pagespeed-no-transform>".format(frappe.session.user + qr_hash)
+		event = str('Party Ledger Ceramic' + frappe.session.user)
+		frappe.publish_realtime(event=event, message=msg,user=frappe.session.user)
+
+
+		try:
+			WebDriverWait(driver, 120).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.two')))
+			driver.quit()
+			remove_qr_code(user,qr_hash)
+			frappe.db.set_value("System Settings","System Settings","default_login",1)
+			# return [driver,user,qr_hash]
+		except:
+			ss_name_fourth =  'whatsapp error ' + frappe.session.user + 'fourth' + frappe.generate_hash(length=5) + '.png'
+			f_fourth = save_file(ss_name_fourth, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_fourth.file_name)
+			error_log_fourth = frappe.log_error(frappe.get_traceback(),"Unable to Save Profile.")
+			f_fourth.db_set('attached_to_doctype','Error Log')
+			f_fourth.db_set('attached_to_name',error_log_fourth.name)
+			frappe.db.commit()
+			driver.quit()
+			remove_qr_code(user,qr_hash)
+			return error_log_fourth.name
+
 	link = "https://web.whatsapp.com/send?phone='{}'&text&source&data&app_absent".format(mobile_number)
 	driver.get(link)
 	attach_list = []
 
 	if content:
-		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')))
 		try:
-			input_box = driver.find_element_by_xpath('//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')
-			input_box.send_keys(content)
-			input_box.send_keys(Keys.ENTER)
+			WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '._1LbR4')))	
 		except:
-			frappe.log_error(frappe.get_traceback(),"Error while trying to send the media file.")
- 
+			ss_name_sixth_1 = 'whatsapp error ' + frappe.session.user + 'sixth 1' + frappe.generate_hash(length=5) +  '.png'
+			f_sixth_1 = save_file(ss_name_sixth_1, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_sixth_1.file_name)
+			error_log_sixth_1 = frappe.log_error(frappe.get_traceback(),"Unable to send the whatsapp message")
+			f_sixth_1.db_set('attached_to_doctype','Error Log')
+			f_sixth_1.db_set('attached_to_name',error_log_sixth_1.name)
+			frappe.db.commit()
+			driver.quit()
+			return error_log_sixth_1.name
+		# try:
+		# 	WebDriverWait(driver, 120).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')))
+		# except:
+		# 	ss_name_sixth_1 = 'whatsapp error ' + frappe.session.user + 'sixth 1' + frappe.generate_hash(length=5) +  '.png'
+		# 	f_sixth_1 = save_file(ss_name_sixth_1, '', '','')
+		# 	driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_sixth_1.file_name)
+		# 	error_log_sixth_1 = frappe.log_error(frappe.get_traceback(),"Unable to send the whatsapp message")
+		# 	f_sixth_1.db_set('attached_to_doctype','Error Log')
+		# 	f_sixth_1.db_set('attached_to_name',error_log_sixth_1.name)
+		# 	frappe.db.commit()
+		# 	driver.quit()
+		# 	return False
+		try:
+			input_box = driver.find_element_by_css_selector('._1LbR4')
+			input_box.send_keys(content)
+			driver.find_element_by_css_selector('._1Ae7k').click()
+		except:
+			ss_name_sixth =  'whatsapp error ' + frappe.session.user + 'sixth' + frappe.generate_hash(length=5) +  '.png'
+			f_sixth = save_file(ss_name_sixth, '', '','')
+			driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_sixth.file_name)
+			error_log_sixth = frappe.log_error(frappe.get_traceback(),"Error while trying to send the media file.")
+			f_sixth.db_set('attached_to_doctype','Error Log')
+			f_sixth.db_set('attached_to_name',error_log_sixth.name)
+			frappe.db.commit()
+			driver.quit()
+			return error_log_sixth.name 
 	try:
 		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
 		WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
@@ -786,14 +866,22 @@ def send_media_whatsapp(mobile_number,content,path_url):
 		attach=driver.find_element_by_css_selector('input[type="file"]')
 		attach.send_keys(path_url)
 
-		WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')))
+		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')))
 		whatsapp_send_button = driver.find_element_by_xpath('//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')
 		whatsapp_send_button.click()
 	except:
-		frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
-
+		ss_name_eight =  'whatsapp error ' + frappe.session.user + 'eight' + frappe.generate_hash(length=5) +  '.png'
+		f_eight = save_file(ss_name_eight, '', '','')
+		driver.save_screenshot(frappe.get_site_path('public','files') + '/'+ f_eight.file_name)
+		error_log_eight = frappe.log_error(frappe.get_traceback(),"Error while trying to send the whatsapp message.")
+		f_eight.db_set('attached_to_doctype','Error Log')
+		f_eight.db_set('attached_to_name',error_log_eight.name)
+		frappe.db.commit()
+		driver.quit()
+		return error_log_eight.name
 	time.sleep(30)
 	driver.quit()
+	return True
 
 def remove_file_from_os(path):
 	if os.path.exists(path):

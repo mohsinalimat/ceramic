@@ -195,6 +195,9 @@ function whatsapp_dialog(report){
 									filters:p.message.filters
 								},
 								callback: function(r){
+									if (r.message){
+										frappe.show_alert({message:__("Please Check Whatsapp Error Here: "+ "<a href = " +r.message + ">Click Here</a>"), indicator:'red'})
+									}
 								}
 							})
 						}
