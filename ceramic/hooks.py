@@ -259,9 +259,9 @@ doc_events = {
 		"validate":"ceramic.ceramic.doc_events.contact.validate",
 	},
 	"Cost Center": {
-		"after_rename": "ceramic.ceramic.doc_events.warehouse.after_rename",
+		"after_rename": "ceramic.ceramic.doc_events.cost_center.after_rename",
 		"validate": "ceramic.ceramic.doc_events.cost_center.validate",
-		"on_trash": "ceramic.ceramic.doc_events.warehouse.on_trash",
+		"on_trash": "ceramic.ceramic.doc_events.cost_center.on_trash",
 	},
 	"Warehouse": {
 		"after_rename": "ceramic.ceramic.doc_events.warehouse.after_rename",
