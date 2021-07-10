@@ -10,6 +10,7 @@ from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_n
 
 
 def before_validate(self, method):
+	get_address(self)
 	self.sales_team = []
 	self.flags.ignore_permissions = True
 
@@ -34,6 +35,12 @@ def before_validate(self, method):
 		so_doc.db_set("title",self.customer)
 		so_doc.db_set("customer_name",self.customer_name)
 
+def get_address(self):
+	if self.si_ref:
+		doc=frappe.get_doc("Sales Invoice",self.si_ref)
+		self.customer_address=doc.customer_address
+		self.shipping_address_name=doc.shipping_address_name
+
 def validate(self, method):
 	check_rate_qty(self)
 	validate_si_ref(self)
@@ -44,6 +51,7 @@ def validate(self, method):
 		validate_tax_template(self)
 	update_discounted_net_total(self)
 	calculate_totals(self)
+	
 
 def validate_si_ref(self):
 	if self.si_ref:
@@ -236,19 +244,10 @@ def on_submit(self,method):
 		if item.against_sales_order:
 			update_sales_order_total_values(frappe.get_doc("Sales Order", item.against_sales_order))
 	
-
 def validate_addresses(self):
 	if not self.shipping_address_name:
 		frappe.throw(_("Shipping Address is mandatory"))
-	if not self.customer_address:
-		frappe.throw(_("Billing Address is mandatory"))
-
-
-
-def validate_addresses(self):
-	if not self.shipping_address_name:
-		frappe.throw(_("Shipping Address is mandatory"))
-	if not self.customer_address:
+	if not self.customer_address or self.customer_address==None or self.customer_address=='':
 		frappe.throw(_("Billing Address is mandatory"))
 
 def check_rate_qty(self):
