@@ -33,6 +33,11 @@ frappe.ui.form.on('Purchase Invoice', {
 			frm.trigger('naming_series');
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+		if (!frm.doc.cost_center) {
+            frappe.db.get_value("Company", frm.doc.company, 'cost_center', function(r) {
+                frm.set_value('cost_center', r.cost_center)
+            })
+        }
 	},
 	naming_series: function(frm) {
 		if (frm.doc.company && !frm.doc.amended_from){
