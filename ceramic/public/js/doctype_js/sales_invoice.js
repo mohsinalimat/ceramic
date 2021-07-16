@@ -170,7 +170,9 @@ frappe.ui.form.on('Sales Invoice', {
         // }
         if (cur_frm.doc.company) {
             frappe.db.get_value("Company", cur_frm.doc.company, 'company_series', (r) => {
-                frm.set_value('company_series', r.company_series);
+                if(frm.doc.company_series != r.company_series){
+                    frm.set_value('company_series', r.company_series);
+                }
             });
         }
         if (frm.doc.__islocal) {

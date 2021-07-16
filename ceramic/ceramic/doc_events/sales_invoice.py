@@ -470,3 +470,7 @@ def calculate_gst_taxable_value(self):
 		if d.account_head in account_list:
 			self.gst_taxable_value = flt(d.base_total) - flt(d.base_tax_amount)
 			break
+
+
+def tcs_deduction(self):
+	pass

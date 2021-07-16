@@ -71,6 +71,12 @@ from erpnext.accounts.doctype.sales_taxes_and_charges_template import sales_taxe
 sales_taxes_and_charges_template.validate_for_tax_category = validate_for_tax_category
 
 
+# finbyzerp override tcs function
+from ceramic.ceramic.doc_events.sales_invoice import tcs_deduction
+from finbyzerp.finbyzerp.doc_events import sales_invoice 
+sales_invoice.tcs_deduction = tcs_deduction
+
+
 app_name = "ceramic"
 app_title = "Ceramic"
 app_publisher = "Finbyz"
