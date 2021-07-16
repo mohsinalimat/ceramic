@@ -515,7 +515,7 @@ def get_picked_item(item_code, batch_no, company, from_date, to_date, bal_qty, t
 
 	picked_item = frappe.db.sql(f"""
 		SELECT 
-			pli.date, pli.sales_order, pli.sales_order_item,
+			pli.delivery_date as date, pli.sales_order, pli.sales_order_item,
 			pl.name as pick_list, pli.name as pick_list_item, pli.item_code,
 			pli.item_name, (pli.qty - pli.delivered_qty - pli.wastage_qty) as picked_qty,
 			pli.delivered_qty, (pli.qty - (pli.wastage_qty + pli.delivered_qty)) as remaining_qty,

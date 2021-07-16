@@ -166,7 +166,7 @@ function get_picked_item_details(item_code, batch_no, company, from_date, to_dat
 				<th>{{ __("Customer") }}</th>
 				<th>{{ __("Lock Pick Qty") }}</th>
 				<th>{{ __("Sales Order") }}</th>
-				<th>{{ __("SO Date") }}</th>
+				<th>{{ __("Delivery Date") }}</th>
 				<th>{{ __("Pick List") }}</th>
 				<th>{{ __("% Picked") }}</th>
 				<th>{{ __("Picked") }}</th>
