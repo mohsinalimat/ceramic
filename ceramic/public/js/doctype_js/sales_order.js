@@ -853,6 +853,12 @@ frappe.ui.form.on("Sales Order Item", {
 		row.delivery_date = frm.doc.delivery_date;
 		frm.refresh_field("items");
 	},
+	sqf_rate: (frm, cdt, cdn) => {
+		let d = locals[cdt][cdn];
+		if(d.sqf_rate){
+			frappe.model.set_value(cdt, cdn, 'rate', flt(d.sqf_rate * 15.5));
+		}
+	},
 	discounted_rate: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'discounted_amount', d.discounted_rate * d.real_qty);

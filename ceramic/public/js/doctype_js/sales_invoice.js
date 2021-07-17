@@ -362,6 +362,12 @@ frappe.ui.form.on("Sales Invoice Item", {
         let d = locals[cdt][cdn];
         frm.events.calculate_total(frm)
     },
+    sqf_rate: (frm, cdt, cdn) => {
+		let d = locals[cdt][cdn];
+		if(d.sqf_rate){
+			frappe.model.set_value(cdt, cdn, 'rate', flt(d.sqf_rate * 15.5));
+		}
+	},
     weight_per_unit: function(frm, cdt, cdn) {
         frm.events.calculate_total(frm)
     }

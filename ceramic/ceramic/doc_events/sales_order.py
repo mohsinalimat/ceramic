@@ -21,6 +21,7 @@ def before_validate(self, method):
 
 def validate(self, method):
 	calculate_order_priority(self)
+	calculate_rate(self)
 	update_discounted_amount(self)
 	update_discounted_net_total(self)
 	# create_main_sales_order(self)
@@ -1052,3 +1053,7 @@ def get_rate_discounted_rate(item_code, customer, company, so_number = None):
 	pass
 
 			
+def calculate_rate(self):
+	for row in self.items:
+		if row.sqf_rate:
+			row.rate = flt(row.sqf_rate*15.5)

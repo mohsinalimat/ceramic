@@ -5,6 +5,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from erpnext.stock.doctype.delivery_note.delivery_note import get_returned_qty_map,get_invoiced_qty_map
 from frappe.contacts.doctype.address.address import get_company_address
+from ceramic.ceramic.doc_events.sales_order import calculate_rate
 
 def before_validate(self, method):
 	self.flags.ignore_permissions = True
@@ -328,6 +329,7 @@ def create_main_sales_invoice(self):
 		self.db_set('pay_amount_left', self.rounded_total)
 
 def validate(self, method):
+	calculate_rate(self)
 	update_discounted_net_total(self)
 	calculate_gst_taxable_value(self)
 	validate_payment_terms_template(self)

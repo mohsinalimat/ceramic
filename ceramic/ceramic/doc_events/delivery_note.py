@@ -4,7 +4,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
 from frappe.model.utils import get_fetch_values
 from frappe.utils import flt
-from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values
+from ceramic.ceramic.doc_events.sales_order import update_sales_order_total_values, calculate_rate
 from ceramic.ceramic.doc_events.sales_invoice import validate_tax_template
 from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no
 
@@ -42,6 +42,7 @@ def get_address(self):
 		self.shipping_address_name=doc.shipping_address_name
 
 def validate(self, method):
+	calculate_rate(self)
 	check_rate_qty(self)
 	validate_si_ref(self)
 	calculate_items_discounted_fields(self)
