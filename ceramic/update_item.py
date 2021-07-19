@@ -46,7 +46,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			# 	child_item = set_purchase_order_defaults(parent_doctype, parent_doctype_name, child_docname, d)
 		else:
 			child_item = frappe.get_doc(parent_doctype + ' Item', d.get("docname"))
-			if child_item.item_code == d.get("item_code") and (not d.get("rate") or flt(child_item.get("rate")) == flt(d.get("rate"))) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")):
+			if child_item.item_code == d.get("item_code") and (not d.get("rate") or flt(child_item.get("rate")) == flt(d.get("rate"))) and flt(child_item.get("qty")) == flt(d.get("qty")) and flt(child_item.get("discounted_rate")) == flt(d.get("discounted_rate")) and flt(child_item.get("real_qty")) == flt(d.get("real_qty")) and flt(child_item.get("sqf_rate")) == flt(d.get("sqf_rate")):
 				continue
 
 		
@@ -88,6 +88,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		child_item.qty = flt(d.get("qty"))
 		child_item.item_name = frappe.db.get_value("Item", d.get("item_code"), "item_name")
 		child_item.real_qty = flt(d.get("qty"))
+		child_item.sqf_rate = flt(d.get("sqf_rate"))
 		precision = child_item.precision("rate") or 2
 
 		
@@ -124,6 +125,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			frappe.throw(_("Row #{0}: Cannot set Rate if amount is greater than billed amount for Item {1}.")
 						 .format(child_item.idx, child_item.item_code))
 		else:
+			child_item.sqf_rate = flt(d.get("sqf_rate"))
 			child_item.rate = flt(d.get("rate"))
 			child_item.discounted_rate = flt(d.get("discounted_rate"))
 		child_item.item_code = d.get('item_code')

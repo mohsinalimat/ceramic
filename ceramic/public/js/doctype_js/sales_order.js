@@ -69,7 +69,24 @@ erpnext.utils.update_child_items = function (opts) {
 					in_list_view: 0,
 					columns: 1,
 					label: __('Real Qty')
-				}, {
+				}, 
+				{
+					fieldtype: 'Currency',
+					fieldname: "sqf_rate",
+					default: 0,
+					read_only: 0,
+					in_list_view: 1,
+					// columns: 1,
+					permlevel: 1,
+					label: __('SQF Rate'),
+					change: function(){
+						let sqf_rate = this.get_value();
+						console.log(sqf_rate)
+						this.dialog.set_value('qty', flt(sqf_rate* 15.5));
+						if(sqf_rate){  }
+					},
+				}, 
+				{
 					fieldtype: 'Currency',
 					fieldname: "rate",
 					default: 0,
@@ -117,6 +134,7 @@ erpnext.utils.update_child_items = function (opts) {
 			"name": d.name,
 			"item_code": d.item_code,
 			"qty": d.qty,
+			"sqf_rate": d.sqf_rate,
 			"rate": d.rate,
 			"discounted_rate": d.discounted_rate,
 			"real_qty": d.real_qty

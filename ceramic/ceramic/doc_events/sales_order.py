@@ -499,6 +499,7 @@ def before_update_after_submit(self, method):
 	update_linked_order(self)
 
 def on_update_after_submit(self, method):
+	calculate_rate(self)
 	delete_pick_list(self)
 	update_sales_order_total_values(self)
 	update_order_rank(self)
