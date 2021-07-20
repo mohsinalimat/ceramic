@@ -81,8 +81,9 @@ erpnext.utils.update_child_items = function (opts) {
 					label: __('SQF Rate'),
 					change: function(){
 						let sqf_rate = this.get_value();
-						console.log(sqf_rate)
-						//if(sqf_rate){  this.dialog.set_value('qty', flt(sqf_rate* 15.5)); }
+						if(sqf_rate){ 
+							this.grid_row.on_grid_fields_dict.rate.set_value(flt(sqf_rate*15.5));		
+						}
 					},
 				}, 
 				{
