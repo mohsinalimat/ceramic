@@ -126,7 +126,10 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 						 .format(child_item.idx, child_item.item_code))
 		else:
 			child_item.sqf_rate = flt(d.get("sqf_rate"))
-			child_item.rate = flt(d.get("rate"))
+			if child_item.sqf_rate:
+				child_item.rate = flt(d.get("sqf_rate") * 15.5)
+			else:
+				child_item.rate = flt(d.get("rate"))
 			child_item.discounted_rate = flt(d.get("discounted_rate"))
 		child_item.item_code = d.get('item_code')
 		

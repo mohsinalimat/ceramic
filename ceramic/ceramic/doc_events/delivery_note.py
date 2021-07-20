@@ -239,7 +239,7 @@ def update_status_pick_list(self):
 	change_delivery_authority(self.name)
 
 def on_submit(self,method):
-	validate_addresses(self)
+	# validate_addresses(self)
 	wastage_stock_entry(self)
 	for item in self.items:
 		if item.against_sales_order:
