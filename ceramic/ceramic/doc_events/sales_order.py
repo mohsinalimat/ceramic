@@ -497,6 +497,7 @@ def before_update_after_submit(self, method):
 	update_discounted_net_total(self)
 	update_order_rank(self)
 	update_linked_order(self)
+	update_comment(self)
 
 def on_update_after_submit(self, method):
 	calculate_rate(self)
@@ -504,6 +505,20 @@ def on_update_after_submit(self, method):
 	update_sales_order_total_values(self)
 	update_order_rank(self)
 	update_item_series(self)
+	
+def update_comment(self):
+	field_list = ['lock_picked_qty','delivery_date']
+	for field in field_list:
+		if str(self.get(field)) != str(frappe.db.get_value("Sales Order",self.name,field)):
+			comment_doc = frappe.new_doc("Comment")
+			comment_doc.comment_type = "Updated"
+			comment_doc.comment_email = frappe.session.user
+			comment_doc.reference_doctype = "Sales Order"
+			comment_doc.reference_name = self.name
+
+			comment_doc.content = f" changed {field} from {frappe.db.get_value('Sales Order',self.name,field)} to {self.get(field)}"
+
+			comment_doc.save()
 
 def update_item_series(self):
 	for item in self.items:
