@@ -5,6 +5,7 @@ from frappe.utils import flt, cint, nowdate
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.contacts.doctype.address.address import get_company_address
+from erpnext.accounts.party import get_party_account
 
 def before_validate(self, method):
 	for item in self.items:
@@ -80,7 +81,8 @@ def make_purchase_invoice(source_name, target_doc=None):
 				# frappe.throw(source_company_abbr + target_company_abbr)
 				if source.taxes[index].cost_center:
 					target.taxes[index].cost_center = source.taxes[index].cost_center.replace(source_company_abbr, target_company_abbr)
-		target.credit_to = frappe.db.get_value("Company", alternate_company, 'default_payable_account')
+		target.credit_to = get_party_account("Supplier",source.supplier,alternate_company)
+		# target.credit_to = frappe.db.get_value("Company", alternate_company, 'default_payable_account')
 		doc.run_method("calculate_taxes_and_totals")
 
 	def update_item(source_doc, target_doc, source_parent):
@@ -119,6 +121,9 @@ def make_purchase_invoice(source_name, target_doc=None):
 			"field_map": {
 				"supplier_warehouse":"supplier_warehouse",
 				"is_return": "is_return"
+			},
+			"field_no_map":{
+				"credit_to"
 			},
 			"validation": {
 				"docstatus": ["=", 1],

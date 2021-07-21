@@ -189,7 +189,7 @@ function whatsapp_dialog(report){
 								method:"ceramic.ceramic.report.party_ledger_ceramic.party_ledger_ceramic.get_report_pdf_whatsapp",
 								args:{
 									mobile_number:v.number,
-									content:v.content || false,
+									content:String(v.content) || false,
 									file_url:p.message.file_url,
 									file_name:p.message.file_name,
 									filters:p.message.filters
