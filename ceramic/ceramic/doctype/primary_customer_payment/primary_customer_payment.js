@@ -90,16 +90,6 @@ frappe.ui.form.on('Primary Customer Payment', {
 			})
 		}
 		frm.toggle_reqd(["reference_no", "reference_date"],(frm.doc.mode_of_payment != "Cash" ? 1 : 0));
-		// if(frm.doc.mode_of_payment=="Cash"){
-		// 	frm.set_df_property("reference_no", "reqd", "0");
-		// 	frm.set_df_property("reference_date", "reqd", "0");
-		// 	frm.refresh();
-		// }
-		// else{
-		// 	frm.set_df_property("reference_no", "reqd", "1");
-		// 	frm.set_df_property("reference_date", "reqd", "1");
-		// 	frm.refresh();
-		// }
 	},
 	
 	
