@@ -75,6 +75,7 @@ frappe.ui.form.on('Primary Customer Payment', {
 	
 
 	mode_of_payment: function(frm) {
+		var me = this;
 		get_payment_mode_account(frm, frm.doc.mode_of_payment, function(account){
 			//var payment_account_field = frm.doc.payment_type == "Receive" ? "paid_to" : "paid_from";
 			frm.set_value("paid_to", account);
@@ -87,6 +88,16 @@ frappe.ui.form.on('Primary Customer Payment', {
 					d.cost_center = "Main - " + r.abbr,
 					d.amount = 0
 			})
+		}
+		if(frm.doc.mode_of_payment=="Cash"){
+			frm.set_df_property("reference_no", "reqd", "0");
+			frm.set_df_property("reference_date", "reqd", "0");
+			frm.refresh();
+		}
+		else{
+			frm.set_df_property("reference_no", "reqd", "1");
+			frm.set_df_property("reference_date", "reqd", "1");
+			frm.refresh();
 		}
 	},
 	
