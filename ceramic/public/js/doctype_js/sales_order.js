@@ -868,8 +868,17 @@ frappe.ui.form.on('Sales Order', {
 frappe.ui.form.on("Sales Order Item", {
 	items_add: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
-		row.delivery_date = frm.doc.delivery_date;
+		row.delivery_date = frm.doc.delivery_date;			
 		frm.refresh_field("items");
+	},
+	item_code: function (frm, cdt, cdn) {
+		var row = locals[cdt][cdn];	
+		frappe.db.get_value("Company",frm.doc.company,"default_packing_type",function(r){
+			if  (r.default_packing_type){
+				frappe.model.set_value(cdt, cdn, 'packing_type', r.default_packing_type);
+				// frm.refresh_field("items");
+			}
+		});
 	},
 	sqf_rate: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
