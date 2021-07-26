@@ -339,7 +339,7 @@ doc_events = {
 			"ceramic.api.naming_series_validate", 
 			"ceramic.ceramic.doc_events.purchase_order.before_validate"
 		],
-		"validate": "ceramic.controllers.item_validation.validate_item_authority",
+		# "validate": "ceramic.controllers.item_validation.validate_item_authority",
 		"on_submit": "ceramic.ceramic.doc_events.purchase_order.on_submit",
 	},
 	"Purchase Receipt":{
@@ -348,7 +348,7 @@ doc_events = {
 			"ceramic.api.naming_series_validate",
 			"ceramic.ceramic.doc_events.purchase_receipt.before_validate",
 		],
-		"validate": "ceramic.controllers.item_validation.validate_item_authority"
+		# "validate": "ceramic.controllers.item_validation.validate_item_authority"
 	},
 	"Purchase Invoice": {
 		"before_naming": [
@@ -360,7 +360,7 @@ doc_events = {
 			"ceramic.api.naming_series_validate"
 		],
 		"validate": [
-			"ceramic.controllers.item_validation.validate_item_authority",
+			# "ceramic.controllers.item_validation.validate_item_authority",
 			"ceramic.ceramic.doc_events.purchase_invoice.validate"
 		],
 		"on_submit": "ceramic.ceramic.doc_events.purchase_invoice.on_submit",

@@ -109,7 +109,7 @@ this.frm.cscript.onload = function (frm) {
 			filters: [
 
 				['is_purchase_item', '=', 1],
-				['authority', 'in', ['', doc.authority]]
+				// ['authority', 'in', ['', doc.authority]]
 			]
 		}
 	});

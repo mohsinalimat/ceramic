@@ -92,8 +92,8 @@ def create_main_purchase_invoice(self):
 			"Purchase Invoice Item": {
 				"doctype": "Purchase Invoice Item",
 				"field_map": {
-					"item_design": "item_code",
-					"item_code": "item_design",
+					# "item_design": "item_code",
+					# "item_code": "item_design",
 					# Rate
 					"full_rate": "rate",
 					"rate": "discounted_rate",
