@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from frappe.model.rename_doc import rename_doc
+from erpnext.stock.doctype.item.item import Item
 
 class TileItemCreationTool(Document):
 
@@ -16,6 +17,7 @@ class TileItemCreationTool(Document):
 		self.delete_item()
 	
 	def validate(self):
+		Item.validate_website_image(self)
 		if self.is_item_series:
 			self.item_series = None
 		else:
