@@ -4,8 +4,8 @@ frappe.ui.form.on('BOM', {
 			return {
 				filters: {
 					"item_group": frm.doc.item_group,
-					"name": ["LIKE", "%Premium%"],
-					"is_stock_item": 0
+					// "name": ["LIKE", "%Premium%"],
+					"is_stock_item": 1
 				}
 			}
 		});

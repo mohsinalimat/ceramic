@@ -9,7 +9,14 @@ frappe.query_reports["Territory wise Lead Details"] = {
 			"label": __("Territory"),
 			"fieldtype": "Link",
 			"options": "Territory",
-			"width": "80"
+			"width": "80",
+			get_query: () => {
+				return {
+					filters: {
+						'is_group': 1
+					}
+				}
+			}
 		},
 		{
 			"fieldname":"customer_group",
