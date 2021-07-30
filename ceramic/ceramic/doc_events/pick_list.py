@@ -484,6 +484,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 	if pick_list_item and pick_list:
 		unpick_qty = flt(unpick_qty)
 		doc = frappe.get_doc("Pick List Item", pick_list_item)
+		original_picked = doc.qty
 		soi_doc = frappe.get_doc("Sales Order Item", sales_order_item)
 		if not unpick_qty:
 			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
@@ -501,7 +502,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				doc.delete()
 			
 			if diff_qty > 0:
-				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} / {original_picked} from item {doc.item_code}")
 		else:
 			if unpick_qty > 0 and unpick_qty > doc.qty - doc.wastage_qty - doc.delivered_qty:
 				frappe.throw(f"You can not unpick qty {unpick_qty} higher than remaining pick qty { doc.qty - doc.wastage_qty - doc.delivered_qty }")
@@ -532,16 +533,17 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				
 				if available_qty < doc.qty - unpick_qty:
 					frappe.throw(f"Qty can not be greater than available qty {available_qty} in Lot {doc.lot_no}")
-				
+				original_picked = doc.qty
 				doc.db_set('qty', doc.qty - unpick_qty)
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
 				if unpick_qty > 0:
-					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} from item {doc.item_code}")
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} / {original_picked} from item {doc.item_code}")
 			else:
+				original_picked = doc.qty
 				doc.db_set('qty', doc.qty - unpick_qty)
 				soi_doc.db_set('picked_qty', flt(soi_doc.picked_qty) - flt(unpick_qty))
 				if unpick_qty > 0:
-					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} from item {doc.item_code}")
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {unpick_qty} / {original_picked} from item {doc.item_code}")
 
 		
 		update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
@@ -555,6 +557,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 				if not sales_order_differnce_qty:
 					break
 				doc = frappe.get_doc("Pick List Item", pl.name)
+				original_picked = doc.qty
 				soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
 				diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
 				
@@ -576,13 +579,14 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 						doc.delete()
 				
 				if diff_qty > 0:
-					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} / {original_picked} from item {doc.item_code}")
 				
 				update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 				# update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
 		else:
 			for pl in data:
 				doc = frappe.get_doc("Pick List Item", pl.name)
+				original_picked = doc.qty
 				soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
 				diff_qty = flt(doc.qty) - flt(doc.delivered_qty) - flt(doc.wastage_qty)
 				doc.db_set('qty', doc.qty - diff_qty)
@@ -598,7 +602,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 						doc.delete()
 				
 				if diff_qty > 0:
-					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+					unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} / {original_picked} from item {doc.item_code}")
 				
 				update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 				update_sales_order_total_values(frappe.get_doc("Sales Order", doc.sales_order))
@@ -608,7 +612,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 		for pl in data:
 			doc = frappe.get_doc("Pick List Item", pl.name)
 			soi_doc = frappe.get_doc("Sales Order Item", doc.sales_order_item)
-			
+			original_picked = doc.qty
 			diff_qty = doc.qty - doc.delivered_qty - flt(doc.wastage_qty)
 			doc.db_set('qty', doc.qty - diff_qty)
 
@@ -624,7 +628,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 					doc.delete()
 			
 			if diff_qty > 0:
-				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} from item {doc.item_code}")
+				unpick_qty_comment(doc.parent, doc.sales_order, f"Unpicked Qty {diff_qty} / {original_picked} from item {doc.item_code}")
 			
 			update_delivered_percent(frappe.get_doc("Pick List", doc.parent))
 		

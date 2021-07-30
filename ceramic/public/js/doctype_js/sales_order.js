@@ -852,16 +852,14 @@ frappe.ui.form.on('Sales Order', {
 		}
 	},
 	correct_picked_qty: function (frm) {
-		frm.doc.items.forEach(function (d) {
 			frappe.call({
 				method: "ceramic.ceramic.doc_events.pick_list.correct_picked_qty",
 				args: {
 					'sales_order': frm.doc.name
 				},
 				callback: function (r) {
-					//frappe.msgprint(r.message);
+					frappe.msgprint(r.message);
 				}
-			})
 		});
 	}
 });
@@ -919,7 +917,7 @@ frappe.ui.form.on("Sales Order Item", {
 		// })
 		
 		frappe.call({
-			method: "ceramic.ceramic.doc_events.pick_list.unpick_item",
+			method: "ceramic.ceramic.doc_events.pick_list.unpick_picked_qty_sales_order",
 			args: {
 				'sales_order': frm.doc.name,
 				'sales_order_item': d.name,
@@ -927,12 +925,6 @@ frappe.ui.form.on("Sales Order Item", {
 			},
 			callback: function (r) {
 				frappe.msgprint(r.message);
-				frappe.call({
-					method: "ceramic.ceramic.doc_events.pick_list.correct_picked_qty",
-					args: {
-						'sales_order': frm.doc.name,
-					}
-				})
 			}
 		})
 	}

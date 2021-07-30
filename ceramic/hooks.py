@@ -2,79 +2,79 @@
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
-# import erpnext
-from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry, populate_matching_invoices
-from ceramic.ceramic.override.delivery_note import validate as delivery_validate
+# # import erpnext
+# from ceramic.override_default_class_method import raise_exceptions, set_actual_qty, set_item_locations, get_current_tax_amount, determine_exclusive_rate, calculate_taxes, actual_amt_check, create_payment_entry, populate_matching_invoices
+# from ceramic.ceramic.override.delivery_note import validate as delivery_validate
 
-from erpnext.stock.stock_ledger import update_entries_after
-from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
-from erpnext.stock.doctype.pick_list.pick_list import PickList
-from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
-from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
-from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
-from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
-BankStatementTransactionEntry.create_payment_entry = create_payment_entry
-BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
-
-
-from erpnext.selling.doctype.customer.customer import Customer
-from ceramic.ceramic.doc_events.customer import override_load_dashboard_info
-Customer.load_dashboard_info = override_load_dashboard_info
-DeliveryNote.validate = delivery_validate
-# import erpnext
-# from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
-# from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
-# erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
-# erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
-
-# override_whitelisted_methods = {
-
-# }
-
-# naming series overrides
-from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
-from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
-from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices, get_opening_invoice_summary
-from ceramic.override_default_class_method import get_transactions
-from erpnext.controllers.accounts_controller import AccountsController
-from ceramic.ceramic.override.controller.accounts_controller import set_missing_item_details as accounts_controllers_set_missing_item_details
-AccountsController.set_missing_item_details = accounts_controllers_set_missing_item_details
-NamingSeries.get_transactions = get_transactions
-OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
-OpeningInvoiceCreationTool.get_opening_invoice_summary = get_opening_invoice_summary
-OpeningInvoiceCreationTool.make_invoices = make_invoices
-
-# # override default class method
-update_entries_after.raise_exceptions = raise_exceptions
-StockEntry.set_actual_qty = set_actual_qty
-PickList.set_item_locations = set_item_locations
-calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
-calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
-calculate_taxes_and_totals.calculate_taxes = calculate_taxes
-StockLedgerEntry.actual_amt_check = actual_amt_check
-
-from erpnext.accounts.party import _get_party_details as party_detail
-from ceramic.api import _get_party_details as my_party_detail
-party_detail =my_party_detail
-
-# Override (frappe/frappe/twofactor.py - toggle_two_factor_auth): to prevent all roles enabled for two factor authentication
-from frappe import twofactor
-from ceramic.api import toggle_two_factor_auth
-twofactor.toggle_two_factor_auth = toggle_two_factor_auth
-
-from erpnext.controllers.stock_controller import StockController
-from ceramic.batch_creation import make_batches as my_make_batches
-StockController.make_batches = my_make_batches
-
-from ceramic.api import validate_for_tax_category
-from erpnext.accounts.doctype.sales_taxes_and_charges_template import sales_taxes_and_charges_template
-sales_taxes_and_charges_template.validate_for_tax_category = validate_for_tax_category
+# from erpnext.stock.stock_ledger import update_entries_after
+# from erpnext.stock.doctype.stock_entry.stock_entry import StockEntry
+# from erpnext.stock.doctype.pick_list.pick_list import PickList
+# from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+# from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
+# from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
+# from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
+# BankStatementTransactionEntry.create_payment_entry = create_payment_entry
+# BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
 
 
-# finbyzerp override tcs function
-from ceramic.ceramic.doc_events.sales_invoice import tcs_deduction
-from finbyzerp.finbyzerp.doc_events import sales_invoice 
-sales_invoice.tcs_deduction = tcs_deduction
+# from erpnext.selling.doctype.customer.customer import Customer
+# from ceramic.ceramic.doc_events.customer import override_load_dashboard_info
+# Customer.load_dashboard_info = override_load_dashboard_info
+# DeliveryNote.validate = delivery_validate
+# # import erpnext
+# # from ceramic.ceramic.doc_events.sales_order import make_delivery_note as so_mk_dn
+# # from ceramic.ceramic.doc_events.sales_order import make_pick_list as so_mk_pl
+# # erpnext.selling.doctype.sales_order.sales_order.make_delivery_note = so_mk_dn
+# # erpnext.selling.doctype.sales_order.sales_order.create_pick_list = so_mk_pl
+
+# # override_whitelisted_methods = {
+
+# # }
+
+# # naming series overrides
+# from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
+# from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
+# from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices, get_opening_invoice_summary
+# from ceramic.override_default_class_method import get_transactions
+# from erpnext.controllers.accounts_controller import AccountsController
+# from ceramic.ceramic.override.controller.accounts_controller import set_missing_item_details as accounts_controllers_set_missing_item_details
+# AccountsController.set_missing_item_details = accounts_controllers_set_missing_item_details
+# NamingSeries.get_transactions = get_transactions
+# OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
+# OpeningInvoiceCreationTool.get_opening_invoice_summary = get_opening_invoice_summary
+# OpeningInvoiceCreationTool.make_invoices = make_invoices
+
+# # # override default class method
+# update_entries_after.raise_exceptions = raise_exceptions
+# StockEntry.set_actual_qty = set_actual_qty
+# PickList.set_item_locations = set_item_locations
+# calculate_taxes_and_totals.get_current_tax_amount = get_current_tax_amount
+# calculate_taxes_and_totals.determine_exclusive_rate = determine_exclusive_rate
+# calculate_taxes_and_totals.calculate_taxes = calculate_taxes
+# StockLedgerEntry.actual_amt_check = actual_amt_check
+
+# from erpnext.accounts.party import _get_party_details as party_detail
+# from ceramic.api import _get_party_details as my_party_detail
+# party_detail =my_party_detail
+
+# # Override (frappe/frappe/twofactor.py - toggle_two_factor_auth): to prevent all roles enabled for two factor authentication
+# from frappe import twofactor
+# from ceramic.api import toggle_two_factor_auth
+# twofactor.toggle_two_factor_auth = toggle_two_factor_auth
+
+# from erpnext.controllers.stock_controller import StockController
+# from ceramic.batch_creation import make_batches as my_make_batches
+# StockController.make_batches = my_make_batches
+
+# from ceramic.api import validate_for_tax_category
+# from erpnext.accounts.doctype.sales_taxes_and_charges_template import sales_taxes_and_charges_template
+# sales_taxes_and_charges_template.validate_for_tax_category = validate_for_tax_category
+
+
+# # finbyzerp override tcs function
+# from ceramic.ceramic.doc_events.sales_invoice import tcs_deduction
+# from finbyzerp.finbyzerp.doc_events import sales_invoice 
+# sales_invoice.tcs_deduction = tcs_deduction
 
 
 app_name = "ceramic"
