@@ -106,24 +106,24 @@ frappe.ui.form.on('Tile Item Creation Tool', {
 			}
 		}
 	},	
-	image:function(frm){
-		if (frm.doc.image){
-		frappe.db.set_value("Tile Item Creation Tool",frm.doc.name,"image",frm.doc.image)
-		frm.refresh();
-	}
-		else{
-			frm.refresh();
-		}
-	},
-	cover_image:function(frm){
-		if (frm.doc.image){
-		frappe.db.set_value("Tile Item Creation Tool",frm.doc.name,"cover_image",frm.doc.image)
-		frm.refresh();
-		}
-		else{
-			frm.refresh();
-		}
-	},
+	// image:function(frm){
+	// 	if (frm.doc.image){
+	// 	frappe.db.set_value("Tile Item Creation Tool",frm.doc.name,"image",frm.doc.image)
+	// 	frm.refresh();
+	// }
+	// 	else{
+	// 		frm.refresh();
+	// 	}
+	// },
+	// cover_image:function(frm){
+	// 	if (frm.doc.cover_image){
+	// 	frappe.db.set_value("Tile Item Creation Tool",frm.doc.name,"cover_image",frm.doc.cover_image)
+	// 	frm.refresh();
+	// 	}
+	// 	else{
+	// 		frm.refresh();
+	// 	}
+	// },
 	// default_production_price: function(frm) {
 	// 	$.each(frm.doc.tile_quality || [], function(i, d) {
 	// 		d.production_price = frm.doc.default_production_price;

@@ -17,7 +17,7 @@ class TileItemCreationTool(Document):
 		self.delete_item()
 	
 	def validate(self):
-		Item.validate_website_image(self)
+		# Item.validate_website_image(self)
 		if self.is_item_series:
 			self.item_series = None
 		else:
