@@ -899,7 +899,7 @@ def schedule_daily():
 
 def set_transaction_status():
 	frappe.db.sql(f"update `tabSales Order` set transaction_status = 'Old' WHERE status in ('Cancelled', 'Closed', 'Completed') AND transaction_status != 'Old' AND modified < '{datetime.datetime.today()-datetime.timedelta(7)}'")
-	frappe.db.sql(f"update `tabSales Order` set transaction_status = 'New' WHERE status in ('Cancelled', 'Closed', 'Completed') AND transaction_status != 'New' AND modified >= '{datetime.datetime.today()-datetime.timedelta(7)}'")
+	frappe.db.sql(f"update `tabSales Order` set transaction_status = 'New' WHERE status not in ('Cancelled', 'Closed', 'Completed') AND transaction_status != 'New'")
 
 	frappe.db.sql(f"update `tabDelivery Note` set transaction_status = 'Old' WHERE transaction_status != 'Old' AND modified < '{datetime.datetime.today()-datetime.timedelta(7)}'")
 	frappe.db.sql(f"update `tabDelivery Note` set transaction_status = 'New' WHERE transaction_status != 'New' AND modified >= '{datetime.datetime.today()-datetime.timedelta(7)}'")

@@ -48,7 +48,6 @@
    "fieldname": "follow_up_by",
    "fieldtype": "Data",
    "label": "Follow up By",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -66,7 +65,7 @@
    "reqd": 1
   }
  ],
- "modified": "2020-10-06 11:47:57.714230",
+ "modified": "2021-08-09 15:24:20.811753",
  "modified_by": "Administrator",
  "module": "Ceramic",
  "name": "Payment Followup Remarks",

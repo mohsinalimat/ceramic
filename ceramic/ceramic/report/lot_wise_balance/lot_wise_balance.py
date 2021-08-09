@@ -448,13 +448,15 @@ def create_stock_entry(company,warehouse,item_code,balance_qty,buying_unit_price
 		se.posting_date = frappe.utils.nowdate()
 		se.posting_time = frappe.utils.nowtime()
 		se.from_warehouse = warehouse
+		abbr = frappe.db.get_value('Company',company,'abbr')
 		se.append("items",{
 			"item_code":item_code,
 			"s_warehouse":warehouse,
 			"qty":se_qty,
 			"batch_no": batch_no,
 			"lot_no": lot_no,
-			"packing_type": packing_type
+			"packing_type": packing_type,
+			"cost_center": f"Main - {abbr}"
 		})
 		try:
 			se.save()
@@ -471,6 +473,7 @@ def create_stock_entry(company,warehouse,item_code,balance_qty,buying_unit_price
 		se.set_posting_time = 1 
 		se.posting_date = date or frappe.utils.nowdate()
 		se.posting_time = time or frappe.utils.nowtime()
+		abbr = frappe.db.get_value('Company',company,'abbr')
 		se.append("items",{
 			"item_code":item_code,
 			"t_warehouse":warehouse,
@@ -478,7 +481,8 @@ def create_stock_entry(company,warehouse,item_code,balance_qty,buying_unit_price
 			"basic_rate":buying_unit_price,
 			"batch_no": batch_no,
 			"lot_no": lot_no,
-			"packing_type": packing_type
+			"packing_type": packing_type,
+			"cost_center": f"Main - {abbr}"
 		})
 		try:
 			se.save()

@@ -370,7 +370,7 @@ def get_item_from_sales_order(company, item_code = None, customer = None, sales_
 				so.company = '{company}' AND
 				so.`docstatus` = 1 {where_clause} AND
 				soi.qty > soi.picked_qty AND
-				so.status != 'Closed'
+				so.status not in ('Closed','Completed','Cancelled','On Hold')
 			ORDER BY
 				soi.order_item_priority DESC
 		""", as_dict = 1)
