@@ -333,8 +333,15 @@ def validate(self, method):
 	update_discounted_net_total(self)
 	calculate_gst_taxable_value(self)
 	validate_payment_terms_template(self)
+	if self._action == "submit":
+		validate_dn_tax(self)
 	# if self._action == "submit":
 	# 	validate_tax_template(self)
+
+def validate_dn_tax(self):
+	if self.items[0].delivery_note:
+		if self.total_taxes_and_charges != frappe.db.get_value("Delivery Note",self.items[0].delivery_note,"total_taxes_and_charges"):
+			frappe.throw("Total Tax Amount doesn't match with tax amount of Delivery Note.")
 
 def validate_payment_terms_template(self):
 	if self._action == "submit" and self.authority == "Unauthorized" and not self.payment_terms_template:

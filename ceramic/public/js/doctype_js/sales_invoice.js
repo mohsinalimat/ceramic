@@ -329,6 +329,7 @@ frappe.ui.form.on('Sales Invoice', {
             frm.trigger('naming_series_');
         }
     },
+
     company: function(frm) {
         if (frm.doc.__islocal) {
             frm.trigger('naming_series_');
@@ -355,6 +356,34 @@ frappe.ui.form.on('Sales Invoice', {
             frm.trigger('naming_series');
         }
     },
+	tax_category: function (frm) {
+		frm.trigger('get_taxes')
+	},
+	tax_paid: function (frm) {
+		if (frm.doc.tax_category) {
+			frm.trigger('get_taxes')
+		}
+	},
+	get_taxes: function (frm) {
+		frappe.call({
+			method: "ceramic.ceramic.doc_events.sales_order.get_tax_template",
+			args: {
+				'tax_paid': frm.doc.tax_paid,
+				'tax_category': frm.doc.tax_category,
+				'company': frm.doc.company
+			},
+			callback: function (r) {
+				if (r.message) {
+					frm.set_value('taxes_and_charges', r.message)
+				}
+				else {
+					frm.set_value('taxes_and_charges', null)
+					frm.set_value('taxes', [])
+				}
+				frm.refresh_field("taxes");
+			}
+		})
+	},
 
 });
 frappe.ui.form.on("Sales Invoice Item", {
