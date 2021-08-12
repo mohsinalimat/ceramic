@@ -54,7 +54,7 @@ def create_payment_entry(self, pe):
 	payment.primary_customer = pe.primary_customer
 	payment.dont_replicate = pe.dont_replicate
 	payment.company = self.company
-	payment.mode_of_payment = "Wire Transfer"
+	payment.mode_of_payment = pe.mode_of_payment
 	payment.party_type = pe.party_type
 	payment.party = pe.party
 	payment.paid_to = self.bank_account if pe.party_type == "Customer" else self.payable_account

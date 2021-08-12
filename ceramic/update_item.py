@@ -65,8 +65,8 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		if parent_doctype == "Purchase Order" and flt(d.get("qty")) < flt(child_item.received_qty):
 			frappe.throw(_("Cannot set quantity less than received quantity"))
 		
-		if parent_doctype == "Sales Order" and flt(d.get("real_qty")) < flt(child_item.delivered_real_qty):
-			frappe.throw(_("Cannot set real quantity less than delivered real quantity"))
+		# if parent_doctype == "Sales Order" and flt(d.get("real_qty")) < flt(child_item.delivered_real_qty):
+		# 	frappe.throw(_("Cannot set real quantity less than delivered real quantity"))
 
 		# if parent_doctype == "Sales Order" and (flt(d.get("real_qty")) - flt(child_item.delivered_real_qty)) > (flt(d.get("qty")) - flt(child_item.delivered_qty)):
 		# 	frappe.throw(_("Real Qty difference cannot be grater than Qty difference"))
