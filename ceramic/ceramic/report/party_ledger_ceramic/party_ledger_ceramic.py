@@ -42,11 +42,16 @@ def execute(filters=None):
 def process_data(filters, res):
 	result = []
 	result += get_opening(filters)
-
+	
 	result += generate_data(filters, res)
+
+	closing = get_party_wise_closing(filters)
 	
 	total = result[-1]
 	opening = result[0]
+	result += [{}]
+	result += closing
+	result += [{}]
 	result.append({
 		"voucher_no": "Closing (Opening + Total)",
 		"total_debit": total['total_debit'] + opening['total_debit'],
@@ -60,6 +65,7 @@ def process_data(filters, res):
 		"cash_balance": total['cash_balance'],
 	})
 
+	
 	return result
 
 def generate_data(filters, res):
@@ -180,6 +186,26 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 	
 	return data
 
+def get_closing_query(primary_customer_select, company, to_date, conditions, group_by_having_conditions):
+	data = frappe.db.sql(f"""
+		SELECT 
+			IFNULL(jv.primary_customer, IFNULL(si.customer, IFNULL(pe.party, gle.party))) as party, SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance{primary_customer_select}
+		FROM
+			`tabGL Entry` as gle
+			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
+			LEFT JOIN `tabSales Invoice` as si on si.name = gle.voucher_no
+			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
+			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
+		WHERE 
+			gle.`company` = '{company}' AND
+			(gle.`posting_date` <= '{to_date}') {conditions} {group_by_having_conditions}
+	""", as_dict = True)
+	
+	# if not data:
+	# 	data = {'debit': 0, 'credit': 0, 'balance': 0, 'primary_customer': None,'party':None}
+	if data:
+		return data
+
 def get_opening(filters):
 	conditions = f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
 	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
@@ -209,16 +235,71 @@ def get_opening(filters):
 
 	return data
 
-def get_closing(data):
-	debit = credit = balance = qty = 0
-
-	for item in data:
-		debit += item.debit	 	
-		credit += item.credit
-		balance += item.balance
-		qty += item.qty
+def get_party_wise_closing(filters):
+	conditions = f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
+	conditions += f" AND gle.`party` = '{filters.party}'" if filters.get('party') else ''
 	
-	return [{'account': 'Closing', 'debit': debit, 'credit': credit, 'balance': balance, 'qty':qty}]
+	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
+
+	group_by_having_conditions = primary_customer_select = ''
+	if filters.get('primary_customer'):
+		primary_customer_select = ", IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) as primary_customer"
+		group_by_having_conditions = f" AND IFNULL(jv.primary_customer, IFNULL(si.primary_customer, IFNULL(pe.primary_customer, gle.party))) = '{filters.primary_customer}' GROUP BY party"
+	
+	total_data_list = get_closing_query(primary_customer_select, filters.company, filters.to_date, conditions, group_by_having_conditions)
+	authorized_data_list = get_closing_query(primary_customer_select, alternate_company, filters.to_date, conditions, group_by_having_conditions)
+	authorized_data_map, total_data_map = {},{}
+
+	party_list = []
+	if authorized_data_list:
+		for d in authorized_data_list:
+			authorized_data_map[d['party']] = d
+			if d['party'] not in party_list:
+				party_list.append(d['party'])
+
+	if total_data_list:
+		for d in total_data_list:
+			total_data_map[d['party']] = d
+			if d['party'] not in party_list:
+				party_list.append(d['party'])
+	
+	data = []
+
+	for party in party_list:
+		auth_debit = flt(authorized_data_map.get(party).get('debit'), 2) if authorized_data_map.get(party) else 0
+		auth_credit = flt(authorized_data_map.get(party).get('credit'), 2) if authorized_data_map.get(party) else 0
+		auth_balance = flt(authorized_data_map.get(party).get('balance'), 2) if authorized_data_map.get(party) else 0
+
+		total_debit = flt(total_data_map.get(party).get('debit'), 2) if total_data_map.get(party) else 0
+		total_credit = flt(total_data_map.get(party).get('credit'), 2) if total_data_map.get(party) else 0
+		total_balance = flt(total_data_map.get(party).get('balance'), 2) if total_data_map.get(party) else 0
+
+		data += [{
+			"voucher_no": 'Closing',
+			"party": party,
+			"billed_debit": auth_debit,
+			"cash_debit": total_debit - auth_debit,
+			"total_debit": total_debit,
+			"billed_credit": auth_credit,
+			"cash_credit": total_credit - auth_credit,
+			"total_credit": total_credit,
+			"billed_balance": auth_balance,
+			"cash_balance": total_balance - auth_balance,
+			"total_balance": total_balance,
+	}]
+
+	return data
+
+# def get_closing(data):
+# 	debit = credit = balance = qty = 0
+
+# 	for item in data:
+# 		debit += item.debit	 	
+# 		credit += item.credit
+# 		balance += item.balance
+# 		qty += item.qty
+	
+# 	return [{'account': 'Closing', 'debit': debit, 'credit': credit, 'balance': balance, 'qty':qty}]
 
 def validate_filters(filters, account_details):
 	if not filters.get('company'):
