@@ -189,7 +189,7 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 def get_closing_query(primary_customer_select, company, to_date, conditions, group_by_having_conditions):
 	data = frappe.db.sql(f"""
 		SELECT 
-			IFNULL(jv.primary_customer, IFNULL(si.customer, IFNULL(pe.party, gle.party))) as party, SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance{primary_customer_select}
+			gle.party as party, SUM(gle.debit) as debit, SUM(gle.credit) as credit, SUM(gle.debit - gle.credit) as balance{primary_customer_select}
 		FROM
 			`tabGL Entry` as gle
 			LEFT JOIN `tabJournal Entry` as jv on jv.name = gle.voucher_no
@@ -197,7 +197,7 @@ def get_closing_query(primary_customer_select, company, to_date, conditions, gro
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
-			gle.`company` = '{company}' AND
+			gle.`company` = '{company}' AND gle.docstatus < 2 AND (gle.party is not null and gle.party != '') AND
 			(gle.`posting_date` <= '{to_date}') {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 	
@@ -274,19 +274,25 @@ def get_party_wise_closing(filters):
 		total_credit = flt(total_data_map.get(party).get('credit'), 2) if total_data_map.get(party) else 0
 		total_balance = flt(total_data_map.get(party).get('balance'), 2) if total_data_map.get(party) else 0
 
-		data += [{
-			"voucher_no": 'Closing',
-			"party": party,
-			"billed_debit": auth_debit,
-			"cash_debit": total_debit - auth_debit,
-			"total_debit": total_debit,
-			"billed_credit": auth_credit,
-			"cash_credit": total_credit - auth_credit,
-			"total_credit": total_credit,
-			"billed_balance": auth_balance,
-			"cash_balance": total_balance - auth_balance,
-			"total_balance": total_balance,
-	}]
+		if auth_balance:
+			data += [{
+				"voucher_no": 'Closing',
+				"party": party,
+				"billed_balance": auth_balance		
+			}]
+			# data += [{
+			# 	"voucher_no": 'Closing',
+			# 	"party": party,
+			# 	"billed_debit": auth_debit,
+			# 	"cash_debit": total_debit - auth_debit,
+			# 	"total_debit": total_debit,
+			# 	"billed_credit": auth_credit,
+			# 	"cash_credit": total_credit - auth_credit,
+			# 	"total_credit": total_credit,
+			# 	"billed_balance": auth_balance,
+			# 	"cash_balance": total_balance - auth_balance,
+			# 	"total_balance": total_balance,
+			# }]
 
 	return data
 
