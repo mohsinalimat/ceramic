@@ -155,7 +155,11 @@
 					{% } else if(data[i].voucher_type == "Purchase Invoice") { %}
 						<strong> Purchase </strong>
 					{% } %}
-					[{{ data[i].voucher_no_trim }}]
+					{% if((data[i].voucher_no == "Closing")){ %}
+						<strong>{{ data[i].voucher_no }}</strong> <br>[{{ data[i].party }}]
+					{% } else { %}
+						[{{ data[i].voucher_no_trim }}]
+					{% } %}  
 					{% if((data[i].billed_credit || data[i].billed_debit) && (data[i].voucher_type == "Payment Entry" || data[i].voucher_type == "Journal Entry" || data[i].voucher_type == "Primary Customer Payment") || (data[i].voucher_type == "Sales Invoice" || data[i].voucher_type == "Purchase Invoice")){ %}
 						<br> [{{ data[i].party }}]
 					{% } %} 
