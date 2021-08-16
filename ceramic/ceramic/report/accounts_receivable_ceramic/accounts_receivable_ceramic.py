@@ -881,7 +881,8 @@ class ReceivablePayableReport(object):
 		if not party in self.party_details:
 			if self.party_type == 'Customer':
 				self.party_details[party] = frappe.db.sql("""
-					select cu.customer_name, cu.territory, cu.customer_group, cu.customer_primary_contact
+					select cu.customer_name, cu.territory, cu.customer_group, cu.customer_primary_contact,
+					cu.size_of_business, cu.payment_performance_or_relations as payment_performance
 					from `tabCustomer` as cu
 					where cu.name = %s
 			""",(party), as_dict=1)

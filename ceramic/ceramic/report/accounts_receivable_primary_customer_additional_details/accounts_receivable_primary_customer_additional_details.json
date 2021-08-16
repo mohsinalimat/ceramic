@@ -1,0 +1,23 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2020-07-23 11:48:55.602735",
+ "disable_prepared_report": 0,
+ "disabled": 1,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Millennium",
+ "modified": "2021-08-16 11:51:59.068241",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Accounts Receivable Primary Customer Additional Details",
+ "owner": "Administrator",
+ "prepared_report": 1,
+ "ref_doctype": "Sales Invoice",
+ "report_name": "Accounts Receivable Primary Customer Additional Details",
+ "report_type": "Script Report",
+ "roles": []
+}
