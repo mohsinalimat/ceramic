@@ -149,6 +149,12 @@ frappe.query_reports["Accounts Receivable Primary Customer Additional Details"] 
 			"fieldname":"ceramic",
 			"label": __("Ceramic"),
 			"fieldtype": "Check",
+		},
+		{
+			"fieldname":"show_auth_data",
+			"label": __("Show Auth Data"),
+			"fieldtype": "Check",
+			"default":1
 		}
 	],
 
