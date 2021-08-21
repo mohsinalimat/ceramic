@@ -205,9 +205,6 @@ def get_conditions_total_qty(filters):
 	if filters.get('item_code'):
 		conditions += f" AND soi.`item_code` = '{filters.get('item_code')}'"
 	
-	if filters.get('show_locked_qty'):
-		conditions += f" AND so.`lock_picked_qty` = '{filters.get('show_locked_qty')}'"
-	
 	conditions += " AND so.status not in ('On Hold', 'Completed' , 'Closed')"
 	
 	return conditions

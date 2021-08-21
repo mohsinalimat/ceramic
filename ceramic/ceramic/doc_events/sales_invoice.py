@@ -340,7 +340,7 @@ def validate(self, method):
 
 def validate_dn_tax(self):
 	if self.items[0].delivery_note:
-		if self.total_taxes_and_charges != frappe.db.get_value("Delivery Note",self.items[0].delivery_note,"total_taxes_and_charges"):
+		if round(self.total_taxes_and_charges) != round(frappe.db.get_value("Delivery Note",self.items[0].delivery_note,"total_taxes_and_charges")):
 			frappe.throw("Total Tax Amount doesn't match with tax amount of Delivery Note.")
 
 def validate_payment_terms_template(self):

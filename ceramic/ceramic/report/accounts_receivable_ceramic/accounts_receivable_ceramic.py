@@ -796,7 +796,7 @@ class ReceivablePayableReport(object):
 		if self.filters.company:
 			for company in self.filters.company:
 				company_placeholder_list.append(company) 
-			if not self.filters.get('show_auth_data'):
+			if not self.filters.get('dont_show_auth_data'):
 				alternate_company = [x.name for x in frappe.get_list("Company", {'alternate_company': company}, 'name')]
 				company_placeholder_list += alternate_company
 			

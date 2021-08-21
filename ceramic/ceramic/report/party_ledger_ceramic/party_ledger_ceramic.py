@@ -977,9 +977,12 @@ def send_media_whatsapp(mobile_number,content,path_url):
 		attach=driver.find_element_by_css_selector('input[type="file"]')
 		attach.send_keys(path_url)
 
-		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')))
-		whatsapp_send_button = driver.find_element_by_xpath('//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')
-		whatsapp_send_button.click()
+		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '._33pCO')))
+		# WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')))
+
+		driver.find_element_by_css_selector('._33pCO').click()
+		# whatsapp_send_button = driver.find_element_by_xpath('//*[@id="app"]/div/div/div[2]/div[2]/span/div/span/div/div/div[2]/span/div/div')
+		# whatsapp_send_button.click()
 	except:
 		ss_name_eight =  'whatsapp error ' + frappe.session.user + 'eight' + frappe.generate_hash(length=5) +  '.png'
 		# f_eight = save_file(ss_name_eight, '', '','')

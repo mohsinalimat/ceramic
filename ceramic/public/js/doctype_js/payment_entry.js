@@ -57,6 +57,7 @@ frappe.ui.form.on('Payment Entry', {
 				d.amount = 0
 			})
 		}
+		frm.toggle_reqd(["reference_no", "reference_date"],(frm.doc.mode_of_payment != "Cash" ? 1 : 0));
 	},
 	before_save: function (frm) {
 		//frm.trigger('get_sales_partner');

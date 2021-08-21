@@ -151,8 +151,8 @@ frappe.query_reports["Accounts Receivable Primary Customer Additional Details"] 
 			"fieldtype": "Check",
 		},
 		{
-			"fieldname":"show_auth_data",
-			"label": __("Show Auth Data"),
+			"fieldname":"dont_show_auth_data",
+			"label": __("Dont Show Auth Data"),
 			"fieldtype": "Check",
 			"default":1
 		}
