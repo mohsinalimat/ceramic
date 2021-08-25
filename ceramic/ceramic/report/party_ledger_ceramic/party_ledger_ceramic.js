@@ -93,6 +93,11 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 			"fieldname": "show_only_unlinked_transactions",
 			"fieldtype": "Check"
 		},	
+		{
+			"label": __("Show Party wise closing"),
+			"fieldname": "show_party_wise_closing",
+			"fieldtype": "Check"
+		},	
 	],
 	onload: function(report){
 		if (frappe.query_report.get_filter_value('party_type') == 'Customer'){

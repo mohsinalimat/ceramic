@@ -268,7 +268,15 @@ def check_rate_qty(self):
 
 def on_cancel(self, method):
 	if self.si_ref:
-		self.db_set('si_ref',None)		
+		self.db_set('si_ref',None)
+
+	# # below changes because of wastage qty issue
+	# new_items=[]
+	# for i in self.items:
+	# 	new_items.append(frappe._dict(i.__dict__))
+	# items = sorted(new_items, key = lambda i: i['wastage_qty'],reverse=True)
+	# for item in items:
+	# # Changes complete
 	for item in self.items:
 		if item.against_pick_list:
 			pick_list_item = frappe.get_doc("Pick List Item", item.pl_detail)

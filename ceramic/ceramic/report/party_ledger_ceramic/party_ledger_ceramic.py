@@ -40,18 +40,21 @@ def execute(filters=None):
 	return columns, data
 
 def process_data(filters, res):
-	result = []
+	result, closing = [], []
 	result += get_opening(filters)
 	
 	result += generate_data(filters, res)
 
-	closing = get_party_wise_closing(filters)
+	if filters.get('show_party_wise_closing'):
+		closing = get_party_wise_closing(filters)
 	
 	total = result[-1]
 	opening = result[0]
-	result += [{}]
-	result += closing
-	result += [{}]
+	
+	if closing:
+		result += [{}]
+		result += closing
+		result += [{}]
 	result.append({
 		"voucher_no": "Closing (Opening + Total)",
 		"total_debit": total['total_debit'] + opening['total_debit'],
