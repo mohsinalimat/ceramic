@@ -579,7 +579,7 @@ frappe.ui.form.on('Sales Order', {
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
 	},
 	lotwise_balance: function(frm){
-		window.open(window.location.href.split("#")[0] + "#query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
+		window.open(window.location.href.split('app')[0] + "app/query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
 	},
 	onload: function (frm) {
 		frm.trigger('naming_series');

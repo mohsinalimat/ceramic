@@ -7,6 +7,8 @@ from frappe.model.naming import parse_naming_series
 from frappe.permissions import get_doctypes_with_read
 from ceramic.ceramic.doc_events.payment_entry import get_outstanding_invoices
 from datetime import datetime
+from six import iteritems
+
 
 
 def populate_matching_invoices(self):
@@ -81,28 +83,37 @@ def create_payment_entry(self, pe):
 	return payment
 
 def raise_exceptions(self):
-	deficiency = min(e["diff"] for e in self.exceptions)
+	msg_list = []
+	for warehouse, exceptions in iteritems(self.exceptions):
+		deficiency = min(e["diff"] for e in exceptions)
 
-	if ((self.exceptions[0]["voucher_type"], self.exceptions[0]["voucher_no"]) in
-		frappe.local.flags.currently_saving):
+		if ((exceptions[0]["voucher_type"], exceptions[0]["voucher_no"]) in
+			frappe.local.flags.currently_saving):
 
-		msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
-			abs(deficiency), frappe.get_desk_link('Item', self.item_code),
-			frappe.get_desk_link('Warehouse', self.warehouse))
-	else:
-		msg = _("{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.").format(
-			abs(deficiency), frappe.get_desk_link('Item', self.item_code),
-			frappe.get_desk_link('Warehouse', self.warehouse),
-			self.exceptions[0]["posting_date"], self.exceptions[0]["posting_time"],
-			frappe.get_desk_link(self.exceptions[0]["voucher_type"], self.exceptions[0]["voucher_no"]))
-
-	allow_negative_stock = frappe.db.get_value("Company", self.company, "allow_negative_stock")
-	
-	if not allow_negative_stock:
-		if self.verbose:
-			frappe.throw(msg, NegativeStockError, title='Insufficent Stock')
+			msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
+				abs(deficiency), frappe.get_desk_link('Item', exceptions[0]["item_code"]),
+				frappe.get_desk_link('Warehouse', warehouse))
 		else:
-			raise NegativeStockError(msg)
+			msg = _("{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.").format(
+				abs(deficiency), frappe.get_desk_link('Item', exceptions[0]["item_code"]),
+				frappe.get_desk_link('Warehouse', warehouse),
+				exceptions[0]["posting_date"], exceptions[0]["posting_time"],
+				frappe.get_desk_link(exceptions[0]["voucher_type"], exceptions[0]["voucher_no"]))
+
+		if msg:
+			msg_list.append(msg)
+
+	# finbyz change
+	allow_negative_stock = frappe.db.get_value("Company", self.company, "allow_negative_stock")
+
+	if not allow_negative_stock:
+		if msg_list:
+			message = "\n\n".join(msg_list)
+			if self.verbose:
+				frappe.throw(message, NegativeStockError, title='Insufficient Stock')
+			else:
+				raise NegativeStockError(message)
+
 
 def set_actual_qty(self):
 	allow_negative_stock = cint(frappe.db.get_value("Stock Settings", None, "allow_negative_stock")) or cint(frappe.db.get_value("Company", self.company, "allow_negative_stock"))

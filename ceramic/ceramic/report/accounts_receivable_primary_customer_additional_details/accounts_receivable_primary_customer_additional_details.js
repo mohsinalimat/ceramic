@@ -235,7 +235,7 @@ function view_receivable_report(primary_customer, company) {
 	// frappe.set_finbyz_route("query-report", "Party Ledger Ceramic",{
 	// 	"company": company, "primary_customer": primary_customer
 	// });
-	window.open(window.location.href.split("#")[0] + "#query-report/Party Ledger Ceramic" + "/?" + "company="+company + "&" + "primary_customer=" + primary_customer,"_blank")
+	window.open(window.location.href.split('app')[0] + "app/query-report/Party Ledger Ceramic" + "/?" + "company="+company + "&" + "primary_customer=" + primary_customer,"_blank")
 	//console.log(url)
 	//window.open("#query-report/Party Ledger Ceramic","_blank");
 }
