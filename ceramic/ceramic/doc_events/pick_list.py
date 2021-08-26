@@ -146,7 +146,7 @@ def update_remaining_qty(self):
 
 def pick_qty_comment(sales_order,data):
 	comment_so_doc = frappe.new_doc("Comment")
-	comment_so_doc.comment_type = "Updated"
+	comment_so_doc.comment_type = "Info"
 	comment_so_doc.comment_email = frappe.session.user
 	comment_so_doc.reference_doctype = "Sales Order"
 	comment_so_doc.reference_name = sales_order
@@ -450,7 +450,7 @@ def unpick_item_1(sales_order, sales_order_item = None, pick_list = None, pick_l
 
 def unpick_qty_comment(reference_name, sales_order, data):
 	comment_pl_doc = frappe.new_doc("Comment")
-	comment_pl_doc.comment_type = "Updated"
+	comment_pl_doc.comment_type = "Info"
 	comment_pl_doc.comment_email = frappe.session.user
 	comment_pl_doc.reference_doctype = "Pick List"
 	comment_pl_doc.reference_name = reference_name
@@ -460,7 +460,7 @@ def unpick_qty_comment(reference_name, sales_order, data):
 	comment_pl_doc.save()
 
 	comment_so_doc = frappe.new_doc("Comment")
-	comment_so_doc.comment_type = "Updated"
+	comment_so_doc.comment_type = "Info"
 	comment_so_doc.comment_email = frappe.session.user
 	comment_so_doc.reference_doctype = "Sales Order"
 	comment_so_doc.reference_name = sales_order

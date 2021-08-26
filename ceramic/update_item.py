@@ -171,7 +171,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		if comment and not new_child_flag:
 			comment_doc = frappe.new_doc("Comment")
-			comment_doc.comment_type = "Updated"
+			comment_doc.comment_type = "Info"
 			comment_doc.comment_email = frappe.session.user
 			comment_doc.reference_doctype = "Sales Order"
 			comment_doc.reference_name = child_item.parent

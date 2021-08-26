@@ -12,9 +12,9 @@ from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
-from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
-BankStatementTransactionEntry.create_payment_entry = create_payment_entry
-BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
+# from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
+# BankStatementTransactionEntry.create_payment_entry = create_payment_entry
+# BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
 
 
 from erpnext.selling.doctype.customer.customer import Customer
@@ -201,8 +201,8 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
 	"frappe.desk.notifications.get_open_count": "ceramic.api.get_open_count",
-	"erpnext.regional.india.utils.generate_ewb_json": "ceramic.ceramic.eway_update.generate_ewb_json",
-	"erpnext.regional.india.utils.download_ewb_json": "ceramic.ceramic.eway_update.download_ewb_json",
+	# "erpnext.regional.india.utils.generate_ewb_json": "ceramic.ceramic.eway_update.generate_ewb_json",
+	# "erpnext.regional.india.utils.download_ewb_json": "ceramic.ceramic.eway_update.download_ewb_json",
 	"erpnext.stock.doctype.batch.batch.get_batch_no": "ceramic.ceramic.override.stock.batch.get_batch_no",
 	"erpnext.stock.get_item_details.get_item_details": "ceramic.ceramic.override.stock.get_item_details.get_item_details",
 }

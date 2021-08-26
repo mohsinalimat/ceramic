@@ -511,7 +511,7 @@ def update_comment(self):
 	for field in field_list:
 		if str(self.get(field)) != str(frappe.db.get_value("Sales Order",self.name,field)):
 			comment_doc = frappe.new_doc("Comment")
-			comment_doc.comment_type = "Updated"
+			comment_doc.comment_type = "Info"
 			comment_doc.comment_email = frappe.session.user
 			comment_doc.reference_doctype = "Sales Order"
 			comment_doc.reference_name = self.name
@@ -546,7 +546,7 @@ def delete_pick_list(self):
 
 def unpick_qty_comment(reference_name, sales_order, data):
 	comment_pl_doc = frappe.new_doc("Comment")
-	comment_pl_doc.comment_type = "Updated"
+	comment_pl_doc.comment_type = "Info"
 	comment_pl_doc.comment_email = frappe.session.user
 	comment_pl_doc.reference_doctype = "Pick List"
 	comment_pl_doc.reference_name = reference_name
@@ -556,7 +556,7 @@ def unpick_qty_comment(reference_name, sales_order, data):
 	comment_pl_doc.save()
 
 	comment_so_doc = frappe.new_doc("Comment")
-	comment_so_doc.comment_type = "Updated"
+	comment_so_doc.comment_type = "Info"
 	comment_so_doc.comment_email = frappe.session.user
 	comment_so_doc.reference_doctype = "Sales Order"
 	comment_so_doc.reference_name = sales_order

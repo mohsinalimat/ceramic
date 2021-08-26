@@ -772,7 +772,8 @@ def send_whatsapp_report(mobile_number, content, file_url,file_name,filters):
 
 	if send_msg == True:
 		comment_whatsapp = frappe.new_doc("Comment")
-		comment_whatsapp.comment_type = "WhatsApp"
+		comment_whatsapp.comment_type = "Info"
+		comment_whatsapp.subject = "Whatsapp"
 		comment_whatsapp.comment_email = frappe.session.user
 		comment_whatsapp.reference_doctype = "Customer"
 		comment_whatsapp.reference_name = filters.get('primary_customer')
