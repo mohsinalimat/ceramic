@@ -111,7 +111,7 @@ frappe.query_reports["Party Ledger Ceramic"] = {
 
 		display_qr()
 		frappe.call({
-			method:"finbyzerp.whatsapp_manager.get_whatsapp_settings",
+			method:"finbyzwhatsapp.whatsapp_manager.get_whatsapp_settings",
 			args:{},
 			callback: function(r){
 				if (r.message ==true){
@@ -178,6 +178,8 @@ function whatsapp_dialog(report){
 							print_css: print_css,
 							print_settings:{"with_letter_head":0,"orientation":"Landscape"},
 							landscape:true,
+							lang: frappe.boot.lang,
+							layout_direction: frappe.utils.is_rtl() ? "rtl" : "ltr",
 							columns: d.message[0]
 					});
 					
