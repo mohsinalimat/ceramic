@@ -12,9 +12,10 @@ from erpnext.stock.doctype.pick_list.pick_list import PickList
 from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockLedgerEntry
 from erpnext.stock.doctype.delivery_note.delivery_note import DeliveryNote
-# from erpnext.accounts.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
-# BankStatementTransactionEntry.create_payment_entry = create_payment_entry
-# BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
+
+from finbyzerp.finbyzerp.doctype.bank_statement_transaction_entry.bank_statement_transaction_entry import BankStatementTransactionEntry
+BankStatementTransactionEntry.create_payment_entry = create_payment_entry
+BankStatementTransactionEntry.populate_matching_invoices = populate_matching_invoices
 
 
 from erpnext.selling.doctype.customer.customer import Customer
