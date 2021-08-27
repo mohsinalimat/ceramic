@@ -23,6 +23,86 @@ def update_delivered_percent(self):
 			self.db_set('per_delivered', 0)
 
 @frappe.whitelist()
+def update_child_price(parent_doctype, trans_items, parent_doctype_name, child_docname="items"):
+	data = json.loads(trans_items)
+	parent = frappe.get_doc(parent_doctype, parent_doctype_name)
+	price_dict={}
+	discount_dict={}
+	sqf_dict={}
+	item_group_list=[]
+	for item in data:
+		if item.get("item_group") not in price_dict.keys():
+			price_dict[item.get("item_group")]=item.get("rate")
+			item_group_list.append(item.get("item_group"))
+	for item in data:
+		if item.get("item_group") not in sqf_dict.keys():
+			sqf_dict[item.get("item_group")]=item.get("sqf_rate")
+	for item in data:
+		if item.get("item_group") not in discount_dict.keys():
+			discount_dict[item.get("item_group")]=item.get("discount_rate")
+
+		
+		
+
+	parent_table= frappe.db.get_all("Sales Order Item",{'parent':parent_doctype_name})
+	for child_item in parent_table:
+		child_doc=frappe.get_doc("Sales Order Item", child_item)
+		if child_doc.item_group in item_group_list:
+			if item.get("item_group") not in item_group_list:
+				item_group_list.append(child_doc.item_group)
+
+			child_doc.item_group
+			if not flt(price_dict[child_doc.item_group]):
+					price_dict[child_doc.item_group] = child_item.rate
+			precision = child_doc.precision("rate") or 2
+
+			if flt(child_doc.billed_amt, precision) > flt(flt(price_dict[child_doc.item_group]) * flt(child_doc.get("qty")), precision):
+				frappe.throw(_("Row #{0}: Cannot set Rate if amount is greater than billed amount for Item {1}.")
+							.format(child_doc.idx, child_doc.item_code))
+			else:
+				child_doc.sqf_rate = flt(sqf_dict[child_doc.item_group])
+				if child_doc.sqf_rate:
+					child_doc.rate = flt(sqf_dict[child_doc.item_group] * 15.5)
+				else:
+					child_doc.rate = flt(price_dict[child_doc.item_group])
+				child_doc.discounted_rate = flt(discount_dict[child_doc.item_group])
+
+			if price_dict[child_doc.item_group]:
+				child_doc.rate = flt(price_dict[child_doc.item_group])
+			if discount_dict[child_doc.item_group]:
+				child_doc.discount_amount=flt(discount_dict[child_doc.item_group])
+			
+			child_doc.discounted_amount = child_doc.real_qty * child_doc.discounted_rate
+			child_doc.discounted_net_amount = child_doc.discounted_amount
+
+			if flt(child_doc.price_list_rate):
+				if flt(child_doc.rate) > flt(child_doc.price_list_rate):
+					#  if rate is greater than price_list_rate, set margin
+					#  or set discount
+					child_doc.discount_percentage = 0
+
+					child_doc.margin_type = "Amount"
+					child_doc.margin_rate_or_amount = flt(child_doc.rate - child_doc.price_list_rate,
+						child_doc.precision("margin_rate_or_amount"))
+					child_doc.rate_with_margin = child_doc.rate
+				else:
+					child_doc.discount_percentage = flt((1 - flt(child_doc.rate) / flt(child_doc.price_list_rate)) * 100.0,
+						child_doc.precision("discount_percentage"))
+					child_doc.discount_amount = flt(child_doc.price_list_rate) - flt(child_doc.rate)
+
+					child_doc.margin_type = ""
+					child_doc.margin_rate_or_amount = 0
+					child_doc.rate_with_margin = 0
+
+
+			child_doc.flags.ignore_validate_update_after_submit = True
+			child_doc.save()
+		else:
+			frappe.throw("Not Permitted to change Item Group")
+
+
+
+@frappe.whitelist()
 def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, child_docname="items"):
 	data = json.loads(trans_items)
 

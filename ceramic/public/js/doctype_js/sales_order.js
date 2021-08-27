@@ -145,6 +145,7 @@ erpnext.utils.update_child_items = function (opts) {
 	dialog.show();
 }
 
+
 erpnext.selling.SalesOrderController = erpnext.selling.SalesOrderController.extend({
 	refresh: function (doc, dt, dn) {
 		var me = this;
@@ -572,7 +573,133 @@ cur_frm.set_query('company', function () {
 	}
 });
 frappe.ui.form.on('Sales Order', {
-	refresh: (frm) => {
+	update_item_group_rate:function(frm){
+		const c=frm
+		// frm.add_custom_button(__('Update Item group Price'), function (frm,opts) {
+		const cannot_add_row = true;
+		const child_docname = "items";
+		var data = [];
+		let me = this;
+		const dialog = new frappe.ui.Dialog({
+			title: __("Update price"),
+			fields: [
+				{
+					fieldname: "trans_items",
+					fieldtype: "Table",
+					label: "Items",
+					cannot_add_rows: cannot_add_row,
+					in_place_edit: true,
+					reqd: 1,
+					data: data,
+					get_data: () => {
+						return data;
+					},
+					fields: [{
+						fieldtype: 'Data',
+						fieldname: "docname",
+						read_only: 1,
+						hidden: 1,
+					}, {
+						fieldtype: 'Link',
+						fieldname: "item_group",
+						options: 'Item Group',
+						read_only: 1,
+						in_list_view: 1,
+						reqd: 1,
+						columns: 3,
+						label: __('Item group'),
+						// before_change:function(){
+						// 	var val=this.get_value();
+						// 	frappe.msgprint(val)
+						// },
+						// change:function(){
+						// 	var val=this.get_value();
+						// 	frappe.msgprint(val)
+						// 	frappe.throw("You cannot change item group")
+						// 	console.log("change")
+						// 	frm.refresh();
+						// }
+					},
+					{
+						fieldtype: 'Currency',
+						fieldname: "rate",
+						default: 0,
+						read_only: 1,
+						in_list_view: 1,
+						// columns: 1,
+						label: __('Rate')
+					},
+					{
+						fieldtype: 'Currency',
+						fieldname: "sqf_rate",
+						default: 0,
+						read_only: 1,
+						in_list_view: 1,
+						// columns: 1,
+						label: __('SQF Rate'),
+						change:function(){
+							let sqf_rate = this.get_value();
+							if(sqf_rate){ 
+								this.grid_row.on_grid_fields_dict.rate.set_value(flt(sqf_rate*15.5));		
+							}
+						}
+					},
+					{
+						fieldtype: 'Currency',
+						fieldname: "discount_rate",
+						default: 0,
+						read_only: 1,
+						in_list_view: 1,
+						// columns: 1,
+						label: __('Discount Rate')
+					},
+					]
+				},
+			],
+				primary_action: function () {
+					const trans_items = this.get_values()["trans_items"];
+					frappe.call({
+						method: 'ceramic.update_item.update_child_price',
+						freeze: true,
+						args: {
+							'parent_doctype': c.doc.doctype,
+							'trans_items': trans_items,
+							'parent_doctype_name': c.doc.name,
+							'child_docname': child_docname,
+							'items_table':c.doc.items,
+						},
+						callback: function () {
+							c.reload_doc();
+							c.refresh();
+						}
+				});
+				this.hide();
+				refresh_field("items");
+			},
+			primary_action_label: __('Update')
+		});
+						
+						const item_group=[];
+						c.doc.items.forEach(d => {
+							if( !item_group.includes(d.item_group)){
+								
+								dialog.fields_dict.trans_items.df.data.push({
+									"docname": d.name,
+									"name": d.name,
+									"item_group": d.item_group,
+									"rate": d.rate,
+									"discount_rate": d.discounted_rate,
+									'sqf_rate':d.sqf_rate
+								});
+								data = dialog.fields_dict.trans_items.df.data;
+								dialog.fields_dict.trans_items.grid.refresh();
+								item_group.push(d.item_group)
+							}
+						})
+						dialog.show();
+					
+				},
+	refresh: function(frm,opts){
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
 			frm.set_value("so_ref", "");
 		}
