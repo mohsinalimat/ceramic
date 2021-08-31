@@ -169,7 +169,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		child_item.item_name = frappe.db.get_value("Item", d.get("item_code"), "item_name")
 		if parent_doctype == "Sales Order":
 			packing_type = frappe.db.get_value("Company",parent.company,"default_packing_type")
-			if packing_type:
+			if packing_type and not child_item.packing_type:
 				child_item.packing_type=packing_type
 		child_item.real_qty = flt(d.get("qty"))
 		child_item.sqf_rate = flt(d.get("sqf_rate"))
