@@ -10,7 +10,7 @@ from datetime import datetime
 from six import iteritems
 
 
-
+@frappe.whitelist()
 def populate_matching_invoices(self):
 	self.payment_invoice_items = []
 	self.map_unknown_transactions()
