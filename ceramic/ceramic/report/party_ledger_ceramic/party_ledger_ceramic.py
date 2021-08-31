@@ -414,7 +414,7 @@ def html_sales_invoice_data(sales_invoice_map,total_taxes_and_charges):
 			"""
 			for k,v in value.items():
 				table+= f"""<p>
-						{v["qty"]} x {k} = <span><strong>{frappe.format(v["qty"] * k,{'fieldtype': 'Currency'})}</strong></span>
+						{v["qty"]} x {frappe.format(k,{'fieldtype': 'Currency'})} = <span><strong>{frappe.format(v["qty"] * k,{'fieldtype': 'Currency'})}</strong></span>
 					</p>	
 				"""
 	if total_taxes_and_charges:
@@ -443,7 +443,7 @@ def get_sales_invoice_data(filters):
 	
 	si_data = frappe.db.sql(f"""
 		SELECT 
-			gle.name, sii.parent as si_name, si.total,si.rounded_total, sii.item_group, sii.rate, sii.qty
+			gle.name, sii.parent as si_name, si.total,si.rounded_total, sii.item_group,  IF(sii.sqf_rate > 0,sii.sqf_rate,sii.rate) as rate, sii.qty
 		FROM
 			`tabGL Entry` as gle
 			JOIN `tabSales Invoice Item` as sii ON sii.parent=gle.voucher_no
