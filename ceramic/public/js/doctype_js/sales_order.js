@@ -622,15 +622,6 @@ frappe.ui.form.on('Sales Order', {
 					},
 					{
 						fieldtype: 'Currency',
-						fieldname: "rate",
-						default: 0,
-						read_only: 1,
-						in_list_view: 1,
-						// columns: 1,
-						label: __('Rate')
-					},
-					{
-						fieldtype: 'Currency',
 						fieldname: "sqf_rate",
 						default: 0,
 						read_only: 1,
@@ -643,6 +634,15 @@ frappe.ui.form.on('Sales Order', {
 								this.grid_row.on_grid_fields_dict.rate.set_value(flt(sqf_rate*15.5));		
 							}
 						}
+					},
+					{
+						fieldtype: 'Currency',
+						fieldname: "rate",
+						default: 0,
+						read_only: 1,
+						in_list_view: 1,
+						// columns: 1,
+						label: __('Rate')
 					},
 					{
 						fieldtype: 'Currency',

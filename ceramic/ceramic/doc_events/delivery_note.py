@@ -43,7 +43,8 @@ def get_address(self):
 
 def validate(self, method):
 	calculate_rate(self)
-	check_rate_qty(self)
+	if self._action == "submit":
+		check_rate_qty(self)
 	validate_si_ref(self)
 	calculate_items_discounted_fields(self)
 	update_lock_qty(self)

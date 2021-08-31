@@ -86,7 +86,7 @@ app_icon = "/files/ceramic.svg"
 app_color = "grey"
 app_email = "info@finbyz.tech"
 app_license = "GPL 3.0"
-
+app_logo_url = "/files/millennium-icon.png"
 # Includes in <head>
 # ------------------
 
