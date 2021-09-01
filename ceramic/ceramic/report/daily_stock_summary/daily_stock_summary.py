@@ -412,9 +412,12 @@ def create_stock_entry(date,company,item_code,warehouse,se_qty,rate):
 		for se_doc in stock_exists:
 			doc = frappe.get_doc("Stock Entry",se_doc.name)
 			doc.flags.ignore_permissions = True
+			remove_repost_item_valuation_entries(doc)
+
 			if doc.docstatus == 1:
 				try:
 					doc.cancel()
+					remove_repost_item_valuation_entries(doc)
 					doc.delete()
 				except Exception as e:
 					frappe.throw(_(str(e)))
@@ -438,3 +441,17 @@ def create_stock_entry(date,company,item_code,warehouse,se_qty,rate):
 	})
 	se.save(ignore_permissions=True)
 	se.submit()
+
+def remove_repost_item_valuation_entries(se_doc):
+	if frappe.db.exists("Repost Item Valuation",{"voucher_type":se_doc.doctype,"voucher_no":se_doc.name}):
+		entry_list = frappe.db.get_all("Repost Item Valuation",{"voucher_type":se_doc.doctype,"voucher_no":se_doc.name})
+		for entry in entry_list:
+			doc = frappe.get_doc("Repost Item Valuation",entry.name)
+			if doc.docstatus == 1:
+				try:
+					doc.cancel()
+					doc.delete()
+				except Exception as e:
+					frappe.throw(_(str(e)))
+			else:
+				doc.delete()	
