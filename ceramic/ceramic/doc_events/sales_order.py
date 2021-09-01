@@ -779,7 +779,7 @@ def make_delivery_note(source_name, target_doc=None, skip_item_mapping=False):
 					INNER JOIN
 						`tabBatch` batch on sle.batch_no = batch.name
 					WHERE
-						sle.item_code = '{pick_doc.item_code}' AND
+						sle.is_cancelled = 0 and sle.item_code = '{pick_doc.item_code}' AND
 						batch.docstatus < 2 AND
 						sle.batch_no = '{pick_doc.batch_no}'
 					GROUP BY 

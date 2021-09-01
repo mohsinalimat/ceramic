@@ -144,21 +144,21 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 			company_wise_total_unpaid = frappe._dict(frappe.db.sql(f"""
 				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
 				from `tabGL Entry`
-				where party_type = '{party_type}' and party in ({customer_list_placeholder})
+				where is_cancelled = 0 and party_type = '{party_type}' and party in ({customer_list_placeholder})
 				group by company"""))
 			
 		else:
 			company_wise_total_unpaid = frappe._dict(frappe.db.sql("""
 				select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
 				from `tabGL Entry`
-				where party_type = %s and party=%s
+				where is_cancelled = 0 and party_type = %s and party=%s
 				group by company""", (party_type, party)))
 
 	else:
 		company_wise_total_unpaid = frappe._dict(frappe.db.sql("""
 			select company, sum(debit_in_account_currency) - sum(credit_in_account_currency)
 			from `tabGL Entry`
-			where party_type = %s and party=%s
+			where is_cancelled = 0 and party_type = %s and party=%s
 			group by company""", (party_type, party)))
 
 	for d in companies:

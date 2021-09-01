@@ -730,7 +730,7 @@ class ReceivablePayableReport(object):
 				LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 				LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 			where
-				gle.docstatus < 2
+				gle.docstatus < 2 and gle.is_cancelled = 0
 				and gle.party_type=%s
 				and (gle.party is not null and gle.party != '')
 				and gle.posting_date <= %s

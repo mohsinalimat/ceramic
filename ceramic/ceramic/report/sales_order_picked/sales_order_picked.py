@@ -115,7 +115,7 @@ def get_data(filters):
 	actual_qty_data = frappe.db.sql(f"""
 		SELECT sle.item_code, sle.warehouse, sle.batch_no, sum(actual_qty) as actual_qty
 		from `tabStock Ledger Entry` as sle
-		WHERE sle.company = '{filters.company}'
+		WHERE sle.is_cancelled = 0 and sle.company = '{filters.company}'
 		group by item_code, batch_no
 	""", as_dict = 1)
 

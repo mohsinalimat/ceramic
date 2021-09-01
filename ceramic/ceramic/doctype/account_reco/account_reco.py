@@ -13,13 +13,13 @@ class AccountReco(Document):
 				frappe.throw("Please Select Correct Primary Customer.")
 	def on_submit(self):
 		if self.party_type != "Customer":
-			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'Old' where name!='a'
+			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'Old' where is_cancelled = 0 and name!='a'
 				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
 				and party = '{party}' and posting_date <= '{posting_date}'
 				""".format(company=self.company, account=self.account, party_type=self.party_type, \
 						party=self.party, posting_date=self.posting_date))
 		
-			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
+			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where is_cancelled = 0 and name!='a'
 				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
 				and party = '{party}' and posting_date <= '{posting_date}'
 				""".format(company=self.company, account=self.account, party_type=self.party_type, \
@@ -38,7 +38,7 @@ class AccountReco(Document):
 				SET
 					gle.transaction_status = 'Old', voucher.transaction_status = 'Old'
 				where
-					gle.voucher_no = voucher.name and gle.name != 'a'
+					gle.voucher_no = voucher.name and is_cancelled = 0 and gle.name != 'a'
 					and gle.company = '{company}' and gle.account = '{account}' and gle.party_type = 'Customer'
 					and voucher.primary_customer = '{party}'
 					and gle.posting_date <= '{posting_date}'
@@ -56,13 +56,13 @@ class AccountReco(Document):
 
 	def on_cancel(self):
 		if self.party_type != "Customer":
-			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'New' where name!='a'
+			frappe.db.sql("""update `tabGL Entry` SET transaction_status = 'New' where is_cancelled = 0 and name!='a'
 				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
 				and party = '{party}' and posting_date <= '{posting_date}'
 				""".format(company=self.company, account=self.account, party_type=self.party_type, \
 						party=self.party, posting_date=self.posting_date))		
 
-			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where name!='a'
+			data = frappe.db.sql("""select voucher_type,voucher_no from `tabGL Entry` where is_cancelled = 0 and name!='a'
 				and company = '{company}' and account = '{account}' and party_type = '{party_type}'
 				and party = '{party}' and posting_date <= '{posting_date}'
 				""".format(company=self.company, account=self.account, party_type=self.party_type, \
@@ -81,7 +81,7 @@ class AccountReco(Document):
 				SET
 					gle.transaction_status = 'New', voucher.transaction_status = 'New'
 				where
-					gle.voucher_no = voucher.name and gle.name != 'a'
+					gle.voucher_no = voucher.name and is_cancelled = 0 and gle.name != 'a'
 					and gle.company = '{company}' and gle.account = '{account}' and gle.party_type = 'Customer'
 					and voucher.primary_customer = '{party}'
 					and gle.posting_date <= '{posting_date}'

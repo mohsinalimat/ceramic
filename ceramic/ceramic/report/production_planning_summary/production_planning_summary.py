@@ -160,7 +160,7 @@ def get_data(filters):
 			`tabStock Ledger Entry` as sle
 			JOIN `tabBatch` as batch on batch.name = sle.batch_no
 		WHERE
-			sle.`item_code`='{item['item_code']}'
+			sle.is_cancelled = 0 and sle.`item_code`='{item['item_code']}'
 			and sle.`company` = '{filters['company']}'
 			and batch.`packing_type` = '{item['packing_type']}'
 		""")

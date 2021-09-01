@@ -516,7 +516,7 @@ def get_outstanding_invoices(party_type, party, account, primary_customer=None, 
 		from
 			`tabGL Entry`
 		where
-			party_type = %(party_type)s and party = %(party)s
+			is_cancelled = 0 and party_type = %(party_type)s and party = %(party)s
 			and account = %(account)s and {dr_or_cr} > 0
 			{condition}
 			and ((voucher_type = 'Journal Entry'
@@ -536,7 +536,7 @@ def get_outstanding_invoices(party_type, party, account, primary_customer=None, 
 		select against_voucher_type, against_voucher,
 			ifnull(sum({payment_dr_or_cr}), 0) as payment_amount
 		from `tabGL Entry`
-		where party_type = %(party_type)s and party = %(party)s
+		where is_cancelled = 0 and party_type = %(party_type)s and party = %(party)s
 			and account = %(account)s
 			and {payment_dr_or_cr} > 0
 			and against_voucher is not null and against_voucher != ''

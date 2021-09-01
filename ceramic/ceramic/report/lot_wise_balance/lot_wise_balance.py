@@ -315,7 +315,7 @@ def get_stock_ledger_entries(filters):
 			from `tabStock Ledger Entry` as sle 
 			JOIN `tabItem` as i on i.item_code = sle.item_code
 			JOIN `tabBatch` as batch on batch.name = sle.batch_no
-			where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
+			where sle.is_cancelled = 0 and sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
 			group by sle.batch_no, sle.item_code, sle.warehouse
 			having sum(actual_qty) != 0
 			order by sle.item_code, sle.warehouse""" %
@@ -326,7 +326,7 @@ def get_stock_ledger_entries(filters):
 			from `tabStock Ledger Entry` as sle 
 			JOIN `tabItem` as i on i.item_code = sle.item_code
 			JOIN `tabBatch` as batch on batch.name = sle.batch_no
-			where sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
+			where sle.is_cancelled = 0 and sle.docstatus < 2 and ifnull(sle.batch_no, '') != '' %s
 			group by batch_no, item_code
 			having sum(actual_qty) != 0
 			order by i.item_group, sle.item_code""" %

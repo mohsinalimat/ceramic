@@ -275,7 +275,7 @@ def get_item_qty(company, item_code = None, customer = None, sales_order = None)
 			FROM
 				`tabStock Ledger Entry` sle, `tabBatch` batch
 			WHERE
-				sle.batch_no = batch.name
+				sle.is_cancelled = 0 and sle.batch_no = batch.name
 				and sle.`item_code`=%(item_code)s
 				and sle.`company` = '{company}'
 				and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
@@ -403,7 +403,7 @@ def get_pick_list_so(sales_order, item_code, sales_order_item):
 			FROM
 				`tabStock Ledger Entry` sle, `tabBatch` batch
 			WHERE
-				sle.batch_no = batch.name
+				sle.is_cancelled = 0 and sle.batch_no = batch.name
 				and sle.`item_code` = '{item_code}'
 				and sle.batch_no = '{item.batch_no}'
 			GROUP BY
@@ -513,7 +513,7 @@ def unpick_item(sales_order, sales_order_item = None, pick_list = None, pick_lis
 					FROM
 						`tabStock Ledger Entry` sle, `tabBatch` batch
 					WHERE
-						sle.batch_no = batch.name
+						sle.is_cancelled = 0 and sle.batch_no = batch.name
 						and sle.`item_code` = '{soi_doc.item_code}'
 						and sle.batch_no = '{doc.batch_no}'
 					GROUP BY
@@ -672,7 +672,7 @@ def get_items(filters):
 		FROM
 			`tabStock Ledger Entry` sle, `tabBatch` batch
 		WHERE
-			sle.batch_no = batch.name
+			sle.is_cancelled = 0 and sle.batch_no = batch.name
 			and sle.`item_code`=%(item_code)s
 			and sle.`company` = '{company}'
 			and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s

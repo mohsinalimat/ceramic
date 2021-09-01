@@ -130,7 +130,7 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
-			gle.`company` = '{company}' AND
+			gle.is_cancelled = 0 and gle.`company` = '{company}' AND
 			gle.`posting_date` < '{from_date}' {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 
@@ -198,7 +198,7 @@ def validate_party(filters):
 def get_result(filters, account_details):
 	alternate_company = frappe.db.get_value("Company", filters.company, 'alternate_company')
 
-	conditions = f"gle.`company` in ('{filters.company}', '{alternate_company}')"
+	conditions = f" AND gle.`company` in ('{filters.company}', '{alternate_company}')"
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
 	conditions += f" AND gle.`party_type` = '{filters.party_type}'" if filters.get('party_type') else f" AND gle.`party_type` in ('Customer', 'Supplier')"
@@ -221,6 +221,7 @@ def get_result(filters, account_details):
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
+			gle.is_cancelled = 0
 			{conditions}
 		ORDER BY
 			gle.posting_date, gle.party

@@ -132,7 +132,7 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
-			gle.`company` = '{company}' AND
+			gle.is_cancelled = 0 and gle.`company` = '{company}' AND
 			gle.`posting_date` < '{from_date}' {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 
@@ -198,7 +198,7 @@ def validate_party(filters):
 					frappe.throw(_("Invalid {0}: {1}").format(party_type, d))
 
 def get_result(filters, account_details):
-	conditions =""
+	conditions ="gle.is_cancelled = 0"
 	company_placeholder_list = []
 	if filters.company:
 		company_placeholder_list.append(filters.company)
@@ -206,7 +206,7 @@ def get_result(filters, account_details):
 		company_placeholder_list += alternate_company
 
 		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
-		conditions += (f"gle.company in ({company_placeholder})")
+		conditions += (f"AND gle.company in ({company_placeholder})")
 
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
@@ -287,7 +287,7 @@ def html_sales_invoice_data(sales_invoice_map):
 	return table
 
 def get_sales_invoice_data(filters):
-	conditions =""
+	conditions ="gle.is_cancelled = 0 "
 	company_placeholder_list = []
 	if filters.company:
 		company_placeholder_list.append(filters.company)
@@ -295,7 +295,7 @@ def get_sales_invoice_data(filters):
 		company_placeholder_list += alternate_company
 
 		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
-		conditions += (f"gle.company in ({company_placeholder})")
+		conditions += (f" AND gle.company in ({company_placeholder})")
 
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"

@@ -178,7 +178,7 @@ def get_opening_query(primary_customer_select, company, from_date, conditions, g
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
-			gle.`company` = '{company}' AND
+			gle.is_cancelled = 0 and gle.`company` = '{company}' AND
 			(gle.`posting_date` < '{from_date}' or gle.transaction_status = 'Old') {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 
@@ -200,7 +200,7 @@ def get_closing_query(primary_customer_select, company, to_date, conditions, gro
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE 
-			gle.`company` = '{company}' AND gle.docstatus < 2 AND (gle.party is not null and gle.party != '') AND
+			gle.is_cancelled = 0 and gle.`company` = '{company}' AND gle.docstatus < 2 AND (gle.party is not null and gle.party != '') AND
 			(gle.`posting_date` <= '{to_date}') {conditions} {group_by_having_conditions}
 	""", as_dict = True)
 	
@@ -359,7 +359,7 @@ def get_result(filters, account_details):
 			LEFT JOIN `tabPurchase Invoice` as pi on pi.name = gle.voucher_no
 			LEFT JOIN `tabPayment Entry` as pe on pe.name = gle.voucher_no
 		WHERE
-			(gle.transaction_status = 'New' or gle.transaction_status IS NULL)
+			gle.is_cancelled = 0 and (gle.transaction_status = 'New' or gle.transaction_status IS NULL)
 			{conditions}
 		GROUP BY
 			gle.voucher_no, gle.party {having_cond}
@@ -425,7 +425,7 @@ def html_sales_invoice_data(sales_invoice_map,total_taxes_and_charges):
 	return table
 
 def get_sales_invoice_data(filters):
-	conditions =""
+	conditions = "gle.is_cancelled = 0"
 	company_placeholder_list = []
 	if filters.company:
 		company_placeholder_list.append(filters.company)
@@ -433,7 +433,7 @@ def get_sales_invoice_data(filters):
 		company_placeholder_list += alternate_company
 
 		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
-		conditions += (f"gle.company in ({company_placeholder})")
+		conditions += (f"AND gle.company in ({company_placeholder})")
 
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"

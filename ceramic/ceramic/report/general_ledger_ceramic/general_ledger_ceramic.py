@@ -143,7 +143,7 @@ def get_gl_entries(filters):
 		LEFT JOIN `tabJournal Entry` as jv on jv.name = gl.voucher_no
 		LEFT JOIN `tabSales Invoice` as si on si.name = gl.voucher_no
 		LEFT JOIN `tabPayment Entry` as pe on pe.name = gl.voucher_no
-		where gl.company=%(company)s {conditions}
+		where gl.is_cancelled = 0 and gl.company=%(company)s {conditions}
 		{order_by_statement}
 		""".format(
 			select_fields=select_fields, conditions=get_conditions(filters),
