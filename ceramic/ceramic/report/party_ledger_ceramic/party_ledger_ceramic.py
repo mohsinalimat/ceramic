@@ -433,7 +433,7 @@ def get_sales_invoice_data(filters):
 		company_placeholder_list += alternate_company
 
 		company_placeholder= ', '.join(f"'{i}'" for i in company_placeholder_list)
-		conditions += (f"AND gle.company in ({company_placeholder})")
+		conditions += (f" AND gle.company in ({company_placeholder})")
 
 	conditions += f" AND gle.`posting_date` >= '{filters.from_date}'"	
 	conditions += f" AND gle.`posting_date` <= '{filters.to_date}'"
