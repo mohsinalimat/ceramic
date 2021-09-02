@@ -1,0 +1,35 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2021-09-02 15:37:29.118207",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "json": "{\"columns\":[\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"date\",\n  \"fieldtype\": \"Datetime\",\n  \"id\": \"date\",\n  \"label\": \"Date\",\n  \"name\": \"Date\",\n  \"width\": 95\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"item_code\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"item_code\",\n  \"label\": \"Item\",\n  \"name\": \"Item\",\n  \"options\": \"Item\",\n  \"width\": 130\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"item_group\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"item_group\",\n  \"label\": \"Item Group\",\n  \"name\": \"Item Group\",\n  \"options\": \"Item Group\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"doctype\": \"Item\",\n  \"editable\": false,\n  \"fieldname\": \"tile_quality\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"tile_quality\",\n  \"insert_after_index\": 2,\n  \"label\": \"Tile Quality\",\n  \"link_field\": \"item_code\",\n  \"name\": \"Tile Quality\",\n  \"options\": \"Tile Quality\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"warehouse\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"warehouse\",\n  \"label\": \"Warehouse\",\n  \"name\": \"Warehouse\",\n  \"options\": \"Warehouse\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"stock_uom\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"stock_uom\",\n  \"label\": \"Stock UOM\",\n  \"name\": \"Stock UOM\",\n  \"options\": \"UOM\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"convertible\": \"qty\",\n  \"editable\": false,\n  \"fieldname\": \"actual_qty\",\n  \"fieldtype\": \"Float\",\n  \"id\": \"actual_qty\",\n  \"label\": \"Qty\",\n  \"name\": \"Qty\",\n  \"width\": 50\n },\n {\n  \"compareValue\": null,\n  \"convertible\": \"qty\",\n  \"editable\": false,\n  \"fieldname\": \"qty_after_transaction\",\n  \"fieldtype\": \"Float\",\n  \"id\": \"qty_after_transaction\",\n  \"label\": \"Balance Qty\",\n  \"name\": \"Balance Qty\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"convertible\": \"rate\",\n  \"editable\": false,\n  \"fieldname\": \"incoming_rate\",\n  \"fieldtype\": \"Currency\",\n  \"id\": \"incoming_rate\",\n  \"label\": \"Incoming Rate\",\n  \"name\": \"Incoming Rate\",\n  \"options\": \"Company:company:default_currency\",\n  \"width\": 110\n },\n {\n  \"compareValue\": null,\n  \"convertible\": \"rate\",\n  \"editable\": false,\n  \"fieldname\": \"valuation_rate\",\n  \"fieldtype\": \"Currency\",\n  \"id\": \"valuation_rate\",\n  \"label\": \"Valuation Rate\",\n  \"name\": \"Valuation Rate\",\n  \"options\": \"Company:company:default_currency\",\n  \"width\": 110\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"stock_value\",\n  \"fieldtype\": \"Currency\",\n  \"id\": \"stock_value\",\n  \"label\": \"Balance Value\",\n  \"name\": \"Balance Value\",\n  \"options\": \"Company:company:default_currency\",\n  \"width\": 110\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"voucher_type\",\n  \"id\": \"voucher_type\",\n  \"label\": \"Voucher Type\",\n  \"name\": \"Voucher Type\",\n  \"width\": 110\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"voucher_no\",\n  \"fieldtype\": \"Dynamic Link\",\n  \"id\": \"voucher_no\",\n  \"label\": \"Voucher #\",\n  \"name\": \"Voucher #\",\n  \"options\": \"voucher_type\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"batch_no\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"batch_no\",\n  \"label\": \"Batch\",\n  \"name\": \"Batch\",\n  \"options\": \"Batch\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"serial_no\",\n  \"id\": \"serial_no\",\n  \"label\": \"Serial #\",\n  \"name\": \"Serial #\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"project\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"project\",\n  \"label\": \"Project\",\n  \"name\": \"Project\",\n  \"options\": \"Project\",\n  \"width\": 100\n },\n {\n  \"compareValue\": null,\n  \"editable\": false,\n  \"fieldname\": \"company\",\n  \"fieldtype\": \"Link\",\n  \"id\": \"company\",\n  \"label\": \"Company\",\n  \"name\": \"Company\",\n  \"options\": \"Company\",\n  \"width\": 110\n }\n]}",
+ "letter_head": "Millennium",
+ "modified": "2021-09-02 15:37:29.118207",
+ "modified_by": "Administrator",
+ "module": "Ceramic",
+ "name": "Stock Ledger Ceramic",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Stock Ledger Entry",
+ "reference_report": "Stock Ledger",
+ "report_name": "Stock Ledger Ceramic",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Local Admin"
+  },
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Sales User"
+  }
+ ]
+}
