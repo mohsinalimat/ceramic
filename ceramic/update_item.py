@@ -99,6 +99,50 @@ def update_child_price(parent_doctype, trans_items, parent_doctype_name, child_d
 			child_doc.save()
 		else:
 			frappe.throw("Not Permitted to change Item Group")
+	parent.calculate_taxes_and_totals()
+
+
+
+	parent_doctype= "Sales Order"
+	parent.reload()
+	parent.flags.ignore_validate_update_after_submit = True
+	parent.flags.ignore_permissions = True
+	parent.set_qty_as_per_stock_uom()
+	parent.calculate_taxes_and_totals()
+	if parent_doctype == "Sales Order":
+		parent.set_gross_profit()
+	frappe.get_doc('Authorization Control').validate_approving_authority(parent.doctype,
+		parent.company, parent.base_grand_total)
+
+	parent.set_payment_schedule()
+	if parent_doctype == 'Purchase Order':
+		parent.validate_minimum_order_qty()
+		parent.validate_budget()
+		if parent.is_against_so():
+			parent.update_status_updater()
+	else:
+		parent.check_credit_limit()
+	parent.save()
+
+	if parent_doctype == 'Purchase Order':
+		update_last_purchase_rate(parent, is_submit = 1)
+		parent.update_prevdoc_status()
+		parent.update_requested_qty()
+		parent.update_ordered_qty()
+		parent.update_ordered_and_reserved_qty()
+		parent.update_receiving_percentage()
+		if parent.is_subcontracted == "Yes":
+			parent.update_reserved_qty_for_subcontract()
+	else:
+		parent.update_reserved_qty()
+		parent.update_project()
+		parent.update_prevdoc_status('submit')
+		parent.update_delivery_status()
+
+	parent.update_blanket_order()
+	parent.update_billing_percentage()
+	parent.set_status()
+
 
 
 
