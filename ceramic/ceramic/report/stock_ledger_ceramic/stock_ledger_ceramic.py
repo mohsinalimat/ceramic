@@ -234,13 +234,16 @@ def get_sle_conditions(filters):
 	if filters.get("warehouse"):
 		warehouse_condition = get_warehouse_condition(filters.get("warehouse"))
 		if warehouse_condition:
+			conditions.append("sle.warehouse=%(warehouse)s")
+			# sle.warehouse="Stores - MVTT"
+			# frappe.msgprint(str(warehouse_condition))
 			conditions.append(warehouse_condition)
 	if filters.get("voucher_no"):
-		conditions.append("voucher_no=%(voucher_no)s")
+		conditions.append("sle.voucher_no=%(voucher_no)s")
 	if filters.get("batch_no"):
-		conditions.append("batch_no=%(batch_no)s")
+		conditions.append("sle.batch_no=%(batch_no)s")
 	if filters.get("project"):
-		conditions.append("project=%(project)s")
+		conditions.append("sle.project=%(project)s")
 
 	return "and {}".format(" and ".join(conditions)) if conditions else ""
 
@@ -268,11 +271,11 @@ def get_opening_balance(filters, columns):
 
 
 def get_warehouse_condition(warehouse):
-	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"], as_dict=1)
+	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt",'name'], as_dict=1)
 	if warehouse_details:
-		return " exists (select name from `tabWarehouse` wh \
-			where wh.lft >= %s and wh.rgt <= %s and warehouse = wh.name)"%(warehouse_details.lft,
-			warehouse_details.rgt)
+		return " exists (select wh.name from `tabWarehouse` wh \
+			where wh.lft >= %s and wh.rgt <= %s and '%s' = wh.name)"%(warehouse_details.lft,
+			warehouse_details.rgt,warehouse)
 
 	return ''
 
