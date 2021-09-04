@@ -200,11 +200,14 @@ frappe.ui.form.on('Sales Invoice', {
     },
     onload: function (frm) {
         frm.ignore_doctypes_on_cancel_all = ['Sales Invoice'];
-        if (frm.doc.irn_cancelled && frm.doc.eway_bill_cancelled && frm.doc.__islocal && frm.doc.amended_from){
+        if (frm.doc.irn_cancelled && frm.doc.irn && frm.doc.__islocal && frm.doc.amended_from){
             frm.set_value("irn",'')
             frm.set_value("irn_cancelled",0)
         }
-
+        if (frm.doc.eway_bill_cancelled &&frm.doc.ewaybill && frm.doc.__islocal && frm.doc.amended_from){
+            frm.set_value("ewaybill",'')
+            frm.set_value("eway_bill_cancelled",0)
+        }
 		if(frm.doc.company && frm.doc.__islocal){
             frappe.db.get_value("Bank Account",{"company":frm.doc.company,"is_company_account":1,"is_default":1},"name", function(r){
                 frm.set_value("bank_account",r.name);
