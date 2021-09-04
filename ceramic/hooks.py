@@ -33,14 +33,14 @@ DeliveryNote.validate = delivery_validate
 # }
 
 # naming series overrides
-from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
+# from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 from erpnext.accounts.doctype.opening_invoice_creation_tool.opening_invoice_creation_tool import OpeningInvoiceCreationTool
 from ceramic.ceramic.doc_events.opening_invoice_creation_tool import get_invoice_dict, make_invoices, get_opening_invoice_summary
-from ceramic.override_default_class_method import get_transactions
+# from ceramic.override_default_class_method import get_transactions
 from erpnext.controllers.accounts_controller import AccountsController
 from ceramic.ceramic.override.controller.accounts_controller import set_missing_item_details as accounts_controllers_set_missing_item_details
 AccountsController.set_missing_item_details = accounts_controllers_set_missing_item_details
-NamingSeries.get_transactions = get_transactions
+# NamingSeries.get_transactions = get_transactions
 OpeningInvoiceCreationTool.get_invoice_dict = get_invoice_dict
 OpeningInvoiceCreationTool.get_opening_invoice_summary = get_opening_invoice_summary
 OpeningInvoiceCreationTool.make_invoices = make_invoices

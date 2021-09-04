@@ -15,7 +15,6 @@ this.frm.cscript.onload = function (frm) {
 
 frappe.ui.form.on('Payment Entry', {
 	refresh: function(frm){
-		console.log('called')
 		if (frm.doc.__islocal){
 			if (cur_frm.doc.company){
 				frappe.db.get_value("Company", cur_frm.doc.company, 'company_series',(r) => {

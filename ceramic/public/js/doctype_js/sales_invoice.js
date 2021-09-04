@@ -191,6 +191,7 @@ frappe.ui.form.on('Sales Invoice', {
                 frm.set_value('cost_center', r.cost_center)
             })
         }
+        frm.trigger('shipping_address_name');
         // if(frm.doc.docstatus == 0 && frm.doc.si_ref && frm.doc.name.includes("New Sales Invoice")){
         // 	frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["company_series","naming_series","series_value"],function(r){
         // 		frm.set_value("naming_series",'A' + String(r.company_series) + r.naming_series)
@@ -213,7 +214,17 @@ frappe.ui.form.on('Sales Invoice', {
                 frm.set_value("bank_account",r.name);
             })
         }
+        frm.trigger('shipping_address_name');
 	},
+    shipping_address_name: function(frm){
+      if (frm.doc.shipping_address_name && frm.doc.docstatus == 0){
+        frappe.db.get_value("Address",frm.doc.shipping_address_name,"city", function(r){
+            if (r.city != frm.doc.city){
+                frm.set_value("city",r.city);
+            }
+        })          
+      }  
+    },
     customer: function(frm) {
         if (frm.doc.customer) {
             frm.set_value("primary_customer", '')
@@ -300,6 +311,7 @@ frappe.ui.form.on('Sales Invoice', {
             frm.set_value('primary_customer', frm.doc.customer)
         }
         frm.trigger('calculate_total');
+        frm.trigger('update_payment_terms_from_sales_order');
     },
     calculate_total: function(frm) {
         let total_qty = 0.0
@@ -313,6 +325,15 @@ frappe.ui.form.on('Sales Invoice', {
 
         frm.set_value("total_qty", total_qty);
         frm.set_value("total_net_weight", total_net_weight);
+    },
+    update_payment_terms_from_sales_order: function(frm){
+        if (frm.doc.items[0].sales_order){
+            frappe.db.get_value("Sales Order",frm.doc.items[0].sales_order,"payment_terms_template", function(r){
+                if (frm.doc.payment_terms_template != r.payment_terms_template){
+                    frm.set_value("payment_terms_template",r.payment_terms_template)
+                }
+            })            
+        }
     },
     naming_series_: function(frm) {
         if (frm.doc.company && !frm.doc.amended_from) {

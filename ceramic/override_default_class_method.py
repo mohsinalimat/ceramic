@@ -366,7 +366,7 @@ def calculate_taxes(self):
 						self.doc.rounding_adjustment = flt(self.doc.grand_total
 							- flt(self.doc.discount_amount) - tax.total,
 							self.doc.precision("rounding_adjustment"))
-
+@frappe.whitelist()
 def get_transactions(self, arg=None):
 	doctypes = list(set(frappe.db.sql_list("""select parent
 			from `tabDocField` df where fieldname='naming_series'""")

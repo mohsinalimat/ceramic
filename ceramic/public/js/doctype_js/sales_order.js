@@ -976,6 +976,10 @@ frappe.ui.form.on('Sales Order', {
 					frappe.throw(__("Row:{0} Rate can not be zero", [d.idx]))
 				}
 			})
+
+			if (!frm.doc.payment_terms_template){
+				frappe.throw("Please Enter Payment Terms Template")
+			}
 		}
 	},
 	correct_picked_qty: function (frm) {
