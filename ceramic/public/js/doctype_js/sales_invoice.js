@@ -191,7 +191,7 @@ frappe.ui.form.on('Sales Invoice', {
                 frm.set_value('cost_center', r.cost_center)
             })
         }
-        frm.trigger('shipping_address_name');
+        frm.trigger('fetch_city');
         // if(frm.doc.docstatus == 0 && frm.doc.si_ref && frm.doc.name.includes("New Sales Invoice")){
         // 	frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["company_series","naming_series","series_value"],function(r){
         // 		frm.set_value("naming_series",'A' + String(r.company_series) + r.naming_series)
@@ -214,9 +214,12 @@ frappe.ui.form.on('Sales Invoice', {
                 frm.set_value("bank_account",r.name);
             })
         }
-        frm.trigger('shipping_address_name');
+        frm.trigger('fetch_city');
 	},
     shipping_address_name: function(frm){
+        frm.trigger('fetch_city');
+    },
+    fetch_city: function(frm){
       if (frm.doc.shipping_address_name && frm.doc.docstatus == 0){
         frappe.db.get_value("Address",frm.doc.shipping_address_name,"city", function(r){
             if (r.city != frm.doc.city){
@@ -311,6 +314,8 @@ frappe.ui.form.on('Sales Invoice', {
             frm.set_value('primary_customer', frm.doc.customer)
         }
         frm.trigger('calculate_total');
+    },
+    validate: function(frm){
         frm.trigger('update_payment_terms_from_sales_order');
     },
     calculate_total: function(frm) {

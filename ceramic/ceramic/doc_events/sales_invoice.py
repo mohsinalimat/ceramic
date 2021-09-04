@@ -58,6 +58,11 @@ def before_naming(self, method):
 
 def on_submit(self, test):
 	"""On Submit Custom Function for Sales Invoice"""
+
+	
+	if self.authority == "Unauthorized":
+		self.db_set("pay_amount_left", self.real_difference_amount)
+
 	create_main_sales_invoice(self)
 	if self.si_ref:
 		si_ref = frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref")
@@ -358,7 +363,7 @@ def update_discounted_net_total(self):
 	
 	self.discounted_grand_total = self.discounted_net_total + self.total_taxes_and_charges - testing_only_tax
 	self.discounted_rounded_total = round(self.discounted_grand_total)
-	self.real_difference_amount = self.rounded_total - self.discounted_rounded_total
+	self.real_difference_amount = flt(self.rounded_total) - flt(self.discounted_rounded_total)
 
 def update_linked_invoice(self):
 	self.flags.ignore_validate_update_after_submit = True
