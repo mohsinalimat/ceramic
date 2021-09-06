@@ -448,11 +448,13 @@ frappe.ui.form.on("Delivery Note Item", {
 	qty: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
 		frm.events.calculate_total(frm)
-		if (d.stock_qty && d.qty){
-			console.log(d.stock_qty/d.qty)
-			frappe.model.set_value(cdt,cdn,"conversion_factor",d.stock_qty/d.qty)
-			frm.refresh();
-			}
+		if (d.stock != d.stock_uom){
+			if (d.stock_qty && d.qty){
+				console.log(d.stock_qty/d.qty)
+				frappe.model.set_value(cdt,cdn,"conversion_factor",d.stock_qty/d.qty)
+				frm.refresh();
+				}
+		}
 	},
 	sqf_rate: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
@@ -462,12 +464,14 @@ frappe.ui.form.on("Delivery Note Item", {
 	},
 	stock_qty:function(frm,cdt,cdn){
         var doc=locals[cdt][cdn]
+		if (doc.stock != doc.stock_uom){
         if (doc.stock_qty && doc.qty){
         console.log(doc.stock_qty/doc.qty)
         frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
 		frm.refresh();
         }
     }
+}
 	// real_qty: function (frm, cdt, cdn) {
 	// 	frm.events.calculate_total(frm)
 	// },

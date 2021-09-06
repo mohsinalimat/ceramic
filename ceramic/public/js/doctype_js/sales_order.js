@@ -1030,10 +1030,12 @@ frappe.ui.form.on("Sales Order Item", {
 		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
 		frm.events.calculate_total(frm)
 		var doc=locals[cdt][cdn]
+		if (doc.stock != doc.stock_uom){
         if (doc.stock_qty && doc.qty){
         console.log(doc.stock_qty/doc.qty)
         frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
         }
+	}
 	},
 	real_qty: function (frm, cdt, cdn) {
 		frm.events.calculate_total(frm)
@@ -1066,11 +1068,13 @@ frappe.ui.form.on("Sales Order Item", {
 	},
 	stock_qty:function(frm,cdt,cdn){
         var doc=locals[cdt][cdn]
+		if (doc.stock != doc.stock_uom){
         if (doc.stock_qty && doc.qty){
         console.log(doc.stock_qty/doc.qty)
         frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
         }
     }
+}
 });
 
 cur_frm.fields_dict.sales_team.grid.get_field("company_").get_query = function(doc) {
