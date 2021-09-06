@@ -208,9 +208,13 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		
 		# if parent_doctype == "Sales Order" and flt(d.get("qty")) != flt(child_item.qty) and child_item.delivered_qty:
 		# 	frappe.throw(_("Cannot change qty as delivery note is already made"))
-
+		item_name, item_group, description,tile_quality = frappe.db.get_value("Item", d.get("item_code"), ["item_name","item_group","description","tile_quality"])
 		child_item.qty = flt(d.get("qty"))
-		child_item.item_name = frappe.db.get_value("Item", d.get("item_code"), "item_name")
+		child_item.item_name = item_name
+		child_item.item_group = item_group
+		child_item.description = description or item_name
+		child_item.tile_quality = tile_quality
+		child_item.parent_item_group = frappe.db.get_value("Item Group",item_group,"parent_item_group")
 		if parent_doctype == "Sales Order":
 			packing_type = frappe.db.get_value("Company",parent.company,"default_packing_type")
 			if packing_type and not child_item.packing_type:
