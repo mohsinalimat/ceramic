@@ -429,5 +429,12 @@ frappe.ui.form.on("Sales Invoice Item", {
 	},
     weight_per_unit: function(frm, cdt, cdn) {
         frm.events.calculate_total(frm)
+    },
+    stock_qty:function(frm,cdt,cdn){
+        var doc=locals[cdt][cdn]
+        if (doc.stock_qty && doc.qty){
+        console.log(doc.stock_qty/doc.qty)
+        frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+        }
     }
 });

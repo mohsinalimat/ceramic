@@ -455,6 +455,14 @@ frappe.ui.form.on("Delivery Note Item", {
 			frappe.model.set_value(cdt, cdn, 'rate', flt(d.sqf_rate * 15.5));
 		}
 	},
+	stock_qty:function(frm,cdt,cdn){
+        var doc=locals[cdt][cdn]
+        if (doc.stock_qty && doc.qty){
+        console.log(doc.stock_qty/doc.qty)
+        frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+		frm.refresh();
+        }
+    }
 	// real_qty: function (frm, cdt, cdn) {
 	// 	frm.events.calculate_total(frm)
 	// },

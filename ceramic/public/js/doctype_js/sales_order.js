@@ -1058,7 +1058,14 @@ frappe.ui.form.on("Sales Order Item", {
 				frappe.msgprint(r.message);
 			}
 		})
-	}
+	},
+	stock_qty:function(frm,cdt,cdn){
+        var doc=locals[cdt][cdn]
+        if (doc.stock_qty && doc.qty){
+        console.log(doc.stock_qty/doc.qty)
+        frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+        }
+    }
 });
 
 cur_frm.fields_dict.sales_team.grid.get_field("company_").get_query = function(doc) {
