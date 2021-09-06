@@ -144,6 +144,17 @@ frappe.query_reports["Accounts Receivable Primary Customer"] = {
 			"fieldname":"based_on_payment_terms",
 			"label": __("Based On Payment Terms"),
 			"fieldtype": "Check",
+		},
+		{
+			"fieldname":"ceramic",
+			"label": __("Ceramic"),
+			"fieldtype": "Check",
+		},
+		{
+			"fieldname":"dont_show_auth_data",
+			"label": __("Dont Show Auth Data"),
+			"fieldtype": "Check",
+			"default":1
 		}
 	],
 
@@ -230,7 +241,7 @@ function view_receivable_report(primary_customer, company) {
 }
 
 function new_remark(primary_customer){
-	new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
+	frappe.new_doc("Payment Followup Remarks", {'customer': primary_customer, 'follow_up_by': frappe.session.user_fullname})
 }
 
 function view_remark(primary_customer){

@@ -51,8 +51,8 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			self.data.append(row)
 			self.data = sorted(self.data, key = lambda i: (i['primary_customer'], i['party']))
 		
-		remark_map_data = self.remark_map()
-
+		last_remark_map_data, second_last_remark_map_data = self.remark_map()
+		reco_map_data = self.get_account_reco_details()
 		for row in self.data:
 			filters = json.dumps({
 				'primary_customer': row.primary_customer,
@@ -81,32 +81,53 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 			row.view_details = f"""<button style='margin-left:5px;border:none;color: #fff; background-color: #5e64ff; padding: 3px 5px;border-radius: 5px;' 
 			type='button' filters='{filters}'
 			onClick='get_payment_remark_details(this.getAttribute("filters"))'>View Details</button>"""
-			
-			if remark_map_data.get(row.primary_customer):
-				row.remark_date = remark_map_data[row.primary_customer].date
-				row.remark = remark_map_data[row.primary_customer].remark
-				row.follow_up_by = remark_map_data[row.primary_customer].follow_up_by
-				row.next_follow_up_date = remark_map_data[row.primary_customer].next_follow_up_date
+
+			if last_remark_map_data.get(row.primary_customer):
+				row.last_remark_date = last_remark_map_data[row.primary_customer].date
+				row.last_remark = last_remark_map_data[row.primary_customer].remark
+				row.follow_up_by = last_remark_map_data[row.primary_customer].follow_up_by
+				row.next_follow_up_date = last_remark_map_data[row.primary_customer].next_follow_up_date
 			else:
 				row.next_follow_up_date = dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date()
-	
+
+			if second_last_remark_map_data.get(row.primary_customer):
+				row.second_last_remark_date = second_last_remark_map_data[row.primary_customer].date
+				row.second_last_remark = second_last_remark_map_data[row.primary_customer].remark
+
+			if reco_map_data.get(row.primary_customer):
+				row.reco_date = reco_map_data[row.primary_customer].reco_date
+				row.reco_amount = reco_map_data[row.primary_customer].reco_amount
+
+
 		self.data = sorted(self.data, key = lambda i: (i['next_follow_up_date'], i['primary_customer'], i['party']))
+		if row.next_follow_up_date == dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date():
+			row.next_follow_up_date = None
 		# d = [item for item in self.data if 'next_follow_up_date' != dt.datetime.strptime("2023-05-05", '%Y-%m-%d').date()]
 		# self.data = sorted(d, key=lambda i: (i['next_follow_up_date'], i['primary_customer'], i['party']))
-		for row in self.data:
-			if row.next_follow_up_date == dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date():
-				row.next_follow_up_date = None
+		# for row in self.data:
+		# 	if row.next_follow_up_date == dt.datetime.strptime("2100-10-10", '%Y-%m-%d').date():
+		# 		row.next_follow_up_date = None
 				
 
 	def remark_map(self):
-		data = frappe.db.sql("""SELECT DISTINCT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date ASC""", as_dict = True)
-
-		remark_map = {}
-
+		data = frappe.db.sql("""SELECT customer, remark, next_follow_up_date, follow_up_by, date FROM `tabPayment Followup Remarks` ORDER BY date DESC""", as_dict = True)
+		last_remark_map = {}
+		second_last_remark_map = {}
 		for row in data:
-			remark_map[row.customer] = row
-		
-		return remark_map
+			if row.customer not in last_remark_map:
+				last_remark_map[row.customer] = row
+			elif row.customer not in second_last_remark_map:
+				second_last_remark_map[row.customer] = row
+		return last_remark_map, second_last_remark_map
+
+	def get_account_reco_details(self):
+		data = frappe.db.sql("""SELECT parent as customer,account_reco_date as reco_date,reconciled_amount as reco_amount
+		from `tabSales Team` where account_reco_date is not null and reconciled_amount != 0 and parenttype = 'Customer'""", as_dict = True)
+
+		reco_map = {}
+		for row in data:
+			reco_map[row.customer] = row
+		return reco_map
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
@@ -116,14 +137,14 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 
 			# Add all amount columns
 			for k in list(self.party_total[d.primary_customer]):
-				if k not in ["currency", "sales_person", "party", "primary_customer","regional_sales_manager","sales_manager","territory","customer_group","one","two","three"]:
+				if k not in ["currency", "sales_person", "party", "primary_customer","regional_sales_manager","sales_manager","territory","customer_group","size_of_business","payment_performance","one","two","three"]:
 					self.party_total[d.primary_customer][k] += d.get(k, 0.0)
 					if k == 'bank_outstanding':
-						self.party_total[d.primary_customer]['one'] = self.party_total[d.primary_customer][k]/1000
+						self.party_total[d.primary_customer]['one'] = round(self.party_total[d.primary_customer][k]/1000)
 					if k == 'cash_outstanding':
-						self.party_total[d.primary_customer]['two'] = self.party_total[d.primary_customer][k]/1000
+						self.party_total[d.primary_customer]['two'] = round(self.party_total[d.primary_customer][k]/1000)
 					if k == 'outstanding':
-						self.party_total[d.primary_customer]['three'] = self.party_total[d.primary_customer][k]/1000
+						self.party_total[d.primary_customer]['three'] = round(self.party_total[d.primary_customer][k]/1000)
 
 				# if k in ["invoiced", "billed_amount", "cash_amount", "paid","cash_paid","bank_paid","credit_note","outstanding","bank_outstanding","cash_outstanding","range1","range2","range3","range4","range5"]:
 				# 	self.party_total[d.primary_customer][k] += d.get(k, 0.0)
@@ -161,7 +182,7 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 	def set_party_details(self, row):
 		self.party_total[row.primary_customer].currency = row.currency
 
-		for key in ('territory', 'customer_group', 'supplier_group'):
+		for key in ('territory', 'customer_group', 'supplier_group','size_of_business','payment_performance'):
 			if row.get(key):
 				self.party_total[row.primary_customer][key] = row.get(key)
 
@@ -178,11 +199,15 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.add_column(_('Sales Head'), fieldname='sales_person', fieldtype='Data')
 		self.add_column(_('RSM'), fieldname='regional_sales_manager', fieldtype='Data')
 		self.add_column(_('Sales Manager'), fieldname='sales_manager', fieldtype='Data')
-		self.add_column(_('Bank Outstanding Amount'), fieldname='bank_outstanding')
-		self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
+		self.add_column(_('Size of Business'), fieldname='size_of_business', fieldtype='Data')
+		self.add_column(_('Payment Performance'), fieldname='payment_performance', fieldtype='Data')
+		if self.filters.get('ceramic'):
+			self.add_column(_('Bank Outstanding Amount'), fieldname='bank_outstanding')
+			self.add_column(_('Cash Outstanding Amount'), fieldname='cash_outstanding')
 		self.add_column(_('Total Outstanding Amount'), fieldname='outstanding')
-		self.add_column(_('One'), fieldname='one',fieldtype='Int')
-		self.add_column(_('Two'), fieldname='two',fieldtype='Int')
+		if self.filters.get('ceramic'):
+			self.add_column(_('One'), fieldname='one',fieldtype='Int')
+			self.add_column(_('Two'), fieldname='two',fieldtype='Int')
 		self.add_column(_('Three'), fieldname='three',fieldtype='Int')
 
 
@@ -195,10 +220,14 @@ class AccountsReceivablePrimaryCustomer(ReceivablePayableReport):
 		self.setup_ageing_columns()
 
 		self.add_column(label=_('Currency'), fieldname='currency', fieldtype='Link', options='Currency', width=80)
-		self.add_column(label=_('Remark'), fieldname='remark', fieldtype='Small Text', width=100)
-		self.add_column(label=_('Remark Date'), fieldname='remark_date', fieldtype='Date', width=100)
+		self.add_column(label=_('Reco Date'), fieldname='reco_date', fieldtype='Date', width=100)
+		self.add_column(label=_('Reco Amount'), fieldname='reco_amount', fieldtype='Currency', width=100)
+		self.add_column(label=_('Last Remark'), fieldname='last_remark', fieldtype='Small Text', width=100)
+		self.add_column(label=_('Last Remark Date'), fieldname='last_remark_date', fieldtype='Date', width=100)
 		self.add_column(label=_('Next Followup Date'), fieldname='next_follow_up_date', fieldtype='Date', width=100)
 		self.add_column(label=_('Follow up By'), fieldname='follow_up_by', fieldtype='button', width=100)
+		self.add_column(label=_('Second Last Remark'), fieldname='second_last_remark', fieldtype='Small Text', width=100)
+		self.add_column(label=_('Second Last Remark Date'), fieldname='second_last_remark_date', fieldtype='Date', width=100)
 		self.add_column(label=_('View Receivable'), fieldname='view_receivable', fieldtype='button', width=110)
 		self.add_column(label=_('Add Remark'), fieldname='add_remark', fieldtype='button', width=100)
 		self.add_column(label=_('View Remark'), fieldname='view_remark', fieldtype='button', width=100)
