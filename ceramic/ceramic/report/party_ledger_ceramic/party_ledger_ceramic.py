@@ -959,7 +959,9 @@ def send_media_whatsapp(mobile_number,content,path_url):
 		try:
 			input_box = driver.find_element_by_css_selector('._1LbR4')
 			input_box.send_keys(content)
-			driver.find_element_by_css_selector('._1Ae7k').click()
+			WebDriverWait(driver,60).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '._4sWnG')))
+			click_element = driver.find_element_by_css_selector('._4sWnG')
+			driver.execute_script("arguments[0].click();", click_element)
 		except:
 			ss_name_sixth =  'whatsapp error ' + frappe.session.user + 'sixth' + frappe.generate_hash(length=5) +  '.png'
 			# f_sixth = save_file(ss_name_sixth, '', '','')
@@ -977,7 +979,9 @@ def send_media_whatsapp(mobile_number,content,path_url):
 	try:
 		WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
 		WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'span[data-icon="clip"]')))
-		driver.find_element_by_css_selector('span[data-icon="clip"]').click()
+		click_element_span = driver.find_element_by_css_selector('span[data-icon="clip')
+		driver.execute_script("arguments[0].click();", click_element_span)
+		# driver.find_element_by_css_selector('span[data-icon="clip"]').click()
 		attach=driver.find_element_by_css_selector('input[type="file"]')
 		attach.send_keys(path_url)
 
