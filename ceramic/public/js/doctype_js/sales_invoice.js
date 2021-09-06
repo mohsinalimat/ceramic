@@ -420,6 +420,12 @@ frappe.ui.form.on("Sales Invoice Item", {
     qty: (frm, cdt, cdn) => {
         let d = locals[cdt][cdn];
         frm.events.calculate_total(frm)
+        var doc=locals[cdt][cdn]
+        if (doc.stock_qty && doc.qty){
+        console.log(doc.stock_qty/doc.qty)
+        frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+        frm.refresh();
+        }
     },
     sqf_rate: (frm, cdt, cdn) => {
 		let d = locals[cdt][cdn];
@@ -435,6 +441,7 @@ frappe.ui.form.on("Sales Invoice Item", {
         if (doc.stock_qty && doc.qty){
         console.log(doc.stock_qty/doc.qty)
         frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+        frm.refresh();
         }
     }
 });

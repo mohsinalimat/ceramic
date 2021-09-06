@@ -1029,6 +1029,11 @@ frappe.ui.form.on("Sales Order Item", {
 		let d = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, 'real_qty', d.qty);
 		frm.events.calculate_total(frm)
+		var doc=locals[cdt][cdn]
+        if (doc.stock_qty && doc.qty){
+        console.log(doc.stock_qty/doc.qty)
+        frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+        }
 	},
 	real_qty: function (frm, cdt, cdn) {
 		frm.events.calculate_total(frm)
