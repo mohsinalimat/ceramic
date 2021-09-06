@@ -680,6 +680,7 @@ def change_customer(customer, doc):
 	customer_data = get_party_details(customer, "Customer")
 
 	so.db_set('customer', customer)
+	so.db_set('primary_customer',frappe.db.get_value("Customer",customer,'primary_customer') or customer)
 	so.db_set('title', customer)
 	so.db_set('customer_name', frappe.db.get_value("Customer",customer,'customer_name'))
 	so.db_set('order_priority', frappe.db.get_value("Customer",customer,'customer_priority'))	

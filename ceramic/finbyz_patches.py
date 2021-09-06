@@ -153,3 +153,38 @@ for jv in jv_list:
                 acc.db_set('party',doc.primary_customer,update_modified=False)
 
 # Patch End
+
+
+
+
+
+
+
+# Patch Start: Update Pay Amount left in sales invoice
+query = frappe.db.sql("""
+    update `tabSales Invoice` asi
+    JOIN `tabSales Invoice` as si on si.si_ref = asi.name
+    set asi.pay_amount_left = asi.real_difference_amount
+    where asi.pay_amount_left = 0 and asi.outstanding_amount = asi.real_difference_amount and 
+    asi.authority = 'Unauthorized' and asi.outstanding_amount > 0 and asi.real_difference_amount > 0 and si.status = "Paid"
+""")
+
+# First Patch
+
+query = frappe.db.sql("""
+    update `tabSales Invoice`
+    set pay_amount_left = real_difference_amount
+    where pay_amount_left  = 0 and outstanding_amount = rounded_total and authority = 'Unauthorized'
+""")
+
+# Second Patch
+
+query = frappe.db.sql("""
+    update `tabSales Invoice` asi
+    JOIN `tabSales Invoice` as si on si.si_ref = asi.name
+    set asi.pay_amount_left = asi.real_difference_amount
+    where asi.pay_amount_left = 0 and asi.outstanding_amount = asi.real_difference_amount and 
+    asi.authority = 'Unauthorized' and asi.outstanding_amount > 0 and asi.real_difference_amount > 0 and si.status = "Paid"
+""")
+
+# Patch End
