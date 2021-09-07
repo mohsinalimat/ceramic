@@ -321,7 +321,7 @@ frappe.ui.form.on('Sales Invoice', {
                 if (doc.uom != doc.stock_uom){
                     if (doc.stock_qty && doc.qty){
                     console.log(doc.stock_qty/doc.qty)
-                    frappe.model.set_value(doc.doctype,doc.name,"conversion_factor",doc.stock_qty/doc.qty)
+                    frappe.model.set_value(doc.doctype,doc.name ,"conversion_factor",doc.stock_qty/doc.qty)
                     }
                 }
             });
