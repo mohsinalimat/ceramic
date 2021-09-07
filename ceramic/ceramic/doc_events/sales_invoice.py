@@ -61,8 +61,11 @@ def on_submit(self, test):
 
 	
 	if self.authority == "Unauthorized":
-		self.db_set("pay_amount_left", self.real_difference_amount)
-
+		if self.real_difference_amount > 0:
+			self.db_set("pay_amount_left", self.real_difference_amount)
+		elif self.real_difference_amount < 0:
+			self.db_set("pay_amount_left", 0)
+			
 	create_main_sales_invoice(self)
 	if self.si_ref:
 		si_ref = frappe.db.get_value("Sales Invoice",self.si_ref,"si_ref")

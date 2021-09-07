@@ -174,10 +174,18 @@ query = frappe.db.sql("""
 query = frappe.db.sql("""
     update `tabSales Invoice`
     set pay_amount_left = real_difference_amount
-    where pay_amount_left  = 0 and outstanding_amount = rounded_total and authority = 'Unauthorized'
+    where pay_amount_left = 0 and outstanding_amount = rounded_total and authority = 'Unauthorized'
 """)
 
 # Second Patch
+
+query = frappe.db.sql("""
+    update `tabSales Invoice`
+    set pay_amount_left = 0
+    where pay_amount_left < 0 and outstanding_amount = rounded_total and authority = 'Unauthorized'
+""")
+
+# Third Patch
 
 query = frappe.db.sql("""
     update `tabSales Invoice` asi
