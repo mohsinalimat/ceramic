@@ -317,11 +317,11 @@ frappe.ui.form.on('Sales Invoice', {
     },
     validate: function(frm){
         frm.trigger('update_payment_terms_from_sales_order');
-            frm.doc.itams.forEach(function(doc){
+            frm.doc.items.forEach(function(doc){
                 if (doc.uom != doc.stock_uom){
                     if (doc.stock_qty && doc.qty){
                     console.log(doc.stock_qty/doc.qty)
-                    frappe.model.set_value(cdt,cdn,"conversion_factor",doc.stock_qty/doc.qty)
+                    frappe.model.set_value(doc.doctype,doc.name,"conversion_factor",doc.stock_qty/doc.qty)
                     }
                 }
             });

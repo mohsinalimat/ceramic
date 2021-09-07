@@ -355,7 +355,7 @@ frappe.ui.form.on('Delivery Note', {
 		}
 	},
 	validate:function(frm){
-		frm.doc.itams.forEach(function(doc){
+		frm.doc.items.forEach(function(doc){
 			if (doc.uom != doc.stock_uom){
 				if (doc.stock_qty && doc.qty){
 				console.log(doc.stock_qty/doc.qty)
