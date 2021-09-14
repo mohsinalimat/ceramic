@@ -190,15 +190,15 @@ this.frm.cscript.onload = function (frm) {
 		return { query: "erpnext.controllers.queries.customer_query" }
 	});
 }
-cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
-	return {
-		filters: {
-			"company": doc.company,
-			"tax_paid": doc.tax_paid || 0,
-			"tax_category":doc.tax_category
-		}
-	}
-};
+// cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
+// 	return {
+// 		filters: {
+// 			"company": doc.company,
+// 			"tax_paid": doc.tax_paid || 0,
+// 			"tax_category":doc.tax_category
+// 		}
+// 	}
+// };
 cur_frm.fields_dict.customer.get_query = function (doc) {
 	return {
 		filters: {
@@ -227,6 +227,7 @@ frappe.ui.form.on('Delivery Note', {
 				frm.set_value('invoice_company', r.alternate_company)
 			})
 		}
+		frm.trigger('set_filter_queries')
 	},
 	refresh: function(frm) {
 		frappe.db.get_value("Company",frm.doc.company,"alternate_company",function(r){
@@ -255,6 +256,7 @@ frappe.ui.form.on('Delivery Note', {
 			frm.trigger('naming_series');
 		}
 		frm.set_df_property("company", "read_only", (!frm.doc.__islocal || frm.doc.amended_from) ? 1 : 0);
+		frm.trigger('set_filter_queries')
 	},
 	before_save: function (frm) {
 		if (!frm.doc.primary_customer) {
@@ -453,6 +455,17 @@ frappe.ui.form.on('Delivery Note', {
 			}, 2000);
 		}
 	},
+    set_filter_queries(frm){
+		frm.set_query("taxes_and_charges", function(doc) {
+			return {
+				filters: [
+					['Sales Taxes and Charges Template', 'company', '=', doc.company],
+					['Sales Taxes and Charges Template', 'tax_paid', '=', doc.tax_paid || 0],
+					['Sales Taxes and Charges Template', 'tax_category', '=', doc.tax_category]
+				]
+			};
+		});
+	}
 });
 frappe.ui.form.on("Delivery Note Item", {
 	qty: (frm, cdt, cdn) => {

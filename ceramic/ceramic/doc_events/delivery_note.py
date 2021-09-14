@@ -215,8 +215,8 @@ def validate_taxes_sales_invoice(self):
 
 		for si_tax in si_ref_doc.taxes:
 			if round(flt(si_tax.tax_amount),1) != round(flt(tax_map.get(si_tax.account_head.replace(target_company_abbr,source_company_abbr))),1):
-				# frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
-				pass
+				frappe.throw("Tax Amount is Different in Row: {}".format(si_tax.idx))
+
 def update_status_pick_list(self):
 	pick_list = list(set([item.against_pick_list for item in self.items if item.against_pick_list]))
 

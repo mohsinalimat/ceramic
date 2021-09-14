@@ -543,14 +543,15 @@ this.frm.cscript.onload = function (frm) {
 	});
 
 }
-cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
-	return {
-		filters: {
-			"company": doc.company,
-			"tax_paid": doc.tax_paid || 0
-		}
-	}
-};
+// cur_frm.fields_dict.taxes_and_charges.fet_query = function (doc) {
+// 	return {
+// 		filters: {
+// 			"company": doc.company,
+// 			"tax_paid": doc.tax_paid || 0
+// 		}
+// 	}
+// };
+
 cur_frm.fields_dict.items.grid.get_field("item_series").get_query = function (doc) {
 	return {
 		filters: {
@@ -700,6 +701,7 @@ frappe.ui.form.on('Sales Order', {
 					
 				},
 	refresh: function(frm,opts){
+		frm.trigger('set_filter_queries')
 		if (frm.doc.amended_from && frm.doc.__islocal && frm.doc.docstatus == 0){
 			frm.set_value("so_ref", "");
 		}
@@ -709,6 +711,7 @@ frappe.ui.form.on('Sales Order', {
 		window.open(window.location.href.split('app')[0] + "app/query-report/Lot-Wise Balance" + "/?" + "company="+ frm.doc.company + "&" + "sales_order=" + frm.doc.name,"_blank")
 	},
 	onload: function (frm) {
+		frm.trigger('set_filter_queries')
 		frm.trigger('naming_series');
 		if(frm.doc.__islocal){
 			frm.trigger('set_bank_account')
@@ -1001,6 +1004,17 @@ frappe.ui.form.on('Sales Order', {
 				frappe.model.set_value(doc.doctype,doc.name,"conversion_factor",doc.stock_qty/doc.qty)
 				}
 			}
+		});
+	},
+	set_filter_queries(frm){
+		frm.set_query("taxes_and_charges", function(doc) {
+			return {
+				filters: [
+					['Sales Taxes and Charges Template', 'company', '=', doc.company],
+					['Sales Taxes and Charges Template', 'tax_paid', '=', doc.tax_paid || 0],
+					['Sales Taxes and Charges Template', 'tax_category', '=', doc.tax_category]
+				]
+			};
 		});
 	}
 })

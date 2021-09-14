@@ -140,15 +140,15 @@ cur_frm.fields_dict.items.grid.get_field("warehouse").get_query = function(doc) 
         }
     }
 };
-cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
-	return {
-		filters: {
-			"company": doc.company,
-			"tax_paid": doc.tax_paid || 0,
-			"tax_category":doc.tax_category
-		}
-	}
-};
+// cur_frm.fields_dict.taxes_and_charges.get_query = function (doc) {
+// 	return {
+// 		filters: {
+// 			"company": doc.company,
+// 			"tax_paid": doc.tax_paid || 0,
+// 			"tax_category":doc.tax_category
+// 		}
+// 	}
+// };
 cur_frm.fields_dict.customer.get_query = function(doc) {
     return {
         filters: {
@@ -192,6 +192,7 @@ frappe.ui.form.on('Sales Invoice', {
             })
         }
         frm.trigger('fetch_city');
+        frm.trigger('set_filter_queries')
         // if(frm.doc.docstatus == 0 && frm.doc.si_ref && frm.doc.name.includes("New Sales Invoice")){
         // 	frappe.db.get_value("Sales Invoice",frm.doc.si_ref,["company_series","naming_series","series_value"],function(r){
         // 		frm.set_value("naming_series",'A' + String(r.company_series) + r.naming_series)
@@ -215,6 +216,7 @@ frappe.ui.form.on('Sales Invoice', {
             })
         }
         frm.trigger('fetch_city');
+        frm.trigger('set_filter_queries')
 	},
     shipping_address_name: function(frm){
         frm.trigger('fetch_city');
@@ -422,6 +424,17 @@ frappe.ui.form.on('Sales Invoice', {
 			}
 		})
 	},
+    set_filter_queries(frm){
+		frm.set_query("taxes_and_charges", function(doc) {
+			return {
+				filters: [
+					['Sales Taxes and Charges Template', 'company', '=', doc.company],
+					['Sales Taxes and Charges Template', 'tax_paid', '=', doc.tax_paid || 0],
+					['Sales Taxes and Charges Template', 'tax_category', '=', doc.tax_category]
+				]
+			};
+		});
+	}
 
 });
 frappe.ui.form.on("Sales Invoice Item", {

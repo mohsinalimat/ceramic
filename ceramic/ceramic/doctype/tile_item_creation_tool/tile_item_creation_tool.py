@@ -222,7 +222,7 @@ class TileItemCreationTool(Document):
 
 @frappe.whitelist()
 def get_tile_quality():
-	return [item.name for item in frappe.get_all('Tile Quality')]
+	return [item.name for item in frappe.get_all('Tile Quality') if item.name not in ['Economy','Classic']]
 
 @frappe.whitelist()
 def change_item_design(doc, new_value):
