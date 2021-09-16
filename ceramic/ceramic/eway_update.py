@@ -1,7 +1,7 @@
 import json
 import frappe, re
 from frappe.utils import flt
-from erpnext.regional.india.utils import validate_sales_invoice, get_address_details, get_gst_accounts, get_transport_details
+from erpnext.regional.india.utils import validate_doc, get_address_details, get_gst_accounts, get_transport_details
 from erpnext.controllers.taxes_and_totals import get_itemised_tax, get_itemised_taxable_amount
 
 def get_itemised_tax_breakup_data(doc, account_wise=False, eway=False):
@@ -71,6 +71,8 @@ def get_item_list(data, doc):
 	item_data_attrs = ['sgstRate', 'cgstRate', 'igstRate', 'cessRate', 'cessNonAdvol']
 	hsn_wise_charges, hsn_taxable_amount, item_name, qty, qtyUnit = get_itemised_tax_breakup_data(doc, account_wise=True, eway=True)
 	# frappe.throw(str(hsn_wise_charges))
+	print("item: "+ str(item_name))
+	print("qty: "+ str(qty))
 	for hsn_code, taxable_amount in hsn_taxable_amount.items():
 		item_data = frappe._dict()
 		if not hsn_code:
@@ -112,7 +114,7 @@ def get_ewb_data(dt, dn):
 	for doc_name in dn:
 		doc = frappe.get_doc(dt, doc_name)
 
-		validate_sales_invoice(doc)
+		validate_doc(doc)
 
 		data = frappe._dict({
 			"transporterId": "",
@@ -135,9 +137,10 @@ def get_ewb_data(dt, dn):
 		company_address = frappe.get_doc('Address', doc.company_address)
 		billing_address = frappe.get_doc('Address', doc.customer_address)
 
+		dispatch_address = frappe.get_doc('Address', doc.dispatch_address_name) if doc.dispatch_address_name else company_address
 		shipping_address = frappe.get_doc('Address', doc.shipping_address_name)
 
-		data = get_address_details(data, doc, company_address, billing_address)
+		data = get_address_details(data, doc, company_address, billing_address, dispatch_address)
 
 		data.itemList = []
 		data.totalValue = doc.total
@@ -191,16 +194,20 @@ def generate_ewb_json(dt, dn):
 
 @frappe.whitelist()
 def download_ewb_json():
-	data = frappe._dict(frappe.local.form_dict)
-
-	frappe.local.response.filecontent = json.dumps(json.loads(data['data']), indent=4, sort_keys=True)
+	data = json.loads(frappe.local.form_dict.data)
+	frappe.local.response.filecontent = json.dumps(data, indent=4, sort_keys=True)
 	frappe.local.response.type = 'download'
 
-	billList = json.loads(data['data'])['billLists']
+	filename_prefix = 'Bulk'
+	docname = frappe.local.form_dict.docname
+	if docname:
+		if docname.startswith('['):
+			docname = json.loads(docname)
+			if len(docname) == 1:
+				docname = docname[0]
 
-	if len(billList) > 1:
-		doc_name = 'Bulk'
-	else:
-		doc_name = data['docname']
+		if not isinstance(docname, list):
+			# removes characters not allowed in a filename (https://stackoverflow.com/a/38766141/4767738)
+			filename_prefix = re.sub(r'[^\w_.)( -]', '', docname)
 
-	frappe.local.response.filename = '{0}_e-WayBill_Data_{1}.json'.format(doc_name, frappe.utils.random_string(5))
+	frappe.local.response.filename = '{0}_e-WayBill_Data_{1}.json'.format(filename_prefix, frappe.utils.random_string(5))

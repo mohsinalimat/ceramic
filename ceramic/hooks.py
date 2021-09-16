@@ -202,8 +202,8 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
 	"frappe.desk.notifications.get_open_count": "ceramic.api.get_open_count",
-	# "erpnext.regional.india.utils.generate_ewb_json": "ceramic.ceramic.eway_update.generate_ewb_json",
-	# "erpnext.regional.india.utils.download_ewb_json": "ceramic.ceramic.eway_update.download_ewb_json",
+	"erpnext.regional.india.utils.generate_ewb_json": "ceramic.ceramic.eway_update.generate_ewb_json",
+	"erpnext.regional.india.utils.download_ewb_json": "ceramic.ceramic.eway_update.download_ewb_json",
 	"erpnext.stock.doctype.batch.batch.get_batch_no": "ceramic.ceramic.override.stock.batch.get_batch_no",
 	"erpnext.stock.get_item_details.get_item_details": "ceramic.ceramic.override.stock.get_item_details.get_item_details",
 }
